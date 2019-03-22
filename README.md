@@ -9,4 +9,4 @@ The script must be run at a Domain Controller running at least Windows Server 20
 
 The script must be run by a user with Domain Admin privileges (Enterprise Admins would be better if dealing with multiple domains and forests).
 
-!(/img/0.jpg)
+![a](/img/0.png)
