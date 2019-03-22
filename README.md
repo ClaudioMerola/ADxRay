@@ -18,3 +18,5 @@ The script must be run by a user with Domain Admin privileges (Enterprise Admins
 ![Users](/Img/3.jpg)
 
 ![GPOs](/Img/4.jpg)
+
+![GPO2](/Img/5.jpg)
