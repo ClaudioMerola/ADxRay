@@ -8,3 +8,5 @@ The script does not record, create or modify anything in the environment (except
 The script must be run at a Domain Controller running at least Windows Server 2012. 
 
 The script must be run by a user with Domain Admin privileges (Enterprise Admins would be better if dealing with multiple domains and forests).
+
+!(/img/0.jpg)
