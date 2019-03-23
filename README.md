@@ -11,14 +11,14 @@ The script must be run by a user with Domain Admin privileges (Enterprise Admins
 
 ![Header](/Img/0.png)
 
-![Forest](/Img/1.png)
+![Forest](/Img/1.PNG)
 
 ![DCs](/Img/2.png)
 
-![DCDIAG](/Img/3.png)
+![DCDIAG](/Img/3.PNG)
 
-![Users](/Img/4.png)
+![Users](/Img/4.PNG)
 
-![Groups](/Img/5.png)
+![Groups](/Img/5.PNG)
 
 ![GPOs](/Img/6.png)
