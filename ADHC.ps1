@@ -13,6 +13,7 @@
 ######################################################################################################################################################################################
 
 
+$Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADHC -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADHC}
 
 $report = "C:\ADHC\ADHC_Report.htm" 
@@ -51,7 +52,8 @@ Add-Content $report "<body LINK='Black' VLINK='Black'>"
 add-content $report  "<table width='100%'>" 
 add-content $report  "<tr bgcolor='Black'>" 
 add-content $report  "<td colspan='7' height='130' align='center'>" 
-add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>PFE's Active Directory Report</strong></font>" 
+add-content $report  "<BR>" 
+#add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>PFE's Active Directory Report</strong></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
@@ -2344,8 +2346,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             if (($GpTemp).Count -ge 2)
                 {
                     $GCounter = (($GpTemp -split(';')).Count - 1)
-                    $gp
-                    $GCounter
                     $GDomain = $Contr.Domain
                     $GName = $gp
                     Add-Content $report "<tr>"
@@ -2721,7 +2721,13 @@ add-content $report "<BR>"
 ######################################### INDEX #############################################
 
 
+
+}
+$Measure = $Runtime.TotalSeconds.ToString('#######.##')
+
 $index = Get-Content "C:\ADHC\ADHC_Report.htm"
+
+$Index[28] =  "<p><span style='font-size:45;color:blue'><strong>PFE's Active Directory Report </strong></span>,<span style='font-size:18;color:white'>(execution: $Measure secs)</span></p>" 
 
 if ($IndexForest0 -eq 0) 
     {
@@ -2996,5 +3002,6 @@ add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADHC Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADHC%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
 Add-Content $report "</body>" 
 Add-Content $report "</html>" 
+
 
 Invoke-Item $report
