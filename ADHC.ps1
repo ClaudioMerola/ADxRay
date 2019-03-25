@@ -49,6 +49,7 @@ Add-Content $report "<body LINK='Black' VLINK='Black'>"
 
 ######################################### HEADER #############################################
 
+add-content $report "<BR>"
 add-content $report  "<table width='100%'>" 
 add-content $report  "<tr>" 
 add-content $report  "<td colspan='7' height='130' align='center' bgcolor='Black'>" 
@@ -62,7 +63,9 @@ add-content $report  "</table>"
 
 
 <# Index is made close to the end of the script. (It has to be done this way to supply index with variables of error counts).
-Close to the end it reads the report file and replaces thoses <BR> with the real index. If you need to add more items to the index simple add more <BR> below
+Close to the end it reads the report file and replaces thoses <BR> with the real index. If you need to add more items to the index sim
+
+
 #>
 
 add-content $report  "<TABLE BORDER=0 WIDTH=90%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
@@ -2739,7 +2742,7 @@ $Measure = $Runtime.TotalSeconds.ToString('#######.##')
 
 $index = Get-Content "C:\ADHC\ADHC_Report.htm"
 
-$Index[34] = "<TABLE BORDER=0 WIDTH=20%><tr><td align='left'><font face='verdana' color='#000000' size='4'> Execution: $Measure seconds<HR></font></td></tr></TABLE>"
+$Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure seconds<HR></font></td></tr></TABLE>"
 
 $i = 38
 
