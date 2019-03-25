@@ -50,22 +50,34 @@ Add-Content $report "<body LINK='Black' VLINK='Black'>"
 ######################################### HEADER #############################################
 
 add-content $report  "<table width='100%'>" 
-add-content $report  "<tr bgcolor='Black'>" 
-add-content $report  "<td colspan='7' height='130' align='center'>" 
-add-content $report  "<BR>" 
-#add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>PFE's Active Directory Report</strong></font>" 
-add-content $report  "</td>" 
+add-content $report  "<tr>" 
+add-content $report  "<td colspan='7' height='130' align='center' bgcolor='Black'>" 
+add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>PFE's Active Directory Report</strong></font>" 
+add-content $report  "</td>"  
 add-content $report  "</tr>" 
-add-content $report  "</table>" 
+add-content $report  "</table>"
+ 
 
 ######################################### INDEX #############################################
 
+
+<# Index is made close to the end of the script. (It has to be done this way to supply index with variables of error counts).
+Close to the end it reads the report file and replaces thoses <BR> with the real index. If you need to add more items to the index simple add more <BR> below
+#>
+
 add-content $report  "<TABLE BORDER=0 WIDTH=90%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
+add-content $report "<BR>"
 
 add-content $report "<BR>"
-add-content $report "<ol>"
-add-content $report "<ul><a href='#ForestHeader'>Forest</a>"
-add-content $report "<ul>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -1376,14 +1388,14 @@ add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
-######################################### Replications ############################################
+######################################### LocatorCheck ############################################
 
 
-add-content $report "<div id='Replications'></div>"
+add-content $report "<div id='LocatorCheck'></div>"
 
 add-content $report "<CENTER>"
 add-content $report  "<CENTER>"
-add-content $report  "<h3>Replications Validation</h3>" 
+add-content $report  "<h3>LocatorCheck Validation</h3>" 
 add-content $report  "</CENTER>"
 add-content $report  "<BR>"
  
@@ -1422,9 +1434,9 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
         }
 
-    if (($DCDiag | Select-String -Pattern 'passed test Replications').Count -eq $true)
+    if (($DCDiag | Select-String -Pattern 'passed test LocatorCheck').Count -eq $true)
         {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test Replications'
+            $Pass = $DCDiag | Select-String -Pattern 'passed test LocatorCheck'
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
         }
     else
@@ -1444,7 +1456,7 @@ add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks for timely replication and any replication errors between domain controllers. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test validates that DCLocator queries return the five 'capabilities' that any DC must know of to operate correctly (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc737410(v=ws.10)'>Global Catalog</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc780487(v=ws.10)'>Operations Masters</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Time Server</a> and <a href='https://docs.microsoft.com/en-us/windows/desktop/SecAuthN/key-distribution-center'>KDC</a>). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
 
 add-content $report  "</CENTER>"
@@ -2727,270 +2739,306 @@ $Measure = $Runtime.TotalSeconds.ToString('#######.##')
 
 $index = Get-Content "C:\ADHC\ADHC_Report.htm"
 
-$Index[28] =  "<p><span style='font-size:45;color:blue'><strong>PFE's Active Directory Report </strong></span>,<span style='font-size:18;color:white'>(execution: $Measure secs)</span></p>" 
+$Index[34] = "<TABLE BORDER=0 WIDTH=20%><tr><td align='left'><font face='verdana' color='#000000' size='4'> Execution: $Measure seconds<HR></font></td></tr></TABLE>"
 
+$i = 38
+
+$index[$i] = "<ol>"
+$i++
+$index[$i] = "<ul><a href='#ForestHeader'>Forest</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexForest0 -eq 0) 
     {
-        $index[36] = "<li><a href='#ForestOverview'> Overview ($IndexForest0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#ForestOverview'> Overview ($IndexForest0 Errors)</a></li>"
     }
 else 
     { 
-        $index[36] = "<li><a href='#ForestOverview'> Overview (<font color='#FF0000'>$IndexForest0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#ForestOverview'> Overview (<font color='#FF0000'>$IndexForest0</font> Errors)</a></li>"
     }
-$index[37] = "<li><a href='#TrustOverview'> Active Directory Trusts</a></li>"
+$i++
+$index[$i] = "<li><a href='#TrustOverview'> Active Directory Trusts</a></li>"
+$i++
 if ($IndexDomain0 -eq 0) 
     {
-        $index[38] = "<li><a href='#DomainOverview'> Domains ($IndexDomain0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#DomainOverview'> Domains ($IndexDomain0 Errors)</a></li>"
     }
 else 
     { 
-        $index[38] = "<li><a href='#DomainOverview'> Domains (<font color='#FF0000'>$IndexDomain0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#DomainOverview'> Domains (<font color='#FF0000'>$IndexDomain0</font> Errors)</a></li>"
     }
+$i++
 if ($IndexDC0 -eq 0) 
     {
-        $index[39] = "<li><a href='#DCOverview'> Domain Controllers ($IndexDC0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#DCOverview'> Domain Controllers ($IndexDC0 Errors)</a></li>"
     }
 else 
     { 
-        $index[39] = "<li><a href='#DCOverview'> Domain Controllers (<font color='#FF0000'>$IndexDC0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#DCOverview'> Domain Controllers (<font color='#FF0000'>$IndexDC0</font> Errors)</a></li>"
     }
-$index[40] = "</ul>"
-$index[41] = "</ul>"
-$index[42] = "<ul><a href='#DCHealth'> Domain Controller's Health</a>"
-$index[43] = "<ul>"
-
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "<ul><a href='#DCHealth'> Domain Controller's Health</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexDC2 -eq 0) 
     {
-        $index[44] = "<li><a href='#Advertising'> Advertising Validation ($IndexDC2 Errors)</a></li>"
+        $index[$i] = "<li><a href='#Advertising'> Advertising Validation ($IndexDC2 Errors)</a></li>"
     }
 else 
     { 
-        $index[44] = "<li><a href='#Advertising'> Advertising Validation (<font color='#FF0000'>$IndexDC2</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#Advertising'> Advertising Validation (<font color='#FF0000'>$IndexDC2</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC3 -eq 0) 
     {
-        $index[45] = "<li><a href='#FrsEvent'> FrsEvent Validation ($IndexDC3 Errors)</a></li>"
+        $index[$i] = "<li><a href='#FrsEvent'> FrsEvent Validation ($IndexDC3 Errors)</a></li>"
     }
 else 
     { 
-        $index[45] = "<li><a href='#FrsEvent'> FrsEvent Validation (<font color='#FF0000'>$IndexDC3</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#FrsEvent'> FrsEvent Validation (<font color='#FF0000'>$IndexDC3</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC4 -eq 0) 
     {
-        $index[46] = "<li><a href='#DFSREvent'> DFSREvent Validation ($IndexDC4 Errors)</a></li>"
+        $index[$i] = "<li><a href='#DFSREvent'> DFSREvent Validation ($IndexDC4 Errors)</a></li>"
     }
 else 
     { 
-        $index[46] = "<li><a href='#DFSREvent'> DFSREvent Validation (<font color='#FF0000'>$IndexDC4</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#DFSREvent'> DFSREvent Validation (<font color='#FF0000'>$IndexDC4</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC5 -eq 0) 
     {
-        $index[47] = "<li><a href='#SysVolCheck'> SysVolCheck Validation ($IndexDC5 Errors)</a></li>"
+        $index[$i] = "<li><a href='#SysVolCheck'> SysVolCheck Validation ($IndexDC5 Errors)</a></li>"
     }
 else 
     { 
-        $index[47] = "<li><a href='#SysVolCheck'> SysVolCheck Validation (<font color='#FF0000'>$IndexDC5</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#SysVolCheck'> SysVolCheck Validation (<font color='#FF0000'>$IndexDC5</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC6 -eq 0) 
     {
-        $index[48] = "<li><a href='#KccEvent'> KccEvent Validation ($IndexDC6 Errors)</a></li>"
+        $index[$i] = "<li><a href='#KccEvent'> KccEvent Validation ($IndexDC6 Errors)</a></li>"
     }
 else 
     { 
-        $index[48] = "<li><a href='#KccEvent'> KccEvent Validation (<font color='#FF0000'>$IndexDC6</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#KccEvent'> KccEvent Validation (<font color='#FF0000'>$IndexDC6</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC7 -eq 0) 
     {
-        $index[49] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation ($IndexDC7 Errors)</a></li>"
+        $index[$i] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation ($IndexDC7 Errors)</a></li>"
     }
 else 
     { 
-        $index[49] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation (<font color='#FF0000'>$IndexDC7</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation (<font color='#FF0000'>$IndexDC7</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC8 -eq 0) 
     {
-        $index[50] = "<li><a href='#MachineAccount'> MachineAccount Validation ($IndexDC8 Errors)</a></li>"
+        $index[$i] = "<li><a href='#MachineAccount'> MachineAccount Validation ($IndexDC8 Errors)</a></li>"
     }
 else 
     { 
-        $index[50] = "<li><a href='#MachineAccount'> MachineAccount Validation (<font color='#FF0000'>$IndexDC8</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#MachineAccount'> MachineAccount Validation (<font color='#FF0000'>$IndexDC8</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC9 -eq 0) 
     {
-        $index[51] = "<li><a href='#NCSecDesc'> NCSecDesc Validation ($IndexDC9 Errors)</a></li>"
+        $index[$i] = "<li><a href='#NCSecDesc'> NCSecDesc Validation ($IndexDC9 Errors)</a></li>"
     }
 else 
     { 
-        $index[51] = "<li><a href='#NCSecDesc'> NCSecDesc Validation (<font color='#FF0000'>$IndexDC9</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#NCSecDesc'> NCSecDesc Validation (<font color='#FF0000'>$IndexDC9</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC10 -eq 0) 
     {
-        $index[52] = "<li><a href='#NetLogons'> NetLogons Validation ($IndexDC10 Errors)</a></li>"
+        $index[$i] = "<li><a href='#NetLogons'> NetLogons Validation ($IndexDC10 Errors)</a></li>"
     }
 else 
     { 
-        $index[52] = "<li><a href='#NetLogons'> NetLogons Validation (<font color='#FF0000'>$IndexDC10</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#NetLogons'> NetLogons Validation (<font color='#FF0000'>$IndexDC10</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC11 -eq 0) 
     {
-        $index[53] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation ($IndexDC11 Errors)</a></li>"
+        $index[$i] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation ($IndexDC11 Errors)</a></li>"
     }
 else 
     { 
-        $index[53] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation (<font color='#FF0000'>$IndexDC11</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation (<font color='#FF0000'>$IndexDC11</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC12 -eq 0) 
     {
-        $index[54] = "<li><a href='#Replications'> Replications Validation ($IndexDC12 Errors)</a></li>"
+        $index[$i] = "<li><a href='#LocatorCheck'> LocatorCheck Validation ($IndexDC12 Errors)</a></li>"
     }
 else 
     { 
-        $index[54] = "<li><a href='#Replications'> Replications Validation (<font color='#FF0000'>$IndexDC12</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#LocatorCheck'> LocatorCheck Validation (<font color='#FF0000'>$IndexDC12</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC13 -eq 0) 
     {
-        $index[55] = "<li><a href='#RidManager'> RidManager Validation ($IndexDC13 Errors)</a></li>"
+        $index[$i] = "<li><a href='#RidManager'> RidManager Validation ($IndexDC13 Errors)</a></li>"
     }
 else 
     { 
-        $index[55] = "<li><a href='#RidManager'> RidManager Validation (<font color='#FF0000'>$IndexDC13</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#RidManager'> RidManager Validation (<font color='#FF0000'>$IndexDC13</font> Errors)</a></li>"
     }
-
+$i++
 if ($IndexDC14 -eq 0) 
     {
-        $index[56] = "<li><a href='#Services'> Services Validation ($IndexDC14 Errors)</a></li>"
+        $index[$i] = "<li><a href='#Services'> Services Validation ($IndexDC14 Errors)</a></li>"
     }
 else 
     { 
-        $index[56] = "<li><a href='#Services'> Services Validation (<font color='#FF0000'>$IndexDC14</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#Services'> Services Validation (<font color='#FF0000'>$IndexDC14</font> Errors)</a></li>"
     }
-
-
+$i++
 if ($IndexDC15 -eq 0) 
     {
-        $index[57] = "<li><a href='#SystemLog'> SystemLog Validation ($IndexDC15 Errors)</a></li>"
+        $index[$i] = "<li><a href='#SystemLog'> SystemLog Validation ($IndexDC15 Errors)</a></li>"
     }
 else 
     { 
-        $index[57] = "<li><a href='#SystemLog'> SystemLog Validation (<font color='#FF0000'>$IndexDC15</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#SystemLog'> SystemLog Validation (<font color='#FF0000'>$IndexDC15</font> Errors)</a></li>"
     }
-
-
+$i++
 if ($IndexDC16 -eq 0) 
     {
-        $index[58] = "<li><a href='#VerifyReferences'> VerifyReferences Validation ($IndexDC16 Errors)</a></li>"
+        $index[$i] = "<li><a href='#VerifyReferences'> VerifyReferences Validation ($IndexDC16 Errors)</a></li>"
     }
 else 
     { 
-        $index[58] = "<li><a href='#VerifyReferences'> VerifyReferences Validation (<font color='#FF0000'>$IndexDC16</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#VerifyReferences'> VerifyReferences Validation (<font color='#FF0000'>$IndexDC16</font> Errors)</a></li>"
     }
-
-
+$i++
 if ($IndexDC17 -eq 0) 
     {
-        $index[59] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation ($IndexDC17 Errors)</a></li>"
+        $index[$i] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation ($IndexDC17 Errors)</a></li>"
     }
 else 
     { 
-        $index[59] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation (<font color='#FF0000'>$IndexDC17</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation (<font color='#FF0000'>$IndexDC17</font> Errors)</a></li>"
     }
-
-
+$i++
 if ($IndexDC18 -eq 0) 
     {
-        $index[60] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation ($IndexDC18 Errors)</a></li>"
+        $index[$i] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation ($IndexDC18 Errors)</a></li>"
     }
 else 
     { 
-        $index[60] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation (<font color='#FF0000'>$IndexDC18</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation (<font color='#FF0000'>$IndexDC18</font> Errors)</a></li>"
     }
-
-$index[61] = "</ul>"
-$index[62] = "</ul>"
-$index[63] = "<ul><a href='#DNSServers'>DNS Servers</a>"
-$index[64] = "<ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "<ul><a href='#DNSServers'>DNS Servers</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexDNS0 -eq 0) 
     {
-        $index[65] = "<li><a href='#DNSServers'> DNS Servers Health ($IndexDNS0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#DNSServers'> DNS Servers Health ($IndexDNS0 Errors)</a></li>"
     }
 else 
     { 
-        $index[65] = "<li><a href='#DNSServers'> DNS Server Health (<font color='#FF0000'>$IndexDNS0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#DNSServers'> DNS Server Health (<font color='#FF0000'>$IndexDNS0</font> Errors)</a></li>"
     }
-$index[66] = "</ul>"
-$index[67] = "</ul>"
-$index[68] = "<ul><a href='#Objects'>Users and Computers</a>"
-$index[69] = "<ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "<ul><a href='#Objects'>Users and Computers</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexUser0 -eq 0) 
     {
-        $index[70] = "<li><a href='#Users'> User Accounts ($IndexUser0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#Users'> User Accounts ($IndexUser0 Errors)</a></li>"
     }
 else 
     { 
-        $index[70] = "<li><a href='#Users'> User Accounts (<font color='#FF0000'>$IndexUser0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#Users'> User Accounts (<font color='#FF0000'>$IndexUser0</font> Errors)</a></li>"
     }
+$i++
 if ($IndexPC0 -eq 0) 
     {
-        $index[71] = "<li><a href='#Computers'> Computer Accounts ($IndexPC0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#Computers'> Computer Accounts ($IndexPC0 Errors)</a></li>"
     }
 else 
     { 
-        $index[71] = "<li><a href='#Computers'> Computer Accounts (<font color='#FF0000'>$IndexPC0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#Computers'> Computer Accounts (<font color='#FF0000'>$IndexPC0</font> Errors)</a></li>"
     }
-$index[72] = "</ul>"
-$index[73] = "</ul>"
-$index[74] = "<ul><a href='#GroupHeader'>Groups</a>"
-$index[75] = "<ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "<ul><a href='#GroupHeader'>Groups</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexGroup0 -eq 0) 
     {
-        $index[76] = "<li><a href='#GroupOverview'> Active Directory Admin Groups ($IndexGroup0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#GroupOverview'> Active Directory Admin Groups ($IndexGroup0 Errors)</a></li>"
     }
 else 
     { 
-        $index[76] = "<li><a href='#GroupOverview'> Active Directory Admin Groups (<font color='#FF0000'>$IndexGroup0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#GroupOverview'> Active Directory Admin Groups (<font color='#FF0000'>$IndexGroup0</font> Errors)</a></li>"
     }
+$i++
 if ($IndexGroup1 -eq 0) 
     {
-        $index[77] = "<li><a href='#Groups'> Active Directory Groups ($IndexGroup1 Errors)</a></li>"
+        $index[$i] = "<li><a href='#Groups'> Active Directory Groups ($IndexGroup1 Errors)</a></li>"
     }
 else 
     { 
-        $index[77] = "<li><a href='#Groups'> Active Directory Groups (<font color='#FF0000'>$IndexGroup1</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#Groups'> Active Directory Groups (<font color='#FF0000'>$IndexGroup1</font> Errors)</a></li>"
     }
-$index[78] = "</ul>"
-$index[79] = "</ul>"
-$index[80] = "<ul><a href='#GPOHeader'>Group Policies</a>"
-$index[81] = "<ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "<ul><a href='#GPOHeader'>Group Policies</a>"
+$i++
+$index[$i] = "<ul>"
+$i++
 if ($IndexGPO0 -eq 0) 
     {
-        $index[82] = "<li><a href='#GPOOverview'> Group Policies Overview ($IndexGPO0 Errors)</a></li>"
+        $index[$i] = "<li><a href='#GPOOverview'> Group Policies Overview ($IndexGPO0 Errors)</a></li>"
     }
 else 
     { 
-        $index[82] = "<li><a href='#GPOOverview'> Group Policies Overview (<font color='#FF0000'>$IndexGPO0</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#GPOOverview'> Group Policies Overview (<font color='#FF0000'>$IndexGPO0</font> Errors)</a></li>"
     }
+$i++
 if ($IndexGPO1 -eq 0) 
     {
-        $index[83] = "<li><a href='#GPOOverview'> Empty GPOs ($IndexGPO1 Errors)</a></li>"
+        $index[$i] = "<li><a href='#GPOOverview'> Empty GPOs ($IndexGPO1 Errors)</a></li>"
     }
 else 
     { 
-        $index[83] = "<li><a href='#GPOOverview'> Empty GPOs (<font color='#FF0000'>$IndexGPO1</font> Errors)</a></li>"
+        $index[$i] = "<li><a href='#GPOOverview'> Empty GPOs (<font color='#FF0000'>$IndexGPO1</font> Errors)</a></li>"
     }
-$index[84] = "</ul>"
-$index[85] = "</ul>"
-$index[86] = "</ol>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ul>"
+$i++
+$index[$i] = "</ol>"
 
 $index | out-file "C:\ADHC\ADHC_Report.htm"
 
