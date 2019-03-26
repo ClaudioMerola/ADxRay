@@ -14,9 +14,9 @@
 
 
 $Runtime = Measure-Command -Expression {
-if ((Test-Path -Path C:\ADHC -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADHC}
+if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
 
-$report = "C:\ADHC\ADHC_Report.htm" 
+$report = "C:\ADxRay\ADxRay_Report.htm" 
 if ((test-path $report) -eq $false) {new-item $report -Type file -Force}
 Clear-Content $report 
 
@@ -25,7 +25,7 @@ $Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
 Add-Content $report "<html>" 
 Add-Content $report "<head>" 
 Add-Content $report "<meta http-equiv='Content-Type' content='text/html; charset=iso-8859-1'>" 
-Add-Content $report "<title>ADReport - $Forest</title>"
+Add-Content $report "<title>ADxRay - $Forest</title>"
 add-content $report '<STYLE TYPE="text/css">' 
 add-content $report  "<!--" 
 add-content $report  "body {" 
@@ -53,7 +53,7 @@ add-content $report "<BR>"
 add-content $report  "<table width='100%'>" 
 add-content $report  "<tr>" 
 add-content $report  "<td colspan='7' height='130' align='center' bgcolor='Black'>" 
-add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>PFE's Active Directory Report</strong></font>" 
+add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong>Active Directory xRay Report</strong></font>" 
 add-content $report  "</td>"  
 add-content $report  "</tr>" 
 add-content $report  "</table>"
@@ -2740,7 +2740,7 @@ add-content $report "<BR>"
 }
 $Measure = $Runtime.TotalSeconds.ToString('#######.##')
 
-$index = Get-Content "C:\ADHC\ADHC_Report.htm"
+$index = Get-Content "C:\ADxRay\ADxRay_Report.htm"
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure seconds<HR></font></td></tr></TABLE>"
 
@@ -3043,7 +3043,7 @@ $index[$i] = "</ul>"
 $i++
 $index[$i] = "</ol>"
 
-$index | out-file "C:\ADHC\ADHC_Report.htm"
+$index | out-file "C:\ADxRay\ADxRay_Report.htm"
 
 ######################################### CLOSING #############################################
 
