@@ -1407,7 +1407,7 @@ Add-Content $report  "<tr bgcolor='WhiteSmoke'>"
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>Replications</B></td>" 
+Add-Content $report  "<td width='20%' align='center'><B>LocatorCheck</B></td>" 
 
 Add-Content $report "</tr>" 
 
@@ -1417,7 +1417,7 @@ foreach ($DC in $DCs)
     {
     Add-Content $report "<tr>"
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:Replications /s:$($args[0])} -ArgumentList $DC
+    $DCDiag = start-job -scriptblock {dcdiag /test:LocatorCheck /s:$($args[0])} -ArgumentList $DC
     wait-job -Job $DCDiag -Timeout 20
     $DCDiag = receive-job -job $DCDiag
 
@@ -1459,7 +1459,7 @@ add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test validates that DCLocator queries return the five 'capabilities' that any DC must know of to operate correctly (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc737410(v=ws.10)'>Global Catalog</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc780487(v=ws.10)'>Operations Masters</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Time Server</a> and <a href='https://docs.microsoft.com/en-us/windows/desktop/SecAuthN/key-distribution-center'>KDC</a>). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test validates that DCLocator queries return the five 'capabilities' that any DC must know of to operate correctly (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc737410(v=ws.10)'>Global Catalog</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc780487(v=ws.10)'>Operations Masters</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Time Server</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Preferred Time Server</a> and <a href='https://docs.microsoft.com/en-us/windows/desktop/SecAuthN/key-distribution-center'>KDC</a>). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
 
 add-content $report  "</CENTER>"
