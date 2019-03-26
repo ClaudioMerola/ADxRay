@@ -1,4 +1,3 @@
-# PFEADHC
 Active Directory Health Check
 
 I started this as a personal project to help me during my work days on customer´s sites and environments. The idea was to compile and put all the manual tests the validations I used to make in the customer´s environment at a simple place in the most automated way as possible. 
