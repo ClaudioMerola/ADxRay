@@ -9,7 +9,7 @@ The script must be run at a Domain Controller running at least Windows Server 20
 The script must be run by a user with Domain Admin privileges (Enterprise Admins would be better if dealing with multiple domains and forests).
 
 
-Releases can be found at: ![Releases](https://github.com/Merola132/ADxRay/releases)
+Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
 
 
 ![Header](/Img/0.PNG)
