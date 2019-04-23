@@ -10,4 +10,6 @@ The script must be run by a user with Domain Admin privileges (Enterprise Admins
 
 The lastest version also creates log files in the C:\ADXRay folder for each step executed by the script.
 
+This script may take several hours to complete!
+
 Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
