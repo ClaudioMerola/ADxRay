@@ -169,7 +169,14 @@ add-content $report "<BR>"
 
 ######################################### FOREST #############################################
 
+$ForestLog = "C:\ADxRay\ForestLog.log" 
+if ((test-path $ForestLog) -eq $false) {new-item $ForestLog -Type file -Force}
+Clear-Content $ForestLog 
 
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Forest data catcher")
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+
+try{
 add-content $report "<div id='ForestOverview'></div>"
 
 add-content $report  "<CENTER>"
@@ -242,6 +249,15 @@ Add-Content $report "<td bgcolor='White' align=center>$ForeSites</td>"
 Add-Content $report "</tr>" 
 Add-content $report  "</table>"
 
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Finishing Execution")
+
+}
+Catch { 
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -250,6 +266,15 @@ add-content $report "<BR>"
 
 ######################################### TRUST #############################################
 
+
+$TrustLog = "C:\ADxRay\TrustLog.log" 
+if ((test-path $TrustLog) -eq $false) {new-item $TrustLog -Type file -Force}
+Clear-Content $TrustLog 
+
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Trust data catcher")
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+
+try{
 add-content $report "<div id='TrustOverview'></div>"
 
 add-content $report "<CENTER>"
@@ -283,6 +308,8 @@ Foreach ($T2 in $Trust1)
         $T3Trans = $T2.ForestTransitive
         $T3Intra = $T2.IntraForest
         $T3SIDFil = $T2.SIDFilteringForestAware
+
+        Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Trust Found for: "+$T3Source+ " To "+$T3Target)
     
         Add-Content $report "<td bgcolor='White' align=center>$T3Source</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$T3Target</td>" 
@@ -294,6 +321,15 @@ Foreach ($T2 in $Trust1)
     }
  
 Add-content $report  "</table>"
+
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Finishing Execution")
+
+}
+Catch { 
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 
 add-content $report "</CENTER>"
@@ -309,6 +345,14 @@ add-content $report "<BR>"
 ######################################### DOMAIN #############################################
 
 add-content $report "<div id='DomainOverview'></div>"
+
+$DomainLog = "C:\ADxRay\DomainLog.log" 
+if ((test-path $DomainLog) -eq $false) {new-item $DomainLog -Type file -Force}
+Clear-Content $DomainLog 
+
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domains data catcher")
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+
 
 add-content $report "<CENTER>"
 
@@ -328,7 +372,8 @@ Add-Content $report  "<td width='10%' align='center'><B>Domain Functional Level<
 Add-Content $report  "<td width='10%' align='center'><B>Domain Computer Container</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Domain User Container</B></td>" 
 
- 
+Try{
+
 Add-Content $report "</tr>" 
 
 Foreach ($Domain0 in $Forest.Domains.Name)
@@ -356,6 +401,10 @@ Foreach ($Domain0 in $Forest.Domains.Name)
         { 
             Add-Content $report "<td bgcolor= 'Lime' align=center>Multi-Forest</td>" 
         }
+
+
+    Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring the following domain: "+$D2Name)
+
     Add-Content $report "<td bgcolor='White' align=center>$ForeName</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Name</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Parent</td>" 
@@ -387,6 +436,17 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>"
 
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain inventoring finished")
+
+
+}
+Catch { 
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 
@@ -407,6 +467,15 @@ add-content $report "<BR>"
 ######################################### DC #############################################
 
 add-content $report "<div id='DCOverview'></div>"
+
+
+$DomainControllersLog = "C:\ADxRay\DomainControllersLog.log" 
+if ((test-path $DomainControllersLog) -eq $false) {new-item $DomainControllersLog -Type file -Force}
+Clear-Content $DomainControllersLog 
+
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers data catcher")
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
 
 add-content $report "<CENTER>"
 
@@ -459,6 +528,8 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCEnabled</td>" 
 
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Inventory of: "+$DCHostName)
+
     if ($DCDNSServiceStatus -eq 'Running')
         {
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCDNSServiceStatus</td>"
@@ -502,6 +573,16 @@ foreach ($DC in $DCs)
 Add-Content $report "</tr>" 
  
 Add-content $report  "</table>" 
+
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Controllers inventoring finished")
+}
+Catch { 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+
 
 add-content $report "</CENTER>"
 
@@ -550,6 +631,14 @@ add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
+$DCHealthLog = "C:\ADxRay\DCHealthLog.log" 
+if ((test-path $DCHealthLog) -eq $false) {new-item $DCHealthLog -Type file -Force}
+Clear-Content $DCHealthLog 
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Health data catcher")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising tests")
+Try{
+
 add-content $report "<div id='Advertising'></div>"
 
 add-content $report "<CENTER>"
@@ -583,7 +672,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising test for DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -612,6 +701,16 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Advertising tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during advertising tests -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
+
+
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -636,6 +735,11 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='FSREvent'></div>"
+
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting FSR tests")
+Try{
+
 
 add-content $report "<CENTER>"
 
@@ -668,7 +772,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting FSR tests on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -697,6 +801,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - FSR tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during FSR tests -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -721,10 +832,15 @@ add-content $report "<BR>"
 
 add-content $report "<div id='DFSREvent'></div>"
 
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DFS-R tests")
+Try{
+
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>DFSREvent Validation</h3>" 
+add-content $report  "<h3>DFS-R Validation</h3>" 
 add-content $report  "</CENTER>"
 add-content $report  "<BR>"
  
@@ -752,7 +868,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DFS-R tests on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -781,6 +897,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DFS-R tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during DFS-R tests -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -805,6 +928,10 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='SysVolCheck'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Check")
+Try{
+
 
 add-content $report "<CENTER>"
 
@@ -837,7 +964,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Check on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -866,6 +993,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SysVol Check finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SysVol Check -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -890,6 +1024,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='KccEvent'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Kcc Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -922,7 +1059,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Kcc Validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -951,6 +1088,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Kcc Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Kcc Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -975,6 +1119,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='KnowsOfRoleHolders'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Roles Holders Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1007,7 +1154,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting KnowsOfRoleHolders validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1036,6 +1183,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - KnowsOfRoleHolders Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RoleHolders Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1059,6 +1213,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='MachineAccount'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Machine Account Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1091,7 +1248,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Machine Account validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1120,6 +1277,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Machine Account Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Machine Account Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1143,6 +1307,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='NCSecDesc'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NCSecDesc Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1175,7 +1342,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NCSecDesc validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1204,6 +1371,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NCSecDesc Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NCSecDesc Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1228,6 +1402,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='NetLogons'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NetLogons Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1260,7 +1437,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NetLogons validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1289,6 +1466,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NetLogons Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NetLogons Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1312,6 +1496,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='ObjectsReplicated'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Object Replication Check")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1344,7 +1531,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Testing Object Replication on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1373,6 +1560,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Object Replication tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Object Replication tests -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1395,6 +1589,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='LocatorCheck'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Locator Check")
+Try{
 
 add-content $report "<CENTER>"
 add-content $report  "<CENTER>"
@@ -1425,7 +1622,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Locator Check on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1452,6 +1649,14 @@ foreach ($DC in $DCs)
 
 Add-Content $report "</tr>" 
 Add-content $report  "</table>" 
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Tests of Locator Check finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Locator Check -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1472,6 +1677,10 @@ add-content $report "<BR>"
 ######################################### RidManager ############################################
 
 add-content $report "<div id='RidManager'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting RidManager Validation")
+Try{
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -1502,7 +1711,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting RidManager tests on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1531,6 +1740,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - RidManager Validation tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RidManager Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1554,6 +1770,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='Services'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Services Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1586,7 +1805,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Services tests on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1615,6 +1834,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Services Validation tests finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Services Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1638,6 +1864,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='SystemLog'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SystemLogs Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1670,7 +1899,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SystemLogs Validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1699,6 +1928,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SystemLogs Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SystemLogs Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1722,6 +1958,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='VerifyReferences'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Reference Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1754,7 +1993,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting References Validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1783,6 +2022,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - References Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during References Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1807,6 +2053,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='CrossRefValidation'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting CrossRef Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1839,7 +2088,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting CrossRef Validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1868,6 +2117,13 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - CrossRef Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during CrossRef Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+
 add-content $report "</CENTER>"
 
 add-content $report "<BR>"
@@ -1892,6 +2148,9 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='CheckSDRefDom'></div>"
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SDRefDom Validation")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -1924,7 +2183,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
-
+    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SDRefDom Validation on DC: "+$DC)
 
     if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
         {
@@ -1952,6 +2211,14 @@ foreach ($DC in $DCs)
 Add-Content $report "</tr>" 
  
 Add-content $report  "</table>" 
+
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SDRefDom Validation finished")
+}
+Catch { 
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SDRefDom Validation -------------")
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 add-content $report "</CENTER>"
 
@@ -2000,6 +2267,14 @@ add-content $report "<BR>"
 
 add-content $report "<div id='DNSServers'></div>"
 
+$DNSServerLog = "C:\ADxRay\DNSServerLog.log" 
+if ((test-path $DNSServerLog) -eq $false) {new-item $DNSServerLog -Type file -Force}
+Clear-Content $DNSServerLog 
+
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DNS Server data catcher")
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -2029,7 +2304,6 @@ Foreach ($Domain0 in $Forest.Domains.Name)
         foreach ($DC in $DCs)
             {
                 Add-Content $report "<tr>"
-                try{
                 $DNS = Get-DnsServer -ComputerName $DC
 
                 if ($DNS -ne '')
@@ -2053,6 +2327,7 @@ Foreach ($Domain0 in $Forest.Domains.Name)
                 $DNSZoneCount = ($DNS.ServerZone | where {$_.ZoneName -notlike '*.arpa' -and $_.ZoneName -ne 'TrustAnchors'}).Count
                 $DNSRootC = $DNSRootHintC.Count
 
+                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DNSName)
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
@@ -2089,14 +2364,20 @@ Foreach ($Domain0 in $Forest.Domains.Name)
 
 
                 }
-                }
-                catch {}
             }
     }
 
 Add-Content $report "</tr>" 
  
 Add-content $report  "</table>"
+
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Inventory finished")
+}
+Catch { 
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 add-content $report "</CENTER>"
 
@@ -2147,6 +2428,14 @@ add-content $report "<BR>"
 
 add-content $report "<div id='Users'></div>"
 
+$UserDetailsLog = "C:\ADxRay\UserDetailsLog.log" 
+if ((test-path $UserDetailsLog) -eq $false) {new-item $UserDetailsLog -Type file -Force}
+Clear-Content $UserDetailsLog 
+
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting User Accounts data catcher")
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -2178,6 +2467,9 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         $UsersInactive = (dsquery user -inactive 12 -s $Contr -limit 0).Count
         $UsersPWDNeverExpire = (dsquery user -stalepwd 0 -s $Contr -limit 0).Count
 
+        Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring User Accounts in the Domain: "+$UsDomain)
+        Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total users found: "+$AllUsers)
+
         Add-Content $report "<td bgcolor='White' align=center>$UsDomain</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
         Add-Content $report "<td bgcolor='White' align=center>$UsersEnabled</td>"               
@@ -2206,6 +2498,14 @@ Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
 
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - User Accounts Inventory finished")
+}
+Catch { 
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the User Accounts Inventoring -------------")
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 
@@ -2224,6 +2524,13 @@ add-content $report "<BR>"
 
 add-content $report "<div id='Computers'></div>"
 
+$ComputerDetailsLog = "C:\ADxRay\ComputerDetailsLog.log" 
+if ((test-path $ComputerDetailsLog) -eq $false) {new-item $ComputerDetailsLog -Type file -Force}
+Clear-Content $ComputerDetailsLog 
+
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Computer Accounts data catcher")
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
 
 add-content $report "<CENTER>"
 
@@ -2262,6 +2569,11 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
     $PCServerUnsupp = ($PCAll | where {$_ -like '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2003*'}).Count
     $PCWSUnsupp = ($PCAll | where {$_ -notlike '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
 
+
+    Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Computer Accounts in the Domain: "+$PCDomain)
+    Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Computers found: "+$PCAllC)
+
+
     Add-Content $report "<td bgcolor='White' align=center>$PCDomain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$PCAllC</td>"         
     Add-Content $report "<td bgcolor='White' align=center>$PCWS</td>"
@@ -2289,6 +2601,14 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
+
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Computer Accounts Inventory finished")
+}
+Catch { 
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Computer Accounts Inventoring -------------")
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2333,6 +2653,14 @@ add-content $report "<BR>"
 
 add-content $report "<div id='GroupOverview'></div>"
 
+$GroupsLog = "C:\ADxRay\GroupsLog.log" 
+if ((test-path $GroupsLog) -eq $false) {new-item $GroupsLog -Type file -Force}
+Clear-Content $GroupsLog 
+
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Groups data catcher")
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -2367,6 +2695,10 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     Add-Content $report "<tr>"
                     Add-Content $report "<td bgcolor='White' align=center>$GDomain</td>" 
                     Add-Content $report "<td bgcolor='White' align=center>$GName</td>" 
+
+                    Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group: "+$GName)
+                    Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total members found: "+$GCounter)
+
                     if ($GCounter -ge 5) 
                         {
                             $IndexGroup0 ++
@@ -2382,6 +2714,13 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
+
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Groups Inventory finished")
+}
+Catch { 
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Domain Groups Inventoring -------------")
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2400,6 +2739,8 @@ add-content $report "<BR>"
 
 add-content $report "<div id='Groups'></div>"
 
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Empty Groups data catcher")
+Try{
 
 add-content $report "<CENTER>"
 
@@ -2437,6 +2778,10 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         $GroupAve = ($Counter | Measure-Object -Average).Average
         Add-Content $report "<td bgcolor='White' align=center>$PCDomain</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$GroupTotal</td>" 
+
+        Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Empty Groups in the Domain: "+$PCDomain)
+        Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Empty Groups found: "+$GroupEmpty)
+
         if ($GroupLarge -ge 5 -and  $GroupLarge -lt 20) 
             {
                 Add-Content $report "<td bgcolor= 'Yellow' align=center> $GroupLarge</td>"
@@ -2486,6 +2831,14 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
  
 Add-content $report  "</table>" 
 
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Empty Domain Groups Inventory finished")
+}
+Catch { 
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Empty Domain Groups Inventoring -------------")
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 
@@ -2528,6 +2881,14 @@ add-content $report "<BR>"
 
 add-content $report "<div id='GPOOverview'></div>"
 
+$GPOsLog = "C:\ADxRay\GPOsLog.log" 
+if ((test-path $GPOsLog) -eq $false) {new-item $GPOsLog -Type file -Force}
+Clear-Content $GPOsLog 
+
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Group Policy Objects data catcher")
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
+
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -2550,8 +2911,6 @@ $IndexGPO0 = 0
 
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
-        Try
-            {
                 $gp1 = @()
                 $GpoC = @()
                 $Gpo = Get-GPO -All -Server $Contr
@@ -2572,6 +2931,10 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 Add-Content $report "<tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
                 Add-Content $report "<td bgcolor='White' align=center>$GpoAll</td>" 
+
+                Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group Policies in the Domain: "+$Domain)
+                Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total GPOs found: "+$GpoAll)
+
                 if ($GpoC2 -ge 1) 
                     {
                         $IndexGPO0 ++
@@ -2599,13 +2962,18 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     { 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
-            }
-        Catch {}
     }
 
 Add-Content $report "</tr>"
  
 Add-content $report  "</table>" 
+
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs Inventory finished")
+}
+Catch { 
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPOs Inventoring -------------")
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2624,6 +2992,10 @@ add-content $report "<BR>"
 
 
 add-content $report "<div id='GPOs'></div>"
+
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting GPOs Without Link catcher")
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+Try{
 
 add-content $report "<CENTER>"
 
@@ -2666,6 +3038,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                         $GpoUserADVer = $Gpo.User.DSVersion
                         $GpoCompADVer = $Gpo.Computer.DSVersion
                         $GpoModDate =  $Gpo.ModificationTime
+
+                        Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring the Following GPO: "+$GpoName)
 
                         if ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0 -and $Gpo.id -in $GposNoLink.id)
                             { 
@@ -2721,6 +3095,14 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
  
 Add-content $report  "</table>" 
 
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs without link Inventory finished")
+}
+Catch { 
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPO Inventoring -------------")
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+}
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 
@@ -2739,11 +3121,11 @@ add-content $report "<BR>"
 
 
 }
-$Measure = $Runtime.TotalSeconds.ToString('#######.##')
+$Measure = $Runtime.Totalminutes.ToString('#######.##')
 
 $index = Get-Content "C:\ADxRay\ADxRay_Report.htm"
 
-$Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure seconds<HR></font></td></tr></TABLE>"
+$Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 
 $i = 38
 
@@ -3054,6 +3436,5 @@ add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADxRay Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADxRay%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
 Add-Content $report "</body>" 
 Add-Content $report "</html>" 
-
 
 Invoke-Item $report
