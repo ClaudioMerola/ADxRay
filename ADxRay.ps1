@@ -2028,6 +2028,7 @@ Foreach ($Domain0 in $Forest.Domains.Name)
 
         foreach ($DC in $DCs)
             {
+                Add-Content $report "<tr>"
                 try{
                 $DNS = Get-DnsServer -ComputerName $DC
 
