@@ -665,7 +665,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:Advertising /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -744,7 +744,7 @@ Try{
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>FrsEvent Validation</h3>" 
+add-content $report  "<h3>FRS Validation</h3>" 
 add-content $report  "</CENTER>"
 add-content $report  "<BR>"
  
@@ -765,7 +765,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:FSREvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -861,7 +861,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:DFSREvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -957,7 +957,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:SysVolCheck /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1052,7 +1052,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:KccEvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1147,7 +1147,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:KnowsOfRoleHolders /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1241,7 +1241,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:MachineAccount /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1335,7 +1335,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:NCSecDesc /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1430,7 +1430,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:NetLogons /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1524,7 +1524,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:ObjectsReplicated /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1615,7 +1615,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:LocatorCheck /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1704,7 +1704,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:RidManager /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1798,7 +1798,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:Services /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1892,7 +1892,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:SystemLog /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -1986,7 +1986,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:VerifyReferences /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -2081,7 +2081,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:CrossRefValidation /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -2176,7 +2176,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<tr>"
 
     $DCDiag = start-job -scriptblock {dcdiag /test:CheckSDRefDom /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 20
+    wait-job -Job $DCDiag -Timeout 60
     $DCDiag = receive-job -job $DCDiag
 
 
@@ -3436,5 +3436,6 @@ add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADxRay Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADxRay%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
 Add-Content $report "</body>" 
 Add-Content $report "</html>" 
+
 
 Invoke-Item $report
