@@ -145,6 +145,16 @@ add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+
 ######################################### FOREST HEADER #############################################
 
 add-content $report "<div id='ForestHeader'></div>"
@@ -247,7 +257,6 @@ Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Sites</B></th>"
 Add-Content $report "<td bgcolor='White' align=center>$ForeSites</td>" 
 
 Add-Content $report "</tr>" 
-Add-content $report  "</table>"
 
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Finishing Execution")
 
@@ -257,6 +266,8 @@ Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>"
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -317,10 +328,9 @@ Foreach ($T2 in $Trust1)
         Add-Content $report "<td bgcolor='White' align=center>$T3Trans</B></td>" 
         Add-Content $report "<td bgcolor='White' align=center>$T3Intra</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$T3SIDFil</td>" 
+
         Add-Content $report "</tr>" 
     }
- 
-Add-content $report  "</table>"
 
 Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Finishing Execution")
 
@@ -331,6 +341,7 @@ Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+"
 }
 Add-Content $TrustLog ("TrustLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
+Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
@@ -430,11 +441,9 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     Add-Content $report "<td bgcolor='White' align=center>$D2CompCont</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2UserCont</td>" 
 
-    }
+    Add-Content $report "</tr>" 
 
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>"
+    }
 
 Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain inventoring finished")
 
@@ -446,11 +455,12 @@ Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 }
 Add-Content $DomainLog ("DomainLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
-
-add-content $report "<BR>"
-add-content $report "<BR>"
+Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
@@ -493,7 +503,7 @@ Add-Content $report  "<td width='5%' align='center'><B>DNS Service</B></td>"
 Add-Content $report  "<td width='8%' align='center'><B>IPV4 Address</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Global Catalog</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Operating System</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Operating System Build</B></td>"
+Add-Content $report  "<td width='5%' align='center'><B>Build</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>FSMO</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>"
  
@@ -505,7 +515,6 @@ $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object 
 
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
 
     $DCD = Get-ADDomainController -Server $DC 
     $DCD = $DCD | Sort-Object
@@ -523,6 +532,8 @@ foreach ($DC in $DCs)
     $DCOSD = $DCD.OperatingSystemVersion
     $FSMO = $DCD.OperationMasterRoles 
     $Site = $DCD.Site
+
+    Add-Content $report "<tr>"
 
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
@@ -569,10 +580,10 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCOSD</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$FSMO</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+    
+    Add-Content $report "</tr>" 
+
     }
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Controllers inventoring finished")
 }
@@ -582,7 +593,7 @@ Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format '
 }
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
-
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -621,6 +632,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a
 
 
 
+
 ######################################### Advertising ############################################
 
 
@@ -651,6 +663,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>Advertising</B></td>" 
@@ -660,46 +673,72 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC2 = 0
+
+
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
-
-    $DCDiag = start-job -scriptblock {dcdiag /test:Advertising /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
-
-
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising test for DC: "+$DC)
-
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC2 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
-    if (($DCDiag | Select-String -Pattern 'passed test Advertising').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test Advertising'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC2 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-
+    start-job -scriptblock {dcdiag /test:Advertising /s:$($args[0])} -ArgumentList $DC
     }
 
+Get-Job | Wait-Job
+
+
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+
+        Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising test for DC: "+$DC)
+
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC2 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
+
+        if (($DCDiag | Select-String -Pattern 'passed test Advertising').Count -eq $true)
+            {
+                $Pass = $DCDiag | Select-String -Pattern 'passed test Advertising'
+                Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
+            }
+        else
+            {
+                $IndexDC2 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
+            }
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+        }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Advertising tests finished")
 }
@@ -708,8 +747,7 @@ Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 
-
-
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -751,6 +789,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>FSREvent</B></td>" 
@@ -760,29 +799,58 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC3 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:FrsEvent /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:FSREvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting FSR tests on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC3 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC3 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
+
 
     if (($DCDiag | Select-String -Pattern 'passed test FrsEvent').Count -eq $true)
         {
@@ -794,12 +862,8 @@ foreach ($DC in $DCs)
             $IndexDC3 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - FSR tests finished")
 }
@@ -807,6 +871,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during FSR tests -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -847,6 +913,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>DFSREvent</B></td>" 
@@ -856,30 +923,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC4 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:DFSREvent /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:DFSREvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job 
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>"
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DFS-R tests on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC4 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC4 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test DFSREvent').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test DFSREvent'
@@ -890,12 +984,8 @@ foreach ($DC in $DCs)
             $IndexDC4 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DFS-R tests finished")
 }
@@ -903,6 +993,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during DFS-R tests -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -943,6 +1035,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>SysVolCheck</B></td>" 
@@ -952,29 +1045,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC5 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:SysVolCheck /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:SysVolCheck /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Check on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC5 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC5 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test SysVolCheck').Count -eq $true)
         {
@@ -986,12 +1107,8 @@ foreach ($DC in $DCs)
             $IndexDC5 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SysVol Check finished")
 }
@@ -999,6 +1116,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SysVol Check -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1038,6 +1157,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>KccEvent</B></td>" 
@@ -1047,29 +1167,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC6 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:KccEvent /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:KccEvent /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Kcc Validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC6 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC6 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test KccEvent').Count -eq $true)
         {
@@ -1081,12 +1229,8 @@ foreach ($DC in $DCs)
             $IndexDC6 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Kcc Validation finished")
 }
@@ -1094,6 +1238,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Kcc Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1133,6 +1279,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>KnowsOfRoleHolders</B></td>" 
@@ -1142,29 +1289,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC7 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:KnowsOfRoleHolders /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:KnowsOfRoleHolders /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>"  
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting KnowsOfRoleHolders validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC7 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC7 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test KnowsOfRoleHolders').Count -eq $true)
         {
@@ -1176,12 +1351,8 @@ foreach ($DC in $DCs)
             $IndexDC7 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - KnowsOfRoleHolders Validation finished")
 }
@@ -1189,6 +1360,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RoleHolders Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1227,6 +1400,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>MachineAccount</B></td>" 
@@ -1236,29 +1410,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC8 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:MachineAccount /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:MachineAccount /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Machine Account validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC8 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC8 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test MachineAccount').Count -eq $true)
         {
@@ -1270,12 +1472,8 @@ foreach ($DC in $DCs)
             $IndexDC8 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Machine Account Validation finished")
 }
@@ -1283,6 +1481,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Machine Account Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1321,6 +1521,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>NCSecDesc</B></td>" 
@@ -1330,29 +1531,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC9 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:NCSecDesc /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:NCSecDesc /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>"  
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NCSecDesc validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC9 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC9 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test NCSecDesc').Count -eq $true)
         {
@@ -1364,12 +1593,8 @@ foreach ($DC in $DCs)
             $IndexDC9 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NCSecDesc Validation finished")
 }
@@ -1377,6 +1602,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NCSecDesc Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1416,6 +1643,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>NetLogons</B></td>" 
@@ -1425,29 +1653,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC10 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:NetLogons /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:NetLogons /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NetLogons validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC10 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC10 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test NetLogons').Count -eq $true)
         {
@@ -1459,12 +1715,8 @@ foreach ($DC in $DCs)
             $IndexDC10 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
 Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
+    }
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NetLogons Validation finished")
 }
@@ -1472,6 +1724,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NetLogons Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1510,6 +1764,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>ObjectsReplicated</B></td>" 
@@ -1519,29 +1774,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC11 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:ObjectsReplicated /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:ObjectsReplicated /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Testing Object Replication on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC11 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC11 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test ObjectsReplicated').Count -eq $true)
         {
@@ -1553,12 +1836,8 @@ foreach ($DC in $DCs)
             $IndexDC11 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Object Replication tests finished")
 }
@@ -1566,6 +1845,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Object Replication tests -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1602,6 +1883,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>LocatorCheck</B></td>" 
@@ -1610,29 +1892,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC12 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:LocatorCheck /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:LocatorCheck /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Locator Check on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC12 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC12 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test LocatorCheck').Count -eq $true)
         {
@@ -1644,11 +1954,8 @@ foreach ($DC in $DCs)
             $IndexDC12 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
-    }
-
-Add-Content $report "</tr>" 
-Add-content $report  "</table>" 
+    Add-Content $report "</tr>" 
+    } 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Tests of Locator Check finished")
 }
@@ -1656,6 +1963,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Locator Check -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
@@ -1691,6 +2000,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>RidManager</B></td>" 
@@ -1699,29 +2009,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC13 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:RidManager /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:RidManager /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting RidManager tests on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC13 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC13 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
 
     if (($DCDiag | Select-String -Pattern 'passed test RidManager').Count -eq $true)
         {
@@ -1733,12 +2071,8 @@ foreach ($DC in $DCs)
             $IndexDC13 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - RidManager Validation tests finished")
 }
@@ -1746,6 +2080,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RidManager Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1784,6 +2120,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>Services</B></td>" 
@@ -1793,30 +2130,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC14 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:Services /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:Services /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Services tests on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC14 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC14 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test Services').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test Services'
@@ -1827,12 +2191,8 @@ foreach ($DC in $DCs)
             $IndexDC14 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Services Validation tests finished")
 }
@@ -1840,6 +2200,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Services Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1878,6 +2240,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>SystemLog</B></td>" 
@@ -1887,30 +2250,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC15 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:SystemLog /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:SystemLog /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SystemLogs Validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC15 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC15 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test SystemLog').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test SystemLog'
@@ -1921,12 +2311,9 @@ foreach ($DC in $DCs)
             $IndexDC15 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
 
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SystemLogs Validation finished")
 }
@@ -1934,6 +2321,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SystemLogs Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -1972,6 +2361,7 @@ add-content $report  "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>VerifyReferences</B></td>" 
@@ -1981,30 +2371,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC16 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:VerifyReferences /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:VerifyReferences /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting References Validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC16 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC16 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test VerifyReferences').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test VerifyReferences'
@@ -2015,12 +2432,8 @@ foreach ($DC in $DCs)
             $IndexDC16 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
-
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - References Validation finished")
 }
@@ -2028,6 +2441,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during References Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -2067,6 +2482,7 @@ add-content $report  "</CENTER>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>CrossRefValidation</B></td>" 
@@ -2076,30 +2492,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC17 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:CrossRefValidation /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:CrossRefValidation /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting CrossRef Validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC17 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC17 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test CrossRefValidation').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test CrossRefValidation'
@@ -2111,11 +2554,8 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
 
+    Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - CrossRef Validation finished")
 }
@@ -2123,6 +2563,8 @@ Catch {
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during CrossRef Validation -------------")
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -2162,6 +2604,7 @@ add-content $report "<BR>"
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
 Add-Content $report  "<td width='20%' align='center'><B>CheckSDRefDom</B></td>" 
@@ -2171,30 +2614,57 @@ Add-Content $report "</tr>"
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 $IndexDC18 = 0
+Get-Job | Remove-Job
+
 foreach ($DC in $DCs)
     {
-    Add-Content $report "<tr>"
+    start-job -scriptblock {dcdiag /test:CheckSDRefDom /s:$($args[0])} -ArgumentList $DC
+    }
 
-    $DCDiag = start-job -scriptblock {dcdiag /test:CheckSDRefDom /s:$($args[0])} -ArgumentList $DC
-    wait-job -Job $DCDiag -Timeout 60
-    $DCDiag = receive-job -job $DCDiag
+Get-Job | Wait-Job
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
+$Jobs = Get-Job
+
+ForEach ($job in $Jobs)
+        {
+        $DCDiag = Receive-Job -Job $job
+
+        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(':')
+        $Site,$DC = $DC2[1].split('\')
+            }
+        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
+            {
+        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
+        $DC = $DC[0].ToString()
+        $DC2 = $DC.split(' ')
+        $DC = $DC2[11]
+        $DC = $DC.split('.')
+        $DC = $DC[0]
+        $Site = ''
+            }
+
+        Add-Content $report "<tr>"
+
+        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
 
     Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SDRefDom Validation on DC: "+$DC)
 
-    if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Ping, LDAP and RPC Connectivity Passed</td>"
-        }
-    else
-        {
-            $IndexDC18 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity test failed</font></td>" 
-        }
-
+        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
+            }
+        else
+            {
+                $IndexDC18 ++
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
+            }
     if (($DCDiag | Select-String -Pattern 'passed test CheckSDRefDom').Count -eq $true)
         {
             $Pass = $DCDiag | Select-String -Pattern 'passed test CheckSDRefDom'
@@ -2206,11 +2676,8 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
         }
 
+        Add-Content $report "</tr>" 
     }
-
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>" 
 
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SDRefDom Validation finished")
 }
@@ -2219,6 +2686,8 @@ Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>" 
 
 add-content $report "</CENTER>"
 
@@ -2292,18 +2761,15 @@ Add-Content $report  "<td width='10%' align='center'><B>Tombstone Interval</B></
 Add-Content $report  "<td width='10%' align='center'><B>Server Recursion Enabled</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Bind Secondaries Enabled</B></td>" 
 
- 
 Add-Content $report "</tr>" 
 
 
 $IndexDNS0 = 0
-Foreach ($Domain0 in $Forest.Domains.Name)
-    {
         $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 
         foreach ($DC in $DCs)
             {
-                Add-Content $report "<tr>"
+                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DC: "+$DC)
                 $DNS = Get-DnsServer -ComputerName $DC
 
                 if ($DNS -ne '')
@@ -2328,6 +2794,8 @@ Foreach ($Domain0 in $Forest.Domains.Name)
                 $DNSRootC = $DNSRootHintC.Count
 
                 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DNSName)
+
+                Add-Content $report "<tr>"
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
@@ -2364,20 +2832,19 @@ Foreach ($Domain0 in $Forest.Domains.Name)
 
 
                 }
+
+            Add-Content $report "</tr>" 
             }
-    }
 
-Add-Content $report "</tr>" 
- 
-Add-content $report  "</table>"
-
-Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Inventory finished")
 }
 Catch { 
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Inventory finished")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
@@ -2458,7 +2925,6 @@ $IndexUser0 = 0
 
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
-        Add-Content $report "<tr>" 
         $UsDomain = $Contr.Domain
         $AllUsers = (dsquery * -filter sAMAccountType=805306368 -s $Contr -attr samAccountName -attrsonly -limit 0).Count
 
@@ -2469,6 +2935,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
         Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring User Accounts in the Domain: "+$UsDomain)
         Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total users found: "+$AllUsers)
+
+        Add-Content $report "<tr>" 
 
         Add-Content $report "<td bgcolor='White' align=center>$UsDomain</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
@@ -2492,11 +2960,9 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 $IndexUser0 ++
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersPWDNeverExpire</font></td>" 
             }
+    Add-Content $report "</tr>"
     }
 
-Add-Content $report "</tr>"
- 
-Add-content $report  "</table>" 
 
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - User Accounts Inventory finished")
 }
@@ -2505,6 +2971,8 @@ Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+ 
+Add-content $report  "</table>" 
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2596,11 +3064,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
           $IndexPC0 ++
           Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
         }
+    Add-Content $report "</tr>"
     }
-
-Add-Content $report "</tr>"
- 
-Add-content $report  "</table>" 
 
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Computer Accounts Inventory finished")
 }
@@ -2609,6 +3074,8 @@ Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-d
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>" 
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2708,12 +3175,10 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                         { 
                             Add-Content $report "<td bgcolor='White' align=center>$GCounter</td>" 
                         } 
+                    Add-Content $report "</tr>"
                 }
             } 
     }
-Add-Content $report "</tr>"
- 
-Add-content $report  "</table>" 
 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Groups Inventory finished")
 }
@@ -2721,6 +3186,8 @@ Catch {
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Domain Groups Inventoring -------------")
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>"
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2764,7 +3231,7 @@ $IndexGroup1 = 0
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
         $GroupsMembers = @()
-        Add-Content $report "<tr>" 
+        
         $PCDomain = $Contr.Domain
         $GroupAll = dsquery * -filter objectclass=group -s $Contr -Attr member -limit 0
         $Counter = @()
@@ -2776,6 +3243,9 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         $GroupLarge = ($Counter | where {$_ -ge 50}).Count
         $GroupEmpty = ($Counter | where {$_ -eq 0}).Count
         $GroupAve = ($Counter | Measure-Object -Average).Average
+        
+        Add-Content $report "<tr>" 
+
         Add-Content $report "<td bgcolor='White' align=center>$PCDomain</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$GroupTotal</td>" 
 
@@ -2828,8 +3298,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         Add-Content $report "<tr>"
     }
- 
-Add-content $report  "</table>" 
 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Empty Domain Groups Inventory finished")
 }
@@ -2838,6 +3306,8 @@ Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>"
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -2928,7 +3398,9 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 $Domain = $Contr.Domain
                 $GpoAll = $Gpo.Count
                 $GpoC2 = $GpoC.Count
+
                 Add-Content $report "<tr>"
+
                 Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
                 Add-Content $report "<td bgcolor='White' align=center>$GpoAll</td>" 
 
@@ -2962,11 +3434,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     { 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
+                Add-Content $report "</tr>"
     }
-
-Add-Content $report "</tr>"
- 
-Add-content $report  "</table>" 
 
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs Inventory finished")
 }
@@ -2974,6 +3443,8 @@ Catch {
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPOs Inventoring -------------")
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+Add-content $report  "</table>" 
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -3020,8 +3491,6 @@ $IndexGPO1 = 0
 
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
-        Try
-            {
                 $Ous = Get-ADOrganizationalUnit -Filter * -Server $Contr
                 $gp1 = @()
                 Foreach ($ou in $Ous)
@@ -3090,11 +3559,7 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                             }
                     }
             }
-            Catch {}
-    }
  
-Add-content $report  "</table>" 
-
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs without link Inventory finished")
 }
 Catch { 
@@ -3102,6 +3567,8 @@ Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" -
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+
+Add-content $report  "</table>" 
 
 add-content $report "<BR>"
 add-content $report "<BR>"
