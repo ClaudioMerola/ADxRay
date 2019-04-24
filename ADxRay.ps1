@@ -145,15 +145,6 @@ add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
 
 ######################################### FOREST HEADER #############################################
 
