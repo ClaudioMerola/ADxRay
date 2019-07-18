@@ -62,87 +62,7 @@ add-content $report  "</table>"
 ######################################### INDEX #############################################
 
 
-<# Index is made close to the end of the script. (It has to be done this way to supply index with variables of error counts).
-Close to the end it reads the report file and replaces thoses <BR> with the real index. If you need to add more items to the index sim
-
-
-#>
-
 add-content $report  "<TABLE BORDER=0 WIDTH=90%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
 add-content $report "<BR>"
 
 
@@ -614,7 +534,7 @@ add-content $report "<div id='DCHealth'></div>"
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller Health<HR></font>" 
+add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller´s Health<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>"
@@ -622,121 +542,316 @@ add-content $report  "</table>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a detailed view of the Domain Controller's health. With tests and validations based on <B>DCDiag</B> tool and should be enough to give a deep status of Domain Controllers.</td></tr></TABLE>" 
 
 
+######################################### DCDiag´s  ###############################################
 
 
-######################################### Advertising ############################################
 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
 
-$DCHealthLog = "C:\ADxRay\DCHealthLog.log" 
-if ((test-path $DCHealthLog) -eq $false) {new-item $DCHealthLog -Type file -Force}
-Clear-Content $DCHealthLog 
+$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
+Get-Job | Remove-Job
 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Health data catcher")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising tests")
-Try{
+start-job -scriptblock {dcdiag /e}
+Get-Job | Wait-Job
+$Job = Get-Job
 
-add-content $report "<div id='Advertising'></div>"
+$DCDiag = Receive-Job -Job $job
+
+ForEach ($DC in $DCs)
+{
 
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>Advertising Validation</h3>" 
+add-content $report  "<h3>$DC</h3>" 
 add-content $report  "</CENTER>"
+
+$DC = $DCs[0].ToString()
+$DC2 = $DC.split(' ')
+$DC = $DC.split('.')
+$DC = $DC[0]
+
+add-content $report  "<BR>"
+add-content $report  "<BR>"
 add-content $report  "<BR>"
  
-add-content $report  "<table width='80%' border='1'>" 
+add-content $report  "<table width='85%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>Advertising</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC2 = 0
+Add-Content $report  "<td width='40%' align='center'><B>Domain Controller Status</B></td>" 
+Add-Content $report  "<td width='60%' align='center'><B>Description</B></td>" 
 
 
-Get-Job | Remove-Job
+Add-Content $report "<tr>"
 
-foreach ($DC in $DCs)
+if(($DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
     {
-    start-job -scriptblock {dcdiag /test:Advertising /s:$($args[0])} -ArgumentList $DC
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
     }
 
-Get-Job | Wait-Job
+add-content $report  "<td bgcolor='White' align=center>Initial connection validation, checks if the DC can be located in the DNS, validates the ICMP ping (1 hop), checks LDAP binding and also the RPC connection. This initial test requires <b>ICMP, LDAP, DNS</b> and <b>RPC</b> connectivity to work properly.</td>"
 
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-        Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Advertising test for DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC2 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-        if (($DCDiag | Select-String -Pattern 'passed test Advertising').Count -eq $true)
-            {
-                $Pass = $DCDiag | Select-String -Pattern 'passed test Advertising'
-                Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-            }
-        else
-            {
-                $IndexDC2 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-            }
 Add-Content $report "</tr>" 
-        }
 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Advertising tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during advertising tests -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates that several attributes are present for the domain in the countainer and subcontainers in the DC objetcs. This test will fail if any attribute is missing. You can find more details regarding the attributes at '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'> What does DCDiag actually do.</a>'</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Advertising')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can be correctly located through the KDC service. It does not validate the Kerberos tickets answer or the communication through the <b>TCP</b> and <b>UDP</b> port <b>88</b>.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding FRS replication. If running Windows Server 2008 R2 or newer on all Domain Controllers is possible SYSVOL were already migrated to DFSR, in this case errors found here can be ignored.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding DFSR replication. If running Windows Server 2008 or older on all Domain Controllers is possible SYSVOL is still using FRS, and in this case errors found here can be ignored. Obs. is highly recommended to migrate SYSVOL to DFSR.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates if the registry key <b>'HKEY_Local_Machine\System\CurrentControlSet\Services\Netlogon\Parameters\SysvolReady=1'</b> exist. This registry has to exist with value '1' for the DC´s SYSVOL to be advertised.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates through KCC there were no errors in the <b>Event Viewer > Applications and Services Logs > Directory Services</b> event log in the past 15 minutes (default time).</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks if this Domain Controller is aware of which DC (or DCs) hold the <b>FSMOs</b>.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks if this computer account exist in Active Directory and the main attributes are set. If this validation reports error. the following parameters of <b>DCDIAG</b> might help: <b>/RecreateMachineAccount</b> and <b>/FixMachineAccount</b>.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates if permissions are correctly set in this Domain Controller for all naming contexts. Those permissions directly affect replication´s health.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates if core security groups (including administrators and Authenticated Users) can connect and read NETLOGON and SYSVOL folders. It also validates access to IPC$. which can lead to failures in organizations that disable IPC$.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks the replication health of core objects and attributes.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Replications')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Replications')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Makes a deep validation to check the main replication for all naming contexts in this Domain Controller.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test RidManager')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates that this Domain Controller and locate and contact the RID Master FSMO role holder.</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Services')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Services')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Validates if the core Active Directory services are running in this Domain Controller. The services verified are: <b>RPCSS, EVENTSYSTEM, DNSCACHE, ISMSERV, KDC, SAMSS, WORKSTATION, W32TIME, NETLOGON, NTDS</b> (in case Windows Server 2008 or newer) and <b>DFSR</b> (if SYSVOL is using DFSR).</td>"
+
+Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>"
+
+if(($DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+    }
+if(($DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
+    {
+            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+
+add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further.</td>"
+
+Add-Content $report "</tr>" 
 
 Add-content $report  "</table>" 
 
@@ -745,1942 +860,10 @@ add-content $report "</CENTER>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks whether each domain controller advertises itself in the roles that it should be capable of performing. This test fails if the Netlogon Service has stopped or failed to start. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### FSREvent ############################################
-
-
-add-content $report "<div id='FSREvent'></div>"
-
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting FSR tests")
-Try{
-
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>FRS Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>FSREvent</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC3 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:FrsEvent /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting FSR tests on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC3 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-
-    if (($DCDiag | Select-String -Pattern 'passed test FrsEvent').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test FrsEvent'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC3 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - FSR tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during FSR tests -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 
-Add-content $report  "</table>" 
 
-add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks to see if there are errors in the file replication system (Failing replication of the SYSVOL share can cause policy problems). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### DFSREvent ############################################
-
-
-add-content $report "<div id='DFSREvent'></div>"
-
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DFS-R tests")
-Try{
-
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>DFS-R Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>DFSREvent</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC4 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:DFSREvent /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job 
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>"
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DFS-R tests on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC4 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test DFSREvent').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test DFSREvent'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC4 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DFS-R tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during DFS-R tests -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test validates the Distributed File System Replication service’s health by reading DFSR event log warning and error entries from the past 24 hours. It’s possible this service won’t be running or installed on Windows Server 2008 if SYSVOL is still using FRS; on Windows Server 2008 R2 the service is always present on DCs. While this ostensibly tests DFSR-enabled SYSVOL, any errors within custom DFSR replication groups would also appear here. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### SysVolCheck ############################################
-
-
-add-content $report "<div id='SysVolCheck'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Check")
-Try{
-
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>SysVolCheck Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>SysVolCheck</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC5 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:SysVolCheck /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Check on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC5 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test SysVolCheck').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test SysVolCheck'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC5 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SysVol Check finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SysVol Check -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test reads the DCs Netlogon SysvolReady registry key to validate that SYSVOL is being advertised. The test uses RPC over SMB (through a named pipe to WinReg). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### KccEvent ############################################
-
-
-add-content $report "<div id='KccEvent'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Kcc Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>KccEvent Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>KccEvent</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC6 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:KccEvent /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Kcc Validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC6 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test KccEvent').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test KccEvent'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC6 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Kcc Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Kcc Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test queries the <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/cc731537(v=ws.10)#BKMK_2'>Knowledge Consistency Checker</a> on a DC for KCC errors and warnings generated in the Directory Services event log during the last 15 minutes. This 15 minute threshold is irrespective of the <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc739941(v=ws.10)#w2k3tr_repup_tools_amfa'>Repl topology update period (secs)</a> registry value on the DC. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### KnowsOfRoleHolders ############################################
-
-
-add-content $report "<div id='KnowsOfRoleHolders'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Roles Holders Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>KnowsOfRoleHolders Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>KnowsOfRoleHolders</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC7 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:KnowsOfRoleHolders /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>"  
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting KnowsOfRoleHolders validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC7 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test KnowsOfRoleHolders').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test KnowsOfRoleHolders'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC7 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - KnowsOfRoleHolders Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RoleHolders Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks whether the domain controller can contact the servers that hold the five operations master roles (also known as flexible single master operations or FSMO roles). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### MachineAccount ############################################
-
-
-add-content $report "<div id='MachineAccount'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Machine Account Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>MachineAccount Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>MachineAccount</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC8 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:MachineAccount /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Machine Account validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC8 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test MachineAccount').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test MachineAccount'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC8 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Machine Account Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Machine Account Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks whether the machine account has properly registered and that the services are advertised. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### NCSecDesc ############################################
-
-
-add-content $report "<div id='NCSecDesc'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NCSecDesc Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>NCSecDesc Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>NCSecDesc</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC9 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:NCSecDesc /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>"  
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NCSecDesc validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC9 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test NCSecDesc').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test NCSecDesc'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC9 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NCSecDesc Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NCSecDesc Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks that the security descriptors on the naming context heads have appropriate permissions for replication. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### NetLogons ############################################
-
-
-add-content $report "<div id='NetLogons'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NetLogons Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>NetLogons Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>NetLogons</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC10 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:NetLogons /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NetLogons validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC10 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test NetLogons').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test NetLogons'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC10 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NetLogons Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during NetLogons Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks that the appropriate logon privileges exist to allow replication to proceed. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### ObjectsReplicated ############################################
-
-
-add-content $report "<div id='ObjectsReplicated'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Object Replication Check")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>ObjectsReplicated Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>ObjectsReplicated</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC11 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:ObjectsReplicated /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Testing Object Replication on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC11 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test ObjectsReplicated').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test ObjectsReplicated'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC11 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Object Replication tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Object Replication tests -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks that the Machine Account and Directory System Agent (DSA) objects have replicated. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-######################################### LocatorCheck ############################################
-
-
-add-content $report "<div id='LocatorCheck'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Locator Check")
-Try{
-
-add-content $report "<CENTER>"
-add-content $report  "<CENTER>"
-add-content $report  "<h3>LocatorCheck Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>LocatorCheck</B></td>" 
-
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC12 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:LocatorCheck /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Locator Check on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC12 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test LocatorCheck').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test LocatorCheck'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC12 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    } 
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Tests of Locator Check finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Locator Check -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>"
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This test validates that DCLocator queries return the five 'capabilities' that any DC must know of to operate correctly (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc737410(v=ws.10)'>Global Catalog</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc780487(v=ws.10)'>Operations Masters</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Time Server</a>, <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc773061(v=ws.10)'>Preferred Time Server</a> and <a href='https://docs.microsoft.com/en-us/windows/desktop/SecAuthN/key-distribution-center'>KDC</a>). For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-######################################### RidManager ############################################
-
-add-content $report "<div id='RidManager'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting RidManager Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>RidManager Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>RidManager</B></td>" 
-
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC13 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:RidManager /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting RidManager tests on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC13 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-
-    if (($DCDiag | Select-String -Pattern 'passed test RidManager').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test RidManager'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC13 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - RidManager Validation tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during RidManager Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks whether the relative identifier (RID) master is accessible and if it contains the proper information. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### Services ############################################
-
-
-add-content $report "<div id='Services'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Services Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>Services Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>Services</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC14 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:Services /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Services tests on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC14 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test Services').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test Services'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC14 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Services Validation tests finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during Services Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks whether the appropriate domain controller services are running. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>"
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### SystemLog ############################################
-
-
-add-content $report "<div id='SystemLog'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SystemLogs Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>SystemLog Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
-
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>SystemLog</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC15 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:SystemLog /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SystemLogs Validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC15 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test SystemLog').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test SystemLog'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC15 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SystemLogs Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SystemLogs Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<BR><TABLE BORDER=0 WIDTH=95%><tr><td>Checks that the system is running without errors. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>" 
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-######################################### VerifyReferences ############################################
-
-
-add-content $report "<div id='VerifyReferences'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Reference Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>VerifyReferences Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report  "<BR>"
-
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>VerifyReferences</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC16 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:VerifyReferences /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting References Validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC16 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test VerifyReferences').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test VerifyReferences'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC16 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - References Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during References Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks that certain system references are intact for the FRS and replication infrastructure. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE>" 
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### CrossRefValidation ############################################
-
-
-add-content $report "<div id='CrossRefValidation'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting CrossRef Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>CrossRefValidation Validation</h3>" 
-add-content $report "<BR>"
-add-content $report  "</CENTER>"
- 
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>CrossRefValidation</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC17 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:CrossRefValidation /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting CrossRef Validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC17 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test CrossRefValidation').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test CrossRefValidation'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC17 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-
-    Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - CrossRef Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during CrossRef Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-add-content $report  "<CENTER>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Checks the validity of cross-references. For more details regarding the tool, check '<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-r2-and-2012/cc731968(v%3Dws.11)'>DCDiag</a>'.Also, verify '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>' for further understanding.</td></tr></TABLE>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main test is made, the basic connectivity with the DC (DNS check, ICMP and RPC) is validated. This validation also includes LDAP binding (<a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc755809(v=ws.10)'>How Active Directory Searches Work</a>).</td></tr></TABLE><BR>" 
-
-add-content $report  "</CENTER>"
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
-
-######################################### CheckSDRefDom ############################################
-
-
-add-content $report "<div id='CheckSDRefDom'></div>"
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SDRefDom Validation")
-Try{
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>CheckSDRefDom Validation</h3>" 
-add-content $report  "</CENTER>"
-add-content $report "<BR>"
-
-add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Connectivity</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>CheckSDRefDom</B></td>" 
-
- 
-Add-Content $report "</tr>" 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
-$IndexDC18 = 0
-Get-Job | Remove-Job
-
-foreach ($DC in $DCs)
-    {
-    start-job -scriptblock {dcdiag /test:CheckSDRefDom /s:$($args[0])} -ArgumentList $DC
-    }
-
-Get-Job | Wait-Job
-
-
-$Jobs = Get-Job
-
-ForEach ($job in $Jobs)
-        {
-        $DCDiag = Receive-Job -Job $job
-
-        if(($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'Testing server:')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(':')
-        $Site,$DC = $DC2[1].split('\')
-            }
-        if(($DCDiag | Select-String -Pattern 'search failed on server').Count -eq $true) 
-            {
-        $DC = ($DCDiag | Select-String -Pattern 'search failed on server')
-        $DC = $DC[0].ToString()
-        $DC2 = $DC.split(' ')
-        $DC = $DC2[11]
-        $DC = $DC.split('.')
-        $DC = $DC[0]
-        $Site = ''
-            }
-
-        Add-Content $report "<tr>"
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$DC</td>" 
-
-    Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SDRefDom Validation on DC: "+$DC)
-
-        if (($DCDiag | Select-String -Pattern 'passed test Connectivity').Count -eq $true)
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>Connectivity Test Passed</td>"
-            }
-        else
-            {
-                $IndexDC18 ++
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Connectivity Test Failed</font></td>" 
-            }
-    if (($DCDiag | Select-String -Pattern 'passed test CheckSDRefDom').Count -eq $true)
-        {
-            $Pass = $DCDiag | Select-String -Pattern 'passed test CheckSDRefDom'
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Pass</td>"
-        }
-    else
-        {
-            $IndexDC18 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Test failed</font></td>" 
-        }
-
-        Add-Content $report "</tr>" 
-    }
-
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - SDRefDom Validation finished")
-}
-Catch { 
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found during SDRefDom Validation -------------")
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-Add-Content $DCHealthLog ("DCHealthLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
-
-Add-content $report  "</table>" 
-
-add-content $report "</CENTER>"
 
 add-content $report "<BR>"
 add-content $report "<BR>"
@@ -3577,312 +1760,12 @@ add-content $report "<BR>"
 ######################################### INDEX #############################################
 
 
-
 }
 $Measure = $Runtime.Totalminutes.ToString('#######.##')
 
 $index = Get-Content "C:\ADxRay\ADxRay_Report.htm"
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
-
-$i = 38
-
-$index[$i] = "<ol>"
-$i++
-$index[$i] = "<ul><a href='#ForestHeader'>Forest</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexForest0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#ForestOverview'> Overview ($IndexForest0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#ForestOverview'> Overview (<font color='#FF0000'>$IndexForest0</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "<li><a href='#TrustOverview'> Active Directory Trusts</a></li>"
-$i++
-if ($IndexDomain0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#DomainOverview'> Domains ($IndexDomain0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#DomainOverview'> Domains (<font color='#FF0000'>$IndexDomain0</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#DCOverview'> Domain Controllers ($IndexDC0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#DCOverview'> Domain Controllers (<font color='#FF0000'>$IndexDC0</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "<ul><a href='#DCHealth'> Domain Controller's Health</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexDC2 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#Advertising'> Advertising Validation ($IndexDC2 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#Advertising'> Advertising Validation (<font color='#FF0000'>$IndexDC2</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC3 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#FrsEvent'> FrsEvent Validation ($IndexDC3 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#FrsEvent'> FrsEvent Validation (<font color='#FF0000'>$IndexDC3</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC4 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#DFSREvent'> DFSREvent Validation ($IndexDC4 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#DFSREvent'> DFSREvent Validation (<font color='#FF0000'>$IndexDC4</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC5 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#SysVolCheck'> SysVolCheck Validation ($IndexDC5 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#SysVolCheck'> SysVolCheck Validation (<font color='#FF0000'>$IndexDC5</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC6 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#KccEvent'> KccEvent Validation ($IndexDC6 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#KccEvent'> KccEvent Validation (<font color='#FF0000'>$IndexDC6</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC7 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation ($IndexDC7 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#KnowsOfRoleHolders'> KnowsOfRoleHolders Validation (<font color='#FF0000'>$IndexDC7</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC8 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#MachineAccount'> MachineAccount Validation ($IndexDC8 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#MachineAccount'> MachineAccount Validation (<font color='#FF0000'>$IndexDC8</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC9 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#NCSecDesc'> NCSecDesc Validation ($IndexDC9 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#NCSecDesc'> NCSecDesc Validation (<font color='#FF0000'>$IndexDC9</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC10 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#NetLogons'> NetLogons Validation ($IndexDC10 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#NetLogons'> NetLogons Validation (<font color='#FF0000'>$IndexDC10</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC11 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation ($IndexDC11 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#ObjectsReplicated'> ObjectsReplicated Validation (<font color='#FF0000'>$IndexDC11</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC12 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#LocatorCheck'> LocatorCheck Validation ($IndexDC12 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#LocatorCheck'> LocatorCheck Validation (<font color='#FF0000'>$IndexDC12</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC13 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#RidManager'> RidManager Validation ($IndexDC13 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#RidManager'> RidManager Validation (<font color='#FF0000'>$IndexDC13</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC14 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#Services'> Services Validation ($IndexDC14 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#Services'> Services Validation (<font color='#FF0000'>$IndexDC14</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC15 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#SystemLog'> SystemLog Validation ($IndexDC15 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#SystemLog'> SystemLog Validation (<font color='#FF0000'>$IndexDC15</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC16 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#VerifyReferences'> VerifyReferences Validation ($IndexDC16 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#VerifyReferences'> VerifyReferences Validation (<font color='#FF0000'>$IndexDC16</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC17 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation ($IndexDC17 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#CrossRefValidation'> CrossRefValidation Validation (<font color='#FF0000'>$IndexDC17</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexDC18 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation ($IndexDC18 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#CheckSDRefDom'> CheckSDRefDom Validation (<font color='#FF0000'>$IndexDC18</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "<ul><a href='#DNSServers'>DNS Servers</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexDNS0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#DNSServers'> DNS Servers Health ($IndexDNS0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#DNSServers'> DNS Server Health (<font color='#FF0000'>$IndexDNS0</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "<ul><a href='#Objects'>Users and Computers</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexUser0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#Users'> User Accounts ($IndexUser0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#Users'> User Accounts (<font color='#FF0000'>$IndexUser0</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexPC0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#Computers'> Computer Accounts ($IndexPC0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#Computers'> Computer Accounts (<font color='#FF0000'>$IndexPC0</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "<ul><a href='#GroupHeader'>Groups</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexGroup0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#GroupOverview'> Active Directory Admin Groups ($IndexGroup0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#GroupOverview'> Active Directory Admin Groups (<font color='#FF0000'>$IndexGroup0</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexGroup1 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#Groups'> Active Directory Groups ($IndexGroup1 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#Groups'> Active Directory Groups (<font color='#FF0000'>$IndexGroup1</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "<ul><a href='#GPOHeader'>Group Policies</a>"
-$i++
-$index[$i] = "<ul>"
-$i++
-if ($IndexGPO0 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#GPOOverview'> Group Policies Overview ($IndexGPO0 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#GPOOverview'> Group Policies Overview (<font color='#FF0000'>$IndexGPO0</font> Errors)</a></li>"
-    }
-$i++
-if ($IndexGPO1 -eq 0) 
-    {
-        $index[$i] = "<li><a href='#GPOOverview'> Empty GPOs ($IndexGPO1 Errors)</a></li>"
-    }
-else 
-    { 
-        $index[$i] = "<li><a href='#GPOOverview'> Empty GPOs (<font color='#FF0000'>$IndexGPO1</font> Errors)</a></li>"
-    }
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ul>"
-$i++
-$index[$i] = "</ol>"
 
 $index | out-file "C:\ADxRay\ADxRay_Report.htm"
 
