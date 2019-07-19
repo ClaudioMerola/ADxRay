@@ -80,13 +80,7 @@ add-content $report  "</table>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section is intended to give an overall view of the <B>Active Directory Forest</B>, as so as the <B>Active Directory Domains</B> and <B>Domain Controllers</B> and configured <B>Trusts</B> between Active Directory Domains and others Active Directory Forests.</td></tr></TABLE>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### FOREST #############################################
 
@@ -180,11 +174,7 @@ Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 
 Add-content $report  "</table>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>" 
-
+add-content $report "<BR><BR><BR><BR>"
 
 ######################################### TRUST #############################################
 
@@ -256,12 +246,7 @@ Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
+add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### DOMAIN #############################################
@@ -379,10 +364,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Domain's design must be 
 
 add-content $report  "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### DC #############################################
@@ -517,12 +499,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Many Domain Controllers 
 
 add-content $report  "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### DCs HEADER #############################################
@@ -571,9 +548,7 @@ $DC2 = $DC.split(' ')
 $DC = $DC.split('.')
 $DC = $DC[0]
 
-add-content $report  "<BR>"
-add-content $report  "<BR>"
-add-content $report  "<BR>"
+add-content $report "<BR><BR><BR>"
  
 add-content $report  "<table width='85%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
@@ -857,16 +832,14 @@ Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 }
 
 
 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<CENTER>"
 
@@ -876,12 +849,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Obs. Before the main tes
 
 add-content $report  "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### DNS HEADER #############################################
@@ -896,13 +864,7 @@ add-content $report  "</td>"
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### DNS Server #############################################
@@ -1022,8 +984,7 @@ Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<CENTER>"
 
@@ -1031,13 +992,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td> DNS Server is an import
 
 add-content $report  "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### AD OBJECTS HEADER #############################################
@@ -1056,13 +1011,7 @@ add-content $report  "</table>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section should give a overall perspective of the user accounts in the environment. As so as the overall maintenance and health of the user accounts in the environment. Verify the informations reported from time to time to keep your environment healthy and to prevent futher problems and security risks regarding user accounts.</td></tr></TABLE>" 
 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### USERS #############################################
 
@@ -1148,17 +1097,13 @@ Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  
  
 Add-content $report  "</table>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This overview state of user accounts will present the <B>Total number of users</b>, the <B>Disabled User Accounts</B>, <B>Inactive Users </B> and User Accounts that never changed they passwords (that are probabily <B>'Password Never Expires'</B> accounts). Most of those counters should be <B>0</B> or the smallest as possible. Exceptions may apply, but should not be a common practice.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### COMPUTER ACCOUNTS #############################################
@@ -1251,21 +1196,13 @@ Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-d
 
 Add-content $report  "</table>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>Those counters present a list of total Windows Servers and Workstations, total number of Windows Servers and Workstations that are enabled and have unsupported Operating Systems.</td></tr></TABLE>"  
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### GROUPS HEADER #############################################
 
@@ -1281,13 +1218,7 @@ add-content $report  "</table>"
 
 add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will verify the number of members in critical administration groups in the Forest and Domain and will alert for every group with more than 30 members (including Users, Computers and other Groups).</td></tr></TABLE>"  
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### GROUPS #############################################
 
@@ -1363,18 +1294,13 @@ Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 
 Add-content $report  "</table>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having far too many users with more than necessary permissions may result in serius security breaches. Make sure only the very necessary user accounts are present in those groups, unautohorized users may cause big damage. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specialy '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR>"
 
 ######################################### EMPTY GROUPS #############################################
 
@@ -1483,20 +1409,13 @@ Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 
 Add-content $report  "</table>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having fair number of groups is not also a good practice, it's vital to ensure an easier and 'clean' management of Active Directory, usually don't make sense have more groups than users or groups too small. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specialy '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### GPO HEADER #############################################
@@ -1514,12 +1433,8 @@ add-content $report  "</table>"
 
 add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will verify the avarage status of Group Policies in the Forest and Domain and will alert for every group policy with <B>too many configurations</B>, <B>withou any configuration</b> at all, or <B>not linked to any OU</B>.</td></tr></TABLE>"  
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
 
 ######################################### GPOs #############################################
 
@@ -1620,17 +1535,13 @@ Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" -
 
 Add-content $report  "</table>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Group Policy represent an important part of Active Directory management (without mention its impact on Servers and Workstation). Make sure GPO conflicts are avoided always as possible, also take GPO backups at a regular basis (<a href='https://docs.microsoft.com/en-us/powershell/module/grouppolicy/backup-gpo?view=win10-ps'>Backup-GPO</a>).</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### GPOs WITHOUT LINK #############################################
@@ -1744,17 +1655,13 @@ Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" -
 
 Add-content $report  "</table>" 
 
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Make sure to investigate and solve problems listed here, Having too many unsued GPOs may impact your Active Directory management effort.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### INDEX #############################################
