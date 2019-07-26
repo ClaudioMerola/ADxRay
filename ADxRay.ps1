@@ -534,7 +534,7 @@ add-content $report  "</table>"
 
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Inventory of: "+$DC)
 
-$DC = $DCs[0].ToString()
+$DC = $DC.ToString()
 $DC2 = $DC.split(' ')
 $DC = $DC.split('.')
 $DC = $DC[0]
