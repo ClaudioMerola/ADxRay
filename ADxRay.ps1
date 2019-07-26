@@ -121,15 +121,12 @@ Add-Content $report "<td bgcolor='White' align=center>$Dom</td>"
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
-$IndexForest0 = 0
     if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
-            $IndexForest0 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
         }
     elseif ($ForeMode -like '*2008*' -and $ForeMode -notlike '*2008R2*') 
         {
-            $IndexForest0 ++
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
     elseif ($ForeMode -like '*2012*' -or $ForeMode -like '*2016*') 
@@ -149,7 +146,6 @@ Add-Content $report "<tr>"
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Recycle Bin Enabled</B></th>" 
     if ($RecycleBin -ne 'Enabled')
         {
-            $IndexForest0 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RecycleBin</font></td>" 
         }
     else
@@ -295,7 +291,6 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     $D2Mode = $Domain1.DomainMode
     $D2CompCont = $Domain1.ComputersContainer
     $D2UserCont = $Domain1.UsersContainer
-    $IndexDomain0 = 0
     if ($Domain1.Children.Count -eq '' -and $Domain1.Parent.Count -eq '')
         {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Single-Domain</td>"
@@ -318,12 +313,10 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     Add-Content $report "<td bgcolor='White' align=center>$D2Child</B></td>" 
     if ($D2Mode -like '*NT*' -or $D2Mode -like '*2000*' -or $D2Mode -like '*2003*')
         {
-            $IndexDomain0 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$D2Mode</font></td>" 
         }
     elseif ($D2Mode -like '*2008*' -and $D2Mode -notlike '*2008R2*') 
         { 
-            $IndexDomain0 ++
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$D2Mode</td>" 
         }
     elseif ($D2Mode -like '*2012*' -or $D2Mode -like '*2016*') 
@@ -378,7 +371,6 @@ Clear-Content $DomainControllersLog
 
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers data catcher")
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
 
 add-content $report "<CENTER>"
 
@@ -390,9 +382,8 @@ add-content $report "<BR>"
 add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Enabled</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>DNS Service</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>IPV4 Address</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Global Catalog</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Operating System</B></td>" 
@@ -402,19 +393,15 @@ Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>"
  
 Add-Content $report "</tr>" 
 
-$IndexDC0 = 0
-
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 
 foreach ($DC in $DCs)
     {
+    Try{
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Inventory of: "+$DC)
 
-    $DCD = Get-ADDomainController -Server $DC 
+    $DCD = Get-ADDomainController -Server $DC
     $DCD = $DCD | Sort-Object
-
-    $DCDNSService = start-job -scriptblock {get-service -ComputerName $($args[0]) -Name "DNS" -ErrorAction SilentlyContinue} -ArgumentList $DC
-    wait-job -Job $DCDNSService -Timeout 20
-    $DCDNSServiceStatus = (receive-job -job $DCDNSService).Status
 
     $Domain = $DCD.Domain
     $DCHostName = $DCD.Hostname
@@ -432,33 +419,22 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCEnabled</td>" 
 
-    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Inventory of: "+$DCHostName)
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting IP of: "+$DCHostName)
 
-    if ($DCDNSServiceStatus -eq 'Running')
-        {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCDNSServiceStatus</td>"
-        }
-    elseif ($DCDNSServiceStatus -eq 'Stopped')
-        {
-            $IndexDC0 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCDNSServiceStatus</font></td>" 
-        }
-    else
-        {
-            $IndexDC0 ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Irresponsible</font></td>" 
-        }
     Add-Content $report "<td bgcolor='White' align=center>$DCIP</td>" 
+
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Global Catalog of: "+$DCHostName)
+
     Add-Content $report "<td bgcolor='White' align=center>$DCGC</td>" 
+
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Operating System Version of: "+$DCHostName)
 
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*')
         {
-            $IndexDC0 ++
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
         }
     elseif ($DCOS -like '* 2008*' -or $DCOS -like '* 2008 R2*') 
         { 
-            $IndexDC0 ++
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$DCOS</td>" 
         }
     elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
@@ -471,19 +447,28 @@ foreach ($DC in $DCs)
         }
      
     Add-Content $report "<td bgcolor='White' align=center>$DCOSD</td>" 
+
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting FSMO of: "+$DCHostName)
+
     Add-Content $report "<td bgcolor='White' align=center>$FSMO</td>" 
+
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Site of: "+$DCHostName)
+
     Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
     
     Add-Content $report "</tr>" 
 
     }
+    Catch 
+            { 
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+    Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+            }
+    }
+
 
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Controllers inventoring finished")
-}
-Catch { 
-Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
-}
+
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 Add-content $report  "</table>" 
@@ -523,9 +508,8 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a
 
 
 
+add-content $report "<BR><BR><BR>"
 
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 Get-Job | Remove-Job
 
 start-job -scriptblock {dcdiag /e}
@@ -534,21 +518,32 @@ $Job = Get-Job
 
 $DCDiag = Receive-Job -Job $job
 
+
 ForEach ($DC in $DCs)
 {
 
-add-content $report "<CENTER>"
 
-add-content $report  "<CENTER>"
-add-content $report  "<h3>$DC</h3>" 
-add-content $report  "</CENTER>"
+
+add-content $report  "<table width='50%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='left'>" 
+add-content $report  "<H2>$DC<HR><H2>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>"
+
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Inventory of: "+$DC)
 
 $DC = $DCs[0].ToString()
 $DC2 = $DC.split(' ')
 $DC = $DC.split('.')
 $DC = $DC[0]
 
-add-content $report "<BR><BR><BR>"
+
+
+add-content $report "<BR><BR>"
+
+add-content $report "<CENTER>"
  
 add-content $report  "<table width='85%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
@@ -558,15 +553,23 @@ Add-Content $report  "<td width='60%' align='center'><B>Description</B></td>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag initial validation: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Connectivity</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Initial connection validation, checks if the DC can be located in the DNS, validates the ICMP ping (1 hop), checks LDAP binding and also the RPC connection. This initial test requires <b>ICMP, LDAP, DNS</b> and <b>RPC</b> connectivity to work properly.</td>"
@@ -575,15 +578,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test VerifyReferences</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates that several attributes are present for the domain in the countainer and subcontainers in the DC objetcs. This test will fail if any attribute is missing. You can find more details regarding the attributes at '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'> What does DCDiag actually do.</a>'</td>"
@@ -592,15 +603,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Advertising Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Advertising')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Advertising</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can be correctly located through the KDC service. It does not validate the Kerberos tickets answer or the communication through the <b>TCP</b> and <b>UDP</b> port <b>88</b>.</td>"
@@ -609,15 +628,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag FrsEvent: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test FrsEvent</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding FRS replication. If running Windows Server 2008 R2 or newer on all Domain Controllers is possible SYSVOL were already migrated to DFSR, in this case errors found here can be ignored.</td>"
@@ -626,15 +653,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag DFSREvent Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test DFSREvent</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding DFSR replication. If running Windows Server 2008 or older on all Domain Controllers is possible SYSVOL is still using FRS, and in this case errors found here can be ignored. Obs. is highly recommended to migrate SYSVOL to DFSR.</td>"
@@ -643,15 +678,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SysvolCheck Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SysVolCheck</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates if the registry key <b>'HKEY_Local_Machine\System\CurrentControlSet\Services\Netlogon\Parameters\SysvolReady=1'</b> exist. This registry has to exist with value '1' for the DC´s SYSVOL to be advertised.</td>"
@@ -660,15 +703,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KccEvent Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KccEvent</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates through KCC there were no errors in the <b>Event Viewer > Applications and Services Logs > Directory Services</b> event log in the past 15 minutes (default time).</td>"
@@ -677,15 +728,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KnowsOfRoleHolders</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks if this Domain Controller is aware of which DC (or DCs) hold the <b>FSMOs</b>.</td>"
@@ -694,15 +753,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag MachineAccount Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test MachineAccount</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks if this computer account exist in Active Directory and the main attributes are set. If this validation reports error. the following parameters of <b>DCDIAG</b> might help: <b>/RecreateMachineAccount</b> and <b>/FixMachineAccount</b>.</td>"
@@ -711,15 +778,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NCSecDesc Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NCSecDesc</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates if permissions are correctly set in this Domain Controller for all naming contexts. Those permissions directly affect replication´s health.</td>"
@@ -728,15 +803,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NetLogons Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NetLogons</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates if core security groups (including administrators and Authenticated Users) can connect and read NETLOGON and SYSVOL folders. It also validates access to IPC$. which can lead to failures in organizations that disable IPC$.</td>"
@@ -745,15 +828,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag ObjectsReplicated: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test ObjectsReplicated</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks the replication health of core objects and attributes.</td>"
@@ -762,15 +853,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Replications: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Replications')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Replications')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Replications')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Replications</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Makes a deep validation to check the main replication for all naming contexts in this Domain Controller.</td>"
@@ -779,15 +878,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag RIDManager: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test RidManager')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test RidManager</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates that this Domain Controller and locate and contact the RID Master FSMO role holder.</td>"
@@ -801,10 +908,16 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test Services')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Services')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Services')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Services</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Validates if the core Active Directory services are running in this Domain Controller. The services verified are: <b>RPCSS, EVENTSYSTEM, DNSCACHE, ISMSERV, KDC, SAMSS, WORKSTATION, W32TIME, NETLOGON, NTDS</b> (in case Windows Server 2008 or newer) and <b>DFSR</b> (if SYSVOL is using DFSR).</td>"
@@ -813,15 +926,23 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
+Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SystemLog Test: "+$DC)
+
 if(($DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
     {
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-if(($DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
-    {
-            $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    else {
+            if(($DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
+                {
+                    $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SystemLog</font></td>"
+                }
     }
 
 add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further.</td>"
@@ -835,8 +956,6 @@ add-content $report "</CENTER>"
 add-content $report "<BR><BR>"
 
 }
-
-
 
 
 add-content $report "<BR><BR>"
@@ -853,7 +972,6 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### DNS HEADER #############################################
-
 
 
 add-content $report  "<table width='100%' border='0'>" 
@@ -878,7 +996,6 @@ Clear-Content $DNSServerLog
 
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DNS Server data catcher")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
 
 add-content $report "<CENTER>"
 
@@ -899,14 +1016,14 @@ Add-Content $report  "<td width='10%' align='center'><B>Bind Secondaries Enabled
 
 Add-Content $report "</tr>" 
 
-
-$IndexDNS0 = 0
         $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 
         foreach ($DC in $DCs)
             {
-                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DC: "+$DC)
-                $DNS = Get-DnsServer -ComputerName $DC
+                Try{
+
+                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DC)
+                $DNS = Get-DnsServer -ComputerName $DC 
 
                 if ($DNS -ne '')
                     {
@@ -929,7 +1046,7 @@ $IndexDNS0 = 0
                 $DNSZoneCount = ($DNS.ServerZone | where {$_.ZoneName -notlike '*.arpa' -and $_.ZoneName -ne 'TrustAnchors'}).Count
                 $DNSRootC = $DNSRootHintC.Count
 
-                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DNSName)
+                Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Validating DNS Server: "+$DNSName)
 
                 Add-Content $report "<tr>"
 
@@ -950,7 +1067,6 @@ $IndexDNS0 = 0
                     }
                 else  
                     { 
-                        $IndexDNS0 ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRootC</font></td>" 
                     }
 
@@ -961,7 +1077,6 @@ $IndexDNS0 = 0
                     }
                 else  
                     { 
-                        $IndexDNS0 ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRecur</font></td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSBindSec</td>" 
@@ -971,12 +1086,13 @@ $IndexDNS0 = 0
 
             Add-Content $report "</tr>" 
             }
-
-}
-Catch { 
+            Catch { 
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+
+}
+
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Inventory finished")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
@@ -997,6 +1113,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### AD OBJECTS HEADER #############################################
 
+#>
 
 add-content $report "<div id='Objects'></div>"
 
@@ -1024,7 +1141,7 @@ Clear-Content $UserDetailsLog
 
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting User Accounts data catcher")
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1044,10 +1161,9 @@ Add-Content $report  "<td width='10%' align='center'><B>Password Never Expires</
 
 Add-Content $report "</tr>" 
 
-$IndexUser0 = 0
-
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+        Try{
         $UsDomain = $Contr.Domain
         $AllUsers = (dsquery * -filter sAMAccountType=805306368 -s $Contr -attr samAccountName -attrsonly -limit 0).Count
 
@@ -1071,7 +1187,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         else 
             { 
-                $IndexUser0 ++
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersInactive</font></td>" 
             }
         if ($UsersPWDNeverExpire -eq '' -or $UsersPWDNeverExpire -eq 0) 
@@ -1080,19 +1195,19 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         else 
             { 
-                $IndexUser0 ++
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersPWDNeverExpire</font></td>" 
             }
     Add-Content $report "</tr>"
     }
-
-
-Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - User Accounts Inventory finished")
-}
 Catch { 
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the User Accounts Inventoring -------------")
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+    }
+
+
+Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - User Accounts Inventory finished")
+
 Add-Content $UserDetailsLog ("UserDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
  
 Add-content $report  "</table>" 
@@ -1117,7 +1232,7 @@ Clear-Content $ComputerDetailsLog
 
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Computer Accounts data catcher")
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1137,10 +1252,10 @@ Add-Content $report  "<td width='15%' align='center'><B>Unsupported Servers</B><
 
 Add-Content $report "</tr>" 
 
-$IndexPC0 = 0
-
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+
+    Try{
 
     Add-Content $report "<tr>" 
 
@@ -1171,7 +1286,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         }
      else 
         { 
-           $IndexPC0 ++
            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
         }
     if ($PCServerUnsupp -eq '' -or $PCServerUnsupp -eq 0)  
@@ -1180,18 +1294,18 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         }
     else 
         { 
-          $IndexPC0 ++
           Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
         }
     Add-Content $report "</tr>"
     }
-
-Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Computer Accounts Inventory finished")
-}
 Catch { 
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Computer Accounts Inventoring -------------")
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+    }
+
+Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Computer Accounts Inventory finished")
+
 Add-Content $ComputerDetailsLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 Add-content $report  "</table>" 
@@ -1231,7 +1345,7 @@ Clear-Content $GroupsLog
 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Groups data catcher")
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1250,10 +1364,9 @@ Add-Content $report "</tr>"
 
 $Groups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','DnsAdmins','Administrators')
 
-$IndexGroup0 = 0
-
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+    Try{
         Foreach ($gp in $Groups)
             {
             $temp = ('(&(objectclass=group)(sAMAccountName='+$gp+'))')
@@ -1273,7 +1386,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                     if ($GCounter -ge 5) 
                         {
-                            $IndexGroup0 ++
                             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GCounter</font></td>"
                         }
                     else 
@@ -1283,14 +1395,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     Add-Content $report "</tr>"
                 }
             } 
-    }
-
-Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Groups Inventory finished")
-}
+            }
 Catch { 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Domain Groups Inventoring -------------")
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+    }
+
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Groups Inventory finished")
+
 
 Add-content $report  "</table>"
 
@@ -1307,7 +1420,7 @@ add-content $report "<BR><BR><BR><BR>"
 add-content $report "<div id='Groups'></div>"
 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Empty Groups data catcher")
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1326,10 +1439,9 @@ Add-Content $report  "<td width='5%' align='center'><B>Average Members</B></td>"
  
 
 Add-Content $report "</tr>" 
-
-$IndexGroup1 = 0
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+    Try{
         $GroupsMembers = @()
         
         $PCDomain = $Contr.Domain
@@ -1352,13 +1464,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Empty Groups in the Domain: "+$PCDomain)
         Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Empty Groups found: "+$GroupEmpty)
 
-        if ($GroupLarge -ge 5 -and  $GroupLarge -lt 20) 
-            {
-                Add-Content $report "<td bgcolor= 'Yellow' align=center> $GroupLarge</td>"
-            }
         if ($GroupLarge -gt 30) 
             {
-                $IndexGroup1 ++
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
             }
         else 
@@ -1366,13 +1473,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 Add-Content $report "<td bgcolor= 'Lime' align=center> $GroupLarge</td>" 
             }
 
-        if ($GroupEmpty -ge 5 -and $GroupEmpty -lt 20) 
-            {
-                Add-Content $report "<td bgcolor= 'Yellow' align=center>$GroupEmpty</td>"
-            }
         if ($GroupEmpty -gt 20) 
             {
-                $IndexGroup1 ++
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupEmpty</font></td>"
             }
         else 
@@ -1387,7 +1489,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         elseif ($GroupAve -ge 0.00 -and $GroupAve -lt 1.00) 
             {
-                $IndexGroup1 ++
                 $GroupAve = $GroupAve.tostring("#.##")
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupAve</font></td>"
             }
@@ -1397,14 +1498,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 Add-Content $report "<td bgcolor='Lime' align=center>$GroupAve</td>" 
             }
         Add-Content $report "<tr>"
-    }
-
-Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Empty Domain Groups Inventory finished")
-}
+        }
 Catch { 
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Empty Domain Groups Inventoring -------------")
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+    }
+
+Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Empty Domain Groups Inventory finished")
+
 Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 Add-content $report  "</table>"
@@ -1446,7 +1548,7 @@ Clear-Content $GPOsLog
 
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Group Policy Objects data catcher")
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1466,10 +1568,9 @@ Add-Content $report  "<td width='5%' align='center'><B>Too Many Settings</B></td
 
 Add-Content $report "</tr>" 
 
-$IndexGPO0 = 0
-
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+        Try{
                 $gp1 = @()
                 $GpoC = @()
                 $Gpo = Get-GPO -All -Server $Contr
@@ -1498,7 +1599,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                 if ($GpoC2 -ge 1) 
                     {
-                        $IndexGPO0 ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoC2 GPOs</font></td>"
                     }
                 else 
@@ -1507,7 +1607,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     }
                 if ($GPEmpt -ge 1) 
                     {
-                        $IndexGPO0 ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPEmpt GPOs</font></td>"
                     }
                 else 
@@ -1516,7 +1615,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     }
                 if ($GPBIG -ge 1) 
                     {
-                        $IndexGPO0 ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPBIG GPOs</font></td>"
                     }
                 else 
@@ -1524,14 +1622,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
                 Add-Content $report "</tr>"
-    }
-
-Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs Inventory finished")
-}
+                }
 Catch { 
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPOs Inventoring -------------")
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+    }
+
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs Inventory finished")
+
 
 Add-content $report  "</table>" 
 
@@ -1551,7 +1650,7 @@ add-content $report "<div id='GPOs'></div>"
 
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting GPOs Without Link catcher")
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
-Try{
+
 
 add-content $report "<CENTER>"
 
@@ -1572,10 +1671,9 @@ Add-Content $report  "<td width='5%' align='center'><B>Modification Date</B></td
 
 Add-Content $report "</tr>" 
 
-$IndexGPO1 = 0
-
 Foreach ($Contr in $Forest.domains.PdcRoleOwner) 
     {
+    Try{
                 $Ous = Get-ADOrganizationalUnit -Filter * -Server $Contr
                 $gp1 = @()
                 Foreach ($ou in $Ous)
@@ -1587,7 +1685,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 Foreach ($GPO in $Gpos)
                     {
                         
-                        $IndexGPO1 ++
                         $GpoName = $Gpo.DisplayName
                         $GpoUserADVer = $Gpo.User.DSVersion
                         $GpoCompADVer = $Gpo.Computer.DSVersion
@@ -1643,14 +1740,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                                 Add-Content $report "</tr>"
                             }
                     }
-            }
- 
-Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs without link Inventory finished")
-}
+                    }
 Catch { 
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPO Inventoring -------------")
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
 }
+            }
+ 
+Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs without link Inventory finished")
+
 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
 
 Add-content $report  "</table>" 
@@ -1665,7 +1763,6 @@ add-content $report "<BR><BR><BR><BR>"
 
 
 ######################################### INDEX #############################################
-
 
 }
 $Measure = $Runtime.Totalminutes.ToString('#######.##')
