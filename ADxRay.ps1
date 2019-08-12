@@ -971,6 +971,106 @@ add-content $report  "</CENTER>"
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
+######################################### SYSVOL FOLDER HEADER #############################################
+
+
+add-content $report  "<table width='100%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='center'>" 
+add-content $report  "<font face='verdana' color='#000000' size='62'>SYSVOL Folder Status<HR></font>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>" 
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+######################################### SYSVOL #############################################
+
+
+add-content $report "<div id='SYSVOL'></div>"
+
+$SYSVOLFOLDER = 'C:\Windows\Sysvol\domain\'
+if ((test-path 'C:\Windows\SYSVOL_DFSR') -eq $true) {$SYSVOLFOLDER = 'C:\Windows\Sysvol_DFSR\domain\'}
+
+add-content $report "<CENTER>"
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Sysvol Folder Status</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+ 
+add-content $report  "<table width='80%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='10%' align='center'><B>Extension</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>File Count</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Size (MB)</B></td>" 
+
+
+Add-Content $report "</tr>" 
+
+      $SYSVOL = Get-ChildItem  -path $SYSVOLFOLDER -Recurse | Where-Object -FilterScript {$_.PSIsContainer -eq $false} | Group-Object -Property Extension | ForEach-Object -Process {
+New-Object -TypeName PSObject -Property @{
+        'Extension'= $_.name
+        'Count' = $_.count
+        'TotalSize (MB)'= '{0:N2}' -f ((($_.group | Measure-Object length -Sum).Sum) /1MB)
+        'TotalSize'    = (($_.group | Measure-Object length -Sum).Sum)
+    } 
+} | Sort-Object -Descending -Property 'Totalsize'
+
+
+Foreach ($Sys in $SYSVOL)
+{
+$SYSEXT = $sys.Extension
+$SYSCOUNT = $sys.Count
+$SYSSIZE = $sys.'TotalSize (MB)'
+
+
+                Add-Content $report "<tr>"
+
+
+                if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm'))
+                    {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
+                    }
+                else  
+                    { 
+                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSSIZE</td>"
+                    }
+                Add-Content $report "<td bgcolor='White' align=center>$SYSCOUNT</td>" 
+
+                if ($sys.Totalsize -ge 839436544)
+                    {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSSIZE</font></td>" 
+                    }
+                else  
+                    { 
+                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSSIZE</td>"
+                    }
+                
+                
+
+            Add-Content $report "</tr>" 
+            }
+
+
+Add-content $report  "</table>"
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR><BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Sysvol folder contain the Group Policies physical files and scripts used in GPOs, those folders are replicated between Domain Controllers from time to time, is very important to only keep essential files in Sysvol as so as keep the folder's size at the very minimum.</td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+
 ######################################### DNS HEADER #############################################
 
 
