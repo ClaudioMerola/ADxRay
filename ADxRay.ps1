@@ -1035,7 +1035,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSSIZE</td>"
+                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSEXT</td>"
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$SYSCOUNT</td>" 
 
