@@ -17,26 +17,26 @@ Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/release
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
 
 
-###The report grabs information about Domain Controllers:
+### The report grabs information about Domain Controllers:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/1.png)
 
-###Domain Controller´s Health:
+### Domain Controller´s Health:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/2.png)
 
-###DNS:
+### DNS:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/3.png)
 
-###Active Directory Objects:
+### Active Directory Objects:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/4.png)
 
-###Active Directory Groups:
+### Active Directory Groups:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/5.png)
 
-###and GPOs:
+### and GPOs:
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/6.png)
