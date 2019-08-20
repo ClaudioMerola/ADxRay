@@ -14,4 +14,4 @@ This script may take several hours to complete!
 
 Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
 
-![alt text](https://github.com/Merola132/ADxRay/0.png)
+![alt text](https://github.com/Merola132/ADxRay/raw/master/0.png)
