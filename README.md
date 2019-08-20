@@ -13,3 +13,5 @@ The lastest version also creates log files in the C:\ADXRay folder for each step
 This script may take several hours to complete!
 
 Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
+
+![alt text](https://github.com/Merola132/ADxRay/0.png)
