@@ -548,6 +548,7 @@ add-content $report "<CENTER>"
 add-content $report  "<table width='85%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='40%' align='center'><B>Domain Controller Status</B></td>" 
+Add-Content $report  "<td width='5%' align='center'><B>Impact</B></td>" 
 Add-Content $report  "<td width='60%' align='center'><B>Description</B></td>" 
 
 
@@ -564,13 +565,15 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -
             if(($DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
                 {
                     $Status = $DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
                 }
                 else
                 {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Connectivity</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test Connectivity</td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>Medium</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Initial connection validation, checks if the DC can be located in the DNS, validates the ICMP ping (1 hop), checks LDAP binding and also the RPC connection. This initial test requires <b>ICMP, LDAP, DNS</b> and <b>RPC</b> connectivity to work properly.</td>"
 
@@ -597,6 +600,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Cou
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates that several attributes are present for the domain in the countainer and subcontainers in the DC objetcs. This test will fail if any attribute is missing. You can find more details regarding the attributes at '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'> What does DCDiag actually do.</a>'</td>"
 
 Add-Content $report "</tr>" 
@@ -622,6 +627,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -e
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can be correctly located through the KDC service. It does not validate the Kerberos tickets answer or the communication through the <b>TCP</b> and <b>UDP</b> port <b>88</b>.</td>"
 
 Add-Content $report "</tr>" 
@@ -639,13 +646,15 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $
             if(($DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
                 {
                     $Status = $DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
                 }
                 else
                 {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test FrsEvent</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test FrsEvent</td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>Medium</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding FRS replication. If running Windows Server 2008 R2 or newer on all Domain Controllers is possible SYSVOL were already migrated to DFSR, in this case errors found here can be ignored.</td>"
 
@@ -664,13 +673,15 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq 
             if(($DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
                 {
                     $Status = $DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
                 }
                 else
                 {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test DFSREvent</font></td>"
+                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test DFSREvent</td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>Medium</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding DFSR replication. If running Windows Server 2008 or older on all Domain Controllers is possible SYSVOL is still using FRS, and in this case errors found here can be ignored. Obs. is highly recommended to migrate SYSVOL to DFSR.</td>"
 
@@ -697,6 +708,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -e
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates if the registry key <b>'HKEY_Local_Machine\System\CurrentControlSet\Services\Netlogon\Parameters\SysvolReady=1'</b> exist. This registry has to exist with value '1' for the DC´s SYSVOL to be advertised.</td>"
 
 Add-Content $report "</tr>" 
@@ -721,6 +734,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KccEvent</font></td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>High</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Validates through KCC there were no errors in the <b>Event Viewer > Applications and Services Logs > Directory Services</b> event log in the past 15 minutes (default time).</td>"
 
@@ -747,6 +762,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).C
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Checks if this Domain Controller is aware of which DC (or DCs) hold the <b>FSMOs</b>.</td>"
 
 Add-Content $report "</tr>" 
@@ -772,6 +789,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Checks if this computer account exist in Active Directory and the main attributes are set. If this validation reports error. the following parameters of <b>DCDIAG</b> might help: <b>/RecreateMachineAccount</b> and <b>/FixMachineAccount</b>.</td>"
 
 Add-Content $report "</tr>" 
@@ -789,13 +808,15 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq 
             if(($DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
                 {
                     $Status = $DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
                 }
                 else
                 {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NCSecDesc</font></td>"
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test NCSecDesc</td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>Medium</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Validates if permissions are correctly set in this Domain Controller for all naming contexts. Those permissions directly affect replication´s health.</td>"
 
@@ -822,6 +843,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq 
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates if core security groups (including administrators and Authenticated Users) can connect and read NETLOGON and SYSVOL folders. It also validates access to IPC$. which can lead to failures in organizations that disable IPC$.</td>"
 
 Add-Content $report "</tr>" 
@@ -846,6 +869,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Co
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test ObjectsReplicated</font></td>"
                 }
     }
+
+add-content $report  "<td bgcolor='White' align=center>High</td>"
 
 add-content $report  "<td bgcolor='White' align=center>Checks the replication health of core objects and attributes.</td>"
 
@@ -872,6 +897,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Makes a deep validation to check the main replication for all naming contexts in this Domain Controller.</td>"
 
 Add-Content $report "</tr>" 
@@ -897,6 +924,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates that this Domain Controller and locate and contact the RID Master FSMO role holder.</td>"
 
 Add-Content $report "</tr>" 
@@ -920,6 +949,8 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $
                 }
     }
 
+add-content $report  "<td bgcolor='White' align=center>High</td>"
+
 add-content $report  "<td bgcolor='White' align=center>Validates if the core Active Directory services are running in this Domain Controller. The services verified are: <b>RPCSS, EVENTSYSTEM, DNSCACHE, ISMSERV, KDC, SAMSS, WORKSTATION, W32TIME, NETLOGON, NTDS</b> (in case Windows Server 2008 or newer) and <b>DFSR</b> (if SYSVOL is using DFSR).</td>"
 
 Add-Content $report "</tr>" 
@@ -937,15 +968,17 @@ if(($DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq 
             if(($DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
                 {
                     $Status = $DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
                 }
                 else
                 {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SystemLog</font></td>"
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test SystemLog</td>"
                 }
     }
 
-add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further.</td>"
+add-content $report  "<td bgcolor='White' align=center>Low</td>"
+
+add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further. The impact of this validation is marked as 'Low' because is very rare to find a DC without any 'errors' in the System's Event Log.</td>"
 
 Add-Content $report "</tr>" 
 
