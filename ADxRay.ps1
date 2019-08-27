@@ -1023,9 +1023,6 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 add-content $report "<div id='SYSVOL'></div>"
 
-$SYSVOLFOLDER = 'C:\Windows\Sysvol\domain\'
-if ((test-path 'C:\Windows\SYSVOL_DFSR') -eq $true) {$SYSVOLFOLDER = 'C:\Windows\Sysvol_DFSR\domain\'}
-
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -1035,12 +1032,17 @@ add-content $report "<BR>"
  
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Extension</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>File Count</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Size (MB)</B></td>" 
 
 
 Add-Content $report "</tr>" 
+
+Foreach ($dom in $Forest.Domains.name){
+
+$SYSVOLFOLDER = ('\\'+$dom+'\SYSVOL\'+$dom)
 
       $SYSVOL = Get-ChildItem  -path $SYSVOLFOLDER -Recurse | Where-Object -FilterScript {$_.PSIsContainer -eq $false} | Group-Object -Property Extension | ForEach-Object -Process {
 New-Object -TypeName PSObject -Property @{
@@ -1054,6 +1056,7 @@ New-Object -TypeName PSObject -Property @{
 
 Foreach ($Sys in $SYSVOL)
 {
+$EXTDOM = $dom
 $SYSEXT = $sys.Extension
 $SYSCOUNT = $sys.Count
 $SYSSIZE = $sys.'TotalSize (MB)'
@@ -1061,6 +1064,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 Add-Content $report "<tr>"
 
+                Add-Content $report "<td bgcolor= 'White' align=center>$EXTDOM</td>"
 
                 if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm'))
                     {
@@ -1085,6 +1089,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
             Add-Content $report "</tr>" 
             }
+    }
 
 
 Add-content $report  "</table>"
@@ -1210,7 +1215,7 @@ Add-Content $report "</tr>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRecur</font></td>" 
+                        Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSRecur</td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSBindSec</td>" 
 
