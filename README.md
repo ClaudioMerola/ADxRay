@@ -14,6 +14,10 @@ This script may take several hours to complete!
 
 Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
 
+Requirements:
+
+The script must be run from a member of the domain running at least Windows Server 2012 R2 with RSAT (Remote Server Administration Tools) installed.
+
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
 
 
