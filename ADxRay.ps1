@@ -1066,7 +1066,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 Add-Content $report "<td bgcolor= 'White' align=center>$EXTDOM</td>"
 
-                if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm'))
+                if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm','.kix','.msi','.ps1','.cmd','.ico'))
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
                     }
@@ -1147,6 +1147,7 @@ Add-Content $report  "<tr bgcolor='WhiteSmoke'>"
 Add-Content $report  "<td width='10%' align='center'><B>Server Name</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Scavaging Enabled</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Number of Zones</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Zones Scavaging Enabled</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Suspicious Root Hints</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Tombstone Interval</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Recursion Enabled</B></td>"
@@ -1178,6 +1179,7 @@ Add-Content $report "</tr>"
 
                 $DNSName = $DNS.ServerSetting.ComputerName
                 $DNSTomb = $DNS.ServerDsSetting.TombstoneInterval
+                $DNSZoneScavenge = ($dns.ServerZoneAging | where {$_.ScavengeServers -notlike '' }).count
                 $DNSBindSec = $DNS.ServerSetting.BindSecondaries
                 $DNSSca = $DNS.ServerScavenging.ScavengingState
                 $DNSRecur = $DNS.ServerRecursion.Enable
@@ -1198,6 +1200,8 @@ Add-Content $report "</tr>"
                         Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
+
+                Add-Content $report "<td bgcolor='White' align=center>$DNSZoneScavenge</td>" 
 
                 if ($DNSRootC -eq '' -or $DNSRootC -eq 0)
                     {
