@@ -512,7 +512,7 @@ add-content $report "<BR><BR><BR>"
 
 Get-Job | Remove-Job
 
-start-job -scriptblock {dcdiag /e}
+start-job -scriptblock {dcdiag /e /s:$args} -ArgumentList ($Forest.SchemaRoleOwner.Name)
 Get-Job | Wait-Job
 $Job = Get-Job
 
