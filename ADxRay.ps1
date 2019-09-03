@@ -16,7 +16,7 @@
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
 
-$report = "C:\ADxRay\ADxRay_Report.htm" 
+$report = ("C:\ADxRay\ADxRay_Report_"+(get-date -Format 'yyyy-MM-dd')+".htm") 
 if ((test-path $report) -eq $false) {new-item $report -Type file -Force}
 Clear-Content $report 
 
@@ -1514,7 +1514,7 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             $temp = ('(&(objectclass=group)(sAMAccountName='+$gp+'))')
             $GpTemp = 0
             $GpTemp = (dsquery * -filter $temp -s $Contr -Attr member -limit 0)
-            if (($GpTemp).Count -ge 2)
+            if ($GpTemp.split(';').count -gt 3)
                 {
                     $GCounter = (($GpTemp -split(';')).Count - 2)
                     $GDomain = $Contr.Domain
@@ -1534,8 +1534,24 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                         { 
                             Add-Content $report "<td bgcolor='White' align=center>$GCounter</td>" 
                         } 
-                    Add-Content $report "</tr>"
+                   
                 }
+            if ($GpTemp.split(';').count -le 3)
+                {
+                    $GCounter = $GpTemp | where {$_ -like '*DC*'}
+                    $GCounter = $GCounter.Count 
+                    $GDomain = $Contr.Domain
+                    $GName = $gp
+                    Add-Content $report "<tr>"
+                    Add-Content $report "<td bgcolor='White' align=center>$GDomain</td>" 
+                    Add-Content $report "<td bgcolor='White' align=center>$GName</td>" 
+
+                    Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group: "+$GName)
+                    Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total members found: "+$GCounter)
+
+                    Add-Content $report "<td bgcolor='White' align=center>$GCounter</td>" 
+                }
+            Add-Content $report "</tr>"
             } 
             }
 Catch { 
@@ -1909,11 +1925,11 @@ add-content $report "<BR><BR><BR><BR>"
 }
 $Measure = $Runtime.Totalminutes.ToString('#######.##')
 
-$index = Get-Content "C:\ADxRay\ADxRay_Report.htm"
+$index = Get-Content $report
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 
-$index | out-file "C:\ADxRay\ADxRay_Report.htm"
+$index | out-file $report
 
 ######################################### CLOSING #############################################
 
