@@ -2,7 +2,7 @@ Active Directory xRay Script
 
 I started this as a personal project to help me during my work days on customer´s sites and environments. The idea was to compile and put all the manual tests the validations I used to make in the customer´s environment at a simple place in the most automated way as possible. 
 
-The script does not record, create or modify anything in the environment (except for creating a folder named “ADxRay” in C:\, and a file named “ADxRay_Report.htm”). 
+The script does not record, create or modify anything in the environment (except for creating a folder named “ADxRay” in C:\, and a file named “ADxRay_Report(date formated as YEAR-MONTH-DAY).htm”). 
 
 The script must be run at a Domain Controller running at least Windows Server 2012. We have seen best results when the script is run from the Schema Master Domain Controller.
 
