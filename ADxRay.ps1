@@ -1516,7 +1516,7 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             $GpTemp = (dsquery * -filter $temp -s $Contr -Attr member -limit 0)
             if (($GpTemp).Count -ge 2)
                 {
-                    $GCounter = (($GpTemp -split(';')).Count - 1)
+                    $GCounter = (($GpTemp -split(';')).Count - 2)
                     $GDomain = $Contr.Domain
                     $GName = $gp
                     Add-Content $report "<tr>"
