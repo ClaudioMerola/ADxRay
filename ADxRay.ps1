@@ -15,12 +15,20 @@
 
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
+if ((Test-Path -Path ('C:\ADxRay\Charts_'+(get-date -Format 'yyyy-MM-dd')) -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path ('C:\ADxRay\Charts_'+(get-date -Format 'yyyy-MM-dd'))}
 
+$ChartFolder = ('C:\ADxRay\Charts_'+(get-date -Format 'yyyy-MM-dd'))
 $report = ("C:\ADxRay\ADxRay_Report_"+(get-date -Format 'yyyy-MM-dd')+".htm") 
 if ((test-path $report) -eq $false) {new-item $report -Type file -Force}
 Clear-Content $report 
 
 $Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
+
+$ChartArea = New-Object System.Windows.Forms.DataVisualization.Charting.ChartArea
+$Series = New-Object -TypeName System.Windows.Forms.DataVisualization.Charting.Series
+$ChartTypes = [System.Windows.Forms.DataVisualization.Charting.SeriesChartType]
+
+$ChartTable = @()
 
 Add-Content $report "<html>" 
 Add-Content $report "<head>" 
@@ -57,13 +65,65 @@ add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong><a h
 add-content $report  "</td>"  
 add-content $report  "</tr>" 
 add-content $report  "</table>"
- 
-
-######################################### INDEX #############################################
-
-
 add-content $report  "<TABLE BORDER=0 WIDTH=90%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
-add-content $report "<BR>"
+add-content $report "<BR><BR><BR><BR><BR>"
+
+######################################### Overview HEADER #############################################
+
+add-content $report  "<table width='100%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='center'>" 
+add-content $report  "<font face='verdana' color='#000000' size='62'>Environment Overview<HR></font>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>" 
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section gives an overview of the whole environment in a clean an easy view. For further details and analysis follow this report in the next sections.</td></tr></TABLE>" 
+
+add-content $report "<BR><BR><BR>"
+
+
+######################################### Overview INDEX #############################################
+
+
+add-content $report  "<table width='40%' align='center' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+
+Add-Content $report  "<td width='10%' align='center'><B>Forest Overview</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controllers</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>DNS Servers</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>SysVol Overview</B></td>" 
+
+Add-Content $report "</tr>" 
+Add-Content $report "<tr>"
+
+Add-Content $report  "<td align='center'><img src='$ChartFolder\Forest.png' alt='Forest Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewDCs.png' alt='Domain Controllers Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewDNS.png' alt='DNS Servers Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewSysVol.png' alt='SysVol Overview'></td>" 
+
+Add-Content $report "</tr>" 
+
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+
+Add-Content $report  "<td width='10%' align='center'><B>Computers Overview</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Users Overview</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Groups Overview</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>GPOs Overview</B></td>" 
+
+Add-Content $report "</tr>" 
+Add-Content $report "<tr>"
+
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewComputers.png' alt='Forest Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewUsers.png' alt='Domain Controllers Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewGroups.png' alt='DNS Servers Overview'></td>" 
+Add-Content $report  "<td align='center'><img src='$ChartFolder\OverviewGPO.png' alt='SysVol Overview'></td>" 
+
+Add-Content $report "</tr>" 
+
+Add-content $report  "</table>" 
+
+add-content $report "<BR><BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### FOREST HEADER #############################################
@@ -80,7 +140,9 @@ add-content $report  "</table>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section is intended to give an overall view of the <B>Active Directory Forest</B>, as so as the <B>Active Directory Domains</B> and <B>Domain Controllers</B> and configured <B>Trusts</B> between Active Directory Domains and others Active Directory Forests.</td></tr></TABLE>" 
 
-add-content $report "<BR><BR><BR><BR><BR><BR>"
+add-content $report "<BR><BR><BR><BR>"
+
+
 
 ######################################### FOREST #############################################
 
@@ -123,18 +185,22 @@ Add-Content $report "<tr>"
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
     if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Functional';Status='Red';Weight=1}
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
         }
     elseif ($ForeMode -like '*2008*' -and $ForeMode -notlike '*2008R2*') 
         {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Functional';Status='Red';Weight=1}
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
     elseif ($ForeMode -like '*2012*' -or $ForeMode -like '*2016*') 
-        { 
+        {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Functional';Status='Green';Weight=1}            
             Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
         }
     else
         {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Functional';Status='Green';Weight=1}
             Add-Content $report "<td bgcolor='White' align=center>$ForeMode</td>" 
         }
 Add-Content $report "</tr>" 
@@ -146,10 +212,12 @@ Add-Content $report "<tr>"
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Recycle Bin Enabled</B></th>" 
     if ($RecycleBin -ne 'Enabled')
         {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Recycle';Status='Red';Weight=1}
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RecycleBin</font></td>" 
         }
     else
-        { 
+        {
+            $ChartTable += New-Object PSObject -property @{Env='Forest';Metric='Recycle';Status='Green';Weight=1}
             Add-Content $report "<td bgcolor= 'Lime' align=center>$RecycleBin</td>" 
         }
 Add-Content $report "</tr>" 
@@ -161,6 +229,7 @@ Add-Content $report "</tr>"
 
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Finishing Execution")
 
+
 }
 Catch { 
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
@@ -171,6 +240,48 @@ Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')
 Add-content $report  "</table>"
 
 add-content $report "<BR><BR><BR><BR>"
+
+
+############################################################### Forest Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\Forest.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
+
 
 ######################################### TRUST #############################################
 
@@ -431,18 +542,22 @@ foreach ($DC in $DCs)
 
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*')
         {
+            $ChartTable += New-Object PSObject -property @{Env='DomainCOntrollers';Metric=$DCHostName;Status='Red';Weight=1}
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
         }
     elseif ($DCOS -like '* 2008*' -or $DCOS -like '* 2008 R2*') 
-        { 
+        {
+            $ChartTable += New-Object PSObject -property @{Env='DomainCOntrollers';Metric=$DCHostName;Status='Red';Weight=1} 
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$DCOS</td>" 
         }
     elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
-        { 
+        {
+            $ChartTable += New-Object PSObject -property @{Env='DomainCOntrollers';Metric=$DCHostName;Status='Green';Weight=1} 
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
         }
     else
         {
+            $ChartTable += New-Object PSObject -property @{Env='DomainCOntrollers';Metric=$DCHostName;Status='Green';Weight=1}
             Add-Content $report "<td bgcolor='White' align=center>$DCOS</td>" 
         }
      
@@ -485,6 +600,47 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Many Domain Controllers 
 add-content $report  "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+############################################################### Overview DCs Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewDCs.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
 
 
 ######################################### DCs HEADER #############################################
@@ -1068,10 +1224,12 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm','.kix','.msi','.ps1','.cmd','.ico'))
                     {
+                        $ChartTable += New-Object PSObject -property @{Env='SysVol';Metric=$SYSEXT;Status='Red';Weight=1}
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
                     }
                 else  
-                    { 
+                    {
+                        $ChartTable += New-Object PSObject -property @{Env='SysVol';Metric=$SYSEXT;Status='Green';Weight=1} 
                         Add-Content $report "<td bgcolor= 'White' align=center>$SYSEXT</td>"
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$SYSCOUNT</td>" 
@@ -1107,6 +1265,46 @@ add-content $report  "</CENTER>"
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
+
+############################################################### Overview SysVol Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewSysVol.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
 
 
 ######################################### DNS HEADER #############################################
@@ -1193,10 +1391,12 @@ Add-Content $report "</tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
                     {
+                        $ChartTable += New-Object PSObject -property @{Env='DNSServer';Metric=$DNSName;Status='Green';Weight=1} 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
                     }
                 else  
                     { 
+                        $ChartTable += New-Object PSObject -property @{Env='DNSServer';Metric=$DNSName;Status='Yellow';Weight=1} 
                         Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
@@ -1251,6 +1451,48 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td> DNS Server is an import
 add-content $report  "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+############################################################### Overview DNS Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Yellow') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Yellow }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewDNS.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
+
 
 
 ######################################### AD OBJECTS HEADER #############################################
@@ -1337,8 +1579,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersPWDNeverExpire</font></td>" 
+                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersPWDNeverExpire</td>" 
             }
+
+            $UsersCountErr = (($UsersInactive + $UsersPWDNeverExpire) /2)
+            $UsersCountOK = (($AllUsers + $AllUsers) / 2)
+            $ChartTable += New-Object PSObject -property @{Env='Users';Metric='UsersOk';Status='Green';Weight=$UsersCountOK} 
+            $ChartTable += New-Object PSObject -property @{Env='Users';Metric='UsersErr';Status='Red';Weight=$UsersCountErr} 
+
+
     Add-Content $report "</tr>"
     }
 Catch { 
@@ -1361,6 +1610,49 @@ add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This overview state of us
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR>"
+
+
+
+############################################################### Overview Users Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewUsers.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
+
 
 
 ######################################### COMPUTER ACCOUNTS #############################################
@@ -1438,6 +1730,15 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         { 
           Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
         }
+
+
+        $CompCountErr = (($PCWSUnsupp + $PCServerUnsupp)/2)
+        $CompCountOK = (($PCServer + $PCWS)/2)
+
+        $ChartTable += New-Object PSObject -property @{Env='Computer';Metric='ComputersOk';Status='Green';Weight=$CompCountOK} 
+        $ChartTable += New-Object PSObject -property @{Env='Computer';Metric='ComputersErr';Status='Red';Weight=$CompCountErr} 
+
+
     Add-Content $report "</tr>"
     }
 Catch { 
@@ -1459,6 +1760,50 @@ add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>Those counters present a 
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+############################################################### Overview Computers Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewComputers.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
+
+
 
 ######################################### GROUPS HEADER #############################################
 
@@ -1655,6 +2000,13 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                 $GroupAve = $GroupAve.tostring("#.##") 
                 Add-Content $report "<td bgcolor='Lime' align=center>$GroupAve</td>" 
             }
+
+            $GrpErr = (($GroupLarge + $GroupEmpty)/2)
+            $GrpOK = (($GroupTotal + $GroupTotal)/2)
+
+            $ChartTable += New-Object PSObject -property @{Env='Groups';Metric='GroupsOk';Status='Green';Weight=$GrpOK} 
+            $ChartTable += New-Object PSObject -property @{Env='Groups';Metric='GroupsErr';Status='Red';Weight=$GrpErr} 
+
         Add-Content $report "<tr>"
         }
 Catch { 
@@ -1676,6 +2028,47 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having fair number of gr
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+############################################################### Overview Groups Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewGroups.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
 
 
 ######################################### GPO HEADER #############################################
@@ -1779,6 +2172,13 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
                     { 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
+
+                $GPOErr = ($GpoC2 + (($GPEmpt + $GPBIG)/2))
+                $GPOOK = (($GpoAll + $GpoAll)/2)
+
+                $ChartTable += New-Object PSObject -property @{Env='GPO';Metric='GPOErr';Status='Red';Weight=$GPOErr} 
+                $ChartTable += New-Object PSObject -property @{Env='GPO';Metric='GPOOK';Status='Green';Weight=$GPOOK} 
+
                 Add-Content $report "</tr>"
                 }
 Catch { 
@@ -1799,6 +2199,48 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Group Policy represent a
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR>"
+
+
+############################################################### Overview GPOs Chart ########################################################################
+
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Windows.Forms.DataVisualization
+
+$Chart = New-object System.Windows.Forms.DataVisualization.Charting.Chart
+
+$Series.ChartType = $ChartTypes::Pie
+
+$Chart.Series.Add($Series)
+$Chart.ChartAreas.Add($ChartArea)
+
+$Chart.Series['Series1'].Points.DataBindXY($ChartTable.Metric, $ChartTable.Weight)
+
+Foreach ($Val in $ChartTable)
+    {
+        if ($Val.Status -eq 'Red') 
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Red }}
+            }
+        elseif ($Val.Status -eq 'Green')
+            {
+                $Chart.Series["Series1"].Points | ForEach-Object {if ($PSItem.AxisLabel -eq $Val.Metric) { $PSItem.Color = [System.Drawing.Color]::Green }}
+            }
+    }
+
+$Chart.Width = 140
+$Chart.Height = 110
+$Chart.BackColor = [System.Drawing.Color]::White
+$Chart.BorderDashStyle = 'Solid'
+
+$Chart.Series['Series1']['PieLineColor'] = 'Black'
+$Chart.Series['Series1'].Label = "."
+
+$Chart.SaveImage($ChartFolder+'\OverviewGPO.png', "PNG")
+
+Remove-Variable ChartTable
+remove-variable Chart
+$ChartTable = @()
+
 
 
 ######################################### GPOs WITHOUT LINK #############################################
@@ -1937,8 +2379,8 @@ Add-Content $report "</tr>"
 Add-content $report  "</table>" 
 add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADxRay Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADxRay%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
+add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='More'><B>More:</B></A> If you wish to have a better inventory and reporting regarding your Active Directory environment, Get in touch with your Microsoft representative to run an On-Demand Assessment in your Active Directory environment. On-Demand Assessment will give you a deep view and understanding of every single issue existing in the environment. More details at: <a href='https://docs.microsoft.com/en-us/services-hub/health/'>Services Hub On-Demand Assessments</a></TD></TR></TABLE>"
 Add-Content $report "</body>" 
 Add-Content $report "</html>" 
-
 
 Invoke-Item $report
