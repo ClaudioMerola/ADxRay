@@ -578,6 +578,7 @@ foreach ($DC in $DCs)
             { 
     Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
     Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+    $ChartTable += New-Object PSObject -property @{Env='DomainCOntrollers';Metric='Extra';Status='Red';Weight=1}        
             }
     }
 
@@ -1431,9 +1432,11 @@ Add-Content $report "</tr>"
             Catch { 
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+$ChartTable += New-Object PSObject -property @{Env='DNSServer';Metric='Extra';Status='Yellow';Weight=1}
 }
 
 }
+
 
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Inventory finished")
 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
