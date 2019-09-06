@@ -16,12 +16,16 @@ Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/release
 
 ### Requirements:
 
-For the script to run successful the following must be met:
+If Running the Charts version the script must be run with the following requirements:
+
+ - At least Windows Server 2012 / Windows 8
+ - .Net 3.5 Installed
+ - RSAT (Remote Server Administration Tools) Installed
+
+If Running the Light version the script must be run with the following requirements:
 
  - At least Windows Server 2012 / Windows 8
  - RSAT (Remote Server Administration Tools) Installed
-
-
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
 
