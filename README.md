@@ -26,6 +26,13 @@ The script must be run with the following requirements:
  
 Internet connection might be use by the script for version validation, but is not a requirement. 
 
+
+
+### ScreenShots:
+
+
+
+
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
 
 
@@ -43,6 +50,8 @@ Internet connection might be use by the script for version validation, but is no
 
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/4.png)
+
+
 
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/5.png)
