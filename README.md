@@ -1,4 +1,4 @@
-### Active Directory xRay Script
+## Active Directory xRay Script
 
 I started this as a personal project to help me during my day to day work on different Active Directory environments.
 
@@ -8,7 +8,7 @@ The script must be run at a Domain Controller or workstation (see requirements b
 
 The script must be run by a user with Domain Admin privileges (Enterprise Admins if dealing with multiple domains and forests).
 
-## This script may take several hours to complete!
+#### This script may take several hours to complete!
 
 
 ### How to run:
@@ -28,7 +28,7 @@ Internet connection might be use by the script for version validation, but is no
 
 
 
-### Screenshots:
+#### Screenshots:
 
 
 
