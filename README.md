@@ -8,7 +8,7 @@ The script must be run at a Domain Controller or workstation (see requirements b
 
 The script must be run by a user with Domain Admin privileges (Enterprise Admins if dealing with multiple domains and forests).
 
-##This script may take several hours to complete!
+This script may take several hours to complete!
 
 
 ### How to run:
