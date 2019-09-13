@@ -28,7 +28,8 @@ Internet connection might be use by the script for version validation, but is no
 
 
 
-### ScreenShots:
+
+### Screenshots:
 
 
 
