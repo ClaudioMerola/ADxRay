@@ -12,10 +12,7 @@
 #                                                                                                                                                                                    #                                             
 ######################################################################################################################################################################################
 
-<# 
-Always check for the newest version at: https://github.com/Merola132/ADxRay
-
- #>
+$Ver = 0.8
 
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
@@ -25,6 +22,8 @@ if ((test-path $report) -eq $false) {new-item $report -Type file -Force}
 Clear-Content $report 
 
 $Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
+
+$ErrorActionPreference = "silentlycontinue"
 
 Add-Content $report "<html>" 
 Add-Content $report "<head>" 
@@ -57,12 +56,13 @@ add-content $report "<BR>"
 add-content $report  "<table width='100%'>" 
 add-content $report  "<tr>" 
 add-content $report  "<td colspan='7' height='130' align='center' bgcolor='Black'>" 
-add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong><a href='https://github.com/Merola132/ADxRay'>Active Directory xRay</a></strong></font>" 
+add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong><a href='https://github.com/Merola132/ADxRay'>Active Directory xRay Report</a></strong></font>" 
 add-content $report  "</td>"  
-add-content $report  "</tr>" 
+add-content $report  "</tr>"
+Add-Content $report "<tr><td><font face='tahoma' color='#000000' size='2'><strong>Version: $Ver</font></td></tr>"  
 add-content $report  "</table>"
-add-content $report  "<TABLE BORDER=0 WIDTH=90%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
-add-content $report "<BR><BR><BR><BR><BR>"
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
+add-content $report "<BR><BR><BR><BR><BR><BR><BR>"
 
 
 
@@ -81,7 +81,7 @@ add-content $report  "</table>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section is intended to give an overall view of the <B>Active Directory Forest</B>, as so as the <B>Active Directory Domains</B> and <B>Domain Controllers</B> and configured <B>Trusts</B> between Active Directory Domains and others Active Directory Forests.</td></tr></TABLE>" 
 
-add-content $report "<BR><BR><BR><BR>"
+add-content $report "<BR><BR><BR>"
 
 
 ######################################### FOREST #############################################
@@ -92,6 +92,8 @@ Clear-Content $ForestLog
 
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Forest data catcher")
 Add-Content $ForestLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
+
+write-host 'Starting Forest Analysis..'
 
 try{
 add-content $report "<div id='ForestOverview'></div>"
@@ -179,6 +181,8 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### TRUST #############################################
 
+write-host 'Starting Trust Analysis..'
+
 
 $TrustLog = "C:\ADxRay\TrustLog.log" 
 if ((test-path $TrustLog) -eq $false) {new-item $TrustLog -Type file -Force}
@@ -198,7 +202,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
 
-$Trust1 = Get-ADtrust -Filter * -Server $Forest.SchemaRoleOwner
+$Trust1 = Get-ADtrust -Filter * -Server $Forest.SchemaRoleOwner -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
@@ -252,6 +256,8 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### DOMAIN #############################################
 
+write-host 'Starting Domains Analysis..'
+
 add-content $report "<div id='DomainOverview'></div>"
 
 $DomainLog = "C:\ADxRay\DomainLog.log" 
@@ -286,7 +292,7 @@ Add-Content $report "</tr>"
 
 Foreach ($Domain0 in $Forest.Domains.Name)
     {
-    $Domain1 = Get-ADDomain -Identity $Domain0
+    $Domain1 = Get-ADDomain -Identity $Domain0 -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
     Add-Content $report "<tr>" 
     
@@ -367,6 +373,8 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### DC #############################################
 
+write-host 'Starting Overall Domain Controller Analysis..'
+
 add-content $report "<div id='DCOverview'></div>"
 
 
@@ -405,7 +413,7 @@ foreach ($DC in $DCs)
     Try{
     Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Inventory of: "+$DC)
 
-    $DCD = Get-ADDomainController -Server $DC
+    $DCD = Get-ADDomainController -Server $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $DCD = $DCD | Sort-Object
 
     $Domain = $DCD.Domain
@@ -496,6 +504,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### DCs HEADER #############################################
 
+write-host 'Starting DCDiag Analysis..'
 
 add-content $report "<div id='DCHealth'></div>"
 
@@ -1014,6 +1023,8 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### SYSVOL FOLDER HEADER #############################################
 
 
+write-host 'Starting Sysvol Analysis..'
+
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
@@ -1115,10 +1126,9 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 
-
-
 ######################################### DNS HEADER #############################################
 
+write-host 'Starting DNS Analysis..'
 
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -1170,7 +1180,7 @@ Add-Content $report "</tr>"
                 Try{
 
                 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DC)
-                $DNS = Get-DnsServer -ComputerName $DC 
+                $DNS = Get-DnsServer -ComputerName $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
                 if ($DNS -ne '')
                     {
@@ -1187,7 +1197,7 @@ Add-Content $report "</tr>"
 
                 $DNSName = $DNS.ServerSetting.ComputerName
                 $DNSTomb = $DNS.ServerDsSetting.TombstoneInterval
-                $DNSZoneScavenge = ($dns.ServerZoneAging | where {$_.ScavengeServers -notlike '' }).count
+                $DNSZoneScavenge = ($dns.ServerZoneAging | where {$_.AgingEnabled -eq $True }).ToString.Count
                 $DNSBindSec = $DNS.ServerSetting.BindSecondaries
                 $DNSSca = $DNS.ServerScavenging.ScavengingState
                 $DNSRecur = $DNS.ServerRecursion.Enable
@@ -1264,7 +1274,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### AD OBJECTS HEADER #############################################
 
-#>
+write-host 'Starting Users and Computers Analysis..'
 
 add-content $report "<div id='Objects'></div>"
 
@@ -1477,6 +1487,8 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### GROUPS HEADER #############################################
+
+write-host 'Starting AD Groups Analysis..'
 
 add-content $report "<div id='GroupHeader'></div>"
 
@@ -1697,6 +1709,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### GPO HEADER #############################################
 
+write-host 'Starting GPO Analysis..'
 
 add-content $report "<div id='GPOHeader'></div>"
 
@@ -1936,6 +1949,28 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Make sure to investigate
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR>"
+
+##################################### VERSION CONTROL #######################################
+
+write-host 'Starting ADxRay Version Validation..'
+
+$VerValid = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Merola132/ADxRay/master/Docs/VersionControl" -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -TimeoutSec 5
+
+if ($VerValid.StatusCode -eq 200) 
+    {
+        if (($VerValid.Content[0]+$VerValid.Content[1]+$VerValid.Content[2]) -eq $Ver) 
+            {
+                Write-Host ('Version: '+$Ver+' - This Version is up to date.') -ForegroundColor Green
+            }
+        else 
+            {
+                Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/Merola132/ADxRay for lastest version and corrections.') -ForegroundColor Red
+            }
+    }
+elseif ($VerValid -eq $null ) 
+    {
+        Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/Merola132/ADxRay for lastest version and corrections.') -ForegroundColor Red
+    }
 
 
 ######################################### INDEX #############################################
