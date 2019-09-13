@@ -12,20 +12,19 @@ The lastest version also creates log files in the C:\ADXRay folder for each step
 
 This script may take several hours to complete!
 
-Releases can be found at: [Releases](https://github.com/Merola132/ADxRay/releases)
+### How to run:
+
+Just copy or download the ADxRay.ps1 and run on any computer that meets the requirements below.
 
 ### Requirements:
 
-If Running the Charts version the script must be run with the following requirements:
-
- - At least Windows Server 2012 / Windows 8
- - .Net 3.5 Installed
- - RSAT (Remote Server Administration Tools) Installed
-
-If Running the Light version the script must be run with the following requirements:
+The script must be run with the following requirements:
 
  - At least Windows Server 2012 / Windows 8
  - RSAT (Remote Server Administration Tools) Installed
+ - Internet connection is not required*
+ 
+Internet connection might be use by the script for version validation, but is not a requirement. 
 
 ![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
 
