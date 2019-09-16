@@ -12,7 +12,7 @@
 #                                                                                                                                                                                    #                                             
 ######################################################################################################################################################################################
 
-$Ver = 0.8
+$Ver = 0.9
 
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
@@ -66,6 +66,24 @@ add-content $report "<BR><BR><BR><BR><BR><BR><BR>"
 
 
 
+######################################### SCORE HEADER #############################################
+
+add-content $report  "<table width='100%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='center'>" 
+add-content $report  "<font face='verdana' color='#000000' size='62'>Environment Score Test<HR></font>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>" 
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues in the report to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE>" 
+
+add-content $report "<BR><BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+##################################### SCORE COUNTERS ###########################################
+
 
 ######################################### FOREST HEADER #############################################
 
@@ -82,6 +100,12 @@ add-content $report  "</table>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section is intended to give an overall view of the <B>Active Directory Forest</B>, as so as the <B>Active Directory Domains</B> and <B>Domain Controllers</B> and configured <B>Trusts</B> between Active Directory Domains and others Active Directory Forests.</td></tr></TABLE>" 
 
 add-content $report "<BR><BR><BR>"
+
+##################################### SCORE COUNTERS ###########################################
+
+
+$ScoreCount = 0
+$ScoreLimit = 0
 
 
 ######################################### FOREST #############################################
@@ -125,6 +149,7 @@ Add-Content $report "<td bgcolor='White' align=center>$Dom</td>"
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
+$ScoreLimit ++
     if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
@@ -134,7 +159,8 @@ Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functiona
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
     elseif ($ForeMode -like '*2012*' -or $ForeMode -like '*2016*') 
-        {        
+        {
+            $ScoreCount ++        
             Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
         }
     else
@@ -148,12 +174,14 @@ Add-Content $report "<td bgcolor='White' align=center>$ForeGC</td>"
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Recycle Bin Enabled</B></th>" 
+$ScoreLimit ++
     if ($RecycleBin -ne 'Enabled')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RecycleBin</font></td>" 
         }
     else
         {
+            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$RecycleBin</td>" 
         }
 Add-Content $report "</tr>" 
@@ -322,6 +350,7 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     Add-Content $report "<td bgcolor='White' align=center>$D2Name</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Parent</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Child</B></td>" 
+    $ScoreLimit ++
     if ($D2Mode -like '*NT*' -or $D2Mode -like '*2000*' -or $D2Mode -like '*2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$D2Mode</font></td>" 
@@ -332,6 +361,7 @@ Foreach ($Domain0 in $Forest.Domains.Name)
         }
     elseif ($D2Mode -like '*2012*' -or $D2Mode -like '*2016*') 
         { 
+            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$D2Mode</td>" 
         }
     else
@@ -441,7 +471,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCGC</td>" 
 
     Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Operating System Version of: "+$DCHostName)
-
+    $ScoreLimit ++
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
@@ -452,6 +482,7 @@ foreach ($DC in $DCs)
         }
     elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
         {
+            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
         }
     else
@@ -598,9 +629,10 @@ Add-Content $report "</tr>"
 Add-Content $report "<tr>"
 
 Add-Content $DomainControllersLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
-
+$ScoreLimit ++
 if(($DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
     {
+            $ScoreCount ++
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
@@ -1086,6 +1118,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm','.kix','.msi','.ps1','.cmd','.ico'))
                     {
+                        $ScoreLimit ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
                     }
                 else  
@@ -1207,10 +1240,11 @@ Add-Content $report "</tr>"
                 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Validating DNS Server: "+$DNSName)
 
                 Add-Content $report "<tr>"
-
+                $ScoreLimit ++
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
                     {
+                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
                     }
                 else  
@@ -1220,9 +1254,10 @@ Add-Content $report "</tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneScavenge</td>" 
-
+                $ScoreLimit ++
                 if ($DNSRootC -eq '' -or $DNSRootC -eq 0)
                     {
+                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
                     }
                 else  
@@ -1231,8 +1266,10 @@ Add-Content $report "</tr>"
                     }
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSTomb</td>" 
+                $ScoreLimit ++
                 if ($DNSRecur -eq $false)
                     {
+                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSRecur</td>"
                     }
                 else  
@@ -1342,16 +1379,20 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
         Add-Content $report "<td bgcolor='White' align=center>$UsersEnabled</td>"               
         Add-Content $report "<td bgcolor='White' align=center>$UsersDisabled</td>"    
+        $ScoreLimit ++
         if ($UsersInactive -eq '' -or $UsersInactive -eq 0) 
             {
+                $ScoreCount ++
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
             { 
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersInactive</font></td>" 
             }
+        $ScoreLimit ++
         if ($UsersPWDNeverExpire -eq '' -or $UsersPWDNeverExpire -eq 0) 
             {
+                $ScoreCount ++
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
@@ -1445,17 +1486,21 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
     Add-Content $report "<td bgcolor='White' align=center>$PCDomain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$PCAllC</td>"         
     Add-Content $report "<td bgcolor='White' align=center>$PCWS</td>"
-    Add-Content $report "<td bgcolor='White' align=center>$PCServer</td>"               
+    Add-Content $report "<td bgcolor='White' align=center>$PCServer</td>"
+    $ScoreLimit ++               
     if ($PCWSUnsupp -eq '' -or $PCWSUnsupp -eq 0) 
         {
+            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
         }
      else 
         { 
            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
         }
+    $ScoreLimit ++
     if ($PCServerUnsupp -eq '' -or $PCServerUnsupp -eq 0)  
         {
+            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
         }
     else 
@@ -1556,6 +1601,7 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                     if ($GCounter -ge 5) 
                         {
+                            $ScoreLimit ++
                             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GCounter</font></td>"
                         }
                     else 
@@ -1649,25 +1695,27 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
         Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Empty Groups in the Domain: "+$PCDomain)
         Add-Content $GroupsLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Empty Groups found: "+$GroupEmpty)
-
+        $ScoreLimit ++
         if ($GroupLarge -gt 30) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
             }
         else 
-            { 
+            {
+                $ScoreCount ++ 
                 Add-Content $report "<td bgcolor= 'Lime' align=center> $GroupLarge</td>" 
             }
-
+        $ScoreLimit ++
         if ($GroupEmpty -gt 20) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupEmpty</font></td>"
             }
         else 
-            { 
+            {
+                $ScoreCount ++ 
                 Add-Content $report "<td bgcolor= 'Lime' align=center>$GroupEmpty</td>" 
             }
-
+        $ScoreLimit ++
         if ($GroupAve -ge 1.00 -and $GroupAve -lt 3.00) 
             {
                 $GroupAve = $GroupAve.tostring("#.##")
@@ -1680,6 +1728,7 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         else 
             {
+                $ScoreCount ++
                 $GroupAve = $GroupAve.tostring("#.##") 
                 Add-Content $report "<td bgcolor='Lime' align=center>$GroupAve</td>" 
             }
@@ -1784,29 +1833,34 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group Policies in the Domain: "+$Domain)
                 Add-Content $GPOsLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total GPOs found: "+$GpoAll)
-
+                $ScoreLimit ++
                 if ($GpoC2 -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoC2 GPOs</font></td>"
                     }
                 else 
-                    { 
+                    {
+                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GpoC2 GPOs</td>" 
                     }
+                $ScoreLimit ++
                 if ($GPEmpt -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPEmpt GPOs</font></td>"
                     }
                 else 
-                    { 
+                    {
+                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPEmpt GPOs</td>" 
                     }
+                $ScoreLimit ++
                 if ($GPBIG -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPBIG GPOs</font></td>"
                     }
                 else 
-                    { 
+                    {
+                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
 
@@ -1955,11 +2009,12 @@ add-content $report "<BR><BR><BR><BR>"
 write-host 'Starting ADxRay Version Validation..'
 
 $VerValid = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Merola132/ADxRay/master/Docs/VersionControl" -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -TimeoutSec 5
-
+$ScoreLimit ++
 if ($VerValid.StatusCode -eq 200) 
     {
         if (($VerValid.Content[0]+$VerValid.Content[1]+$VerValid.Content[2]) -eq $Ver) 
             {
+                $ScoreCount ++
                 Write-Host ('Version: '+$Ver+' - This Version is up to date.') -ForegroundColor Green
             }
         else 
@@ -1981,6 +2036,14 @@ $Measure = $Runtime.Totalminutes.ToString('#######.##')
 $index = Get-Content $report
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
+if ($ScoreCount -eq $ScoreLimit)
+    {
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+    }
+    else
+    {
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+    }
 
 $index | out-file $report
 
