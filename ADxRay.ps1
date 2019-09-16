@@ -76,7 +76,7 @@ add-content $report  "</td>"
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues in the report to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE>" 
 
 add-content $report "<BR><BR>"
 add-content $report "<BR>"
@@ -311,8 +311,8 @@ Add-Content $report  "<td width='5%' align='center'><B>Domain Name</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Parent Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>ChildDomain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Functional Level</B></td>"
-Add-Content $report  "<td width='10%' align='center'><B>Domain Computer Container</B></td>"
-Add-Content $report  "<td width='10%' align='center'><B>Domain User Container</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Default Computer Container</B></td>"
+Add-Content $report  "<td width='10%' align='center'><B>Default User Container</B></td>" 
 
 Try{
 
@@ -2038,11 +2038,11 @@ $index = Get-Content $report
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 if ($ScoreCount -eq $ScoreLimit)
     {
-        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
     }
     else
     {
-        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
     }
 
 $index | out-file $report
