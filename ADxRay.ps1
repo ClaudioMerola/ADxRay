@@ -1200,7 +1200,7 @@ Add-Content $report  "<td width='10%' align='center'><B>Server Scavaging Enabled
 Add-Content $report  "<td width='10%' align='center'><B>Number of Zones</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Zones Scavaging Enabled</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Suspicious Root Hints</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Tombstone Interval</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>SRV Records</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Recursion Enabled</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Bind Secondaries Enabled</B></td>" 
 
@@ -1214,6 +1214,18 @@ Add-Content $report "</tr>"
 
                 Add-Content $DNSServerLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DC)
                 $DNS = Get-DnsServer -ComputerName $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                $ldapRR = Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$domain) -Name '_ldap._tcp.dc' -ComputerName $DC
+
+
+
+                $DNSSRVRR = 'Ok'
+                Foreach ($DCOne in $DCs)
+                    {
+                        if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.'))
+                            {
+                                $DNSSRVRR = 'Missing'
+                            }
+                    }
 
                 if ($DNS -ne '')
                     {
@@ -1226,10 +1238,8 @@ Add-Content $report "</tr>"
                                 $DNSRootHintC += $dd.NameServer
                             }
                     }
-                
 
                 $DNSName = $DNS.ServerSetting.ComputerName
-                $DNSTomb = $DNS.ServerDsSetting.TombstoneInterval
                 $DNSZoneScavenge = ($dns.ServerZoneAging | where {$_.AgingEnabled -eq $True }).ToString.Count
                 $DNSBindSec = $DNS.ServerSetting.BindSecondaries
                 $DNSSca = $DNS.ServerScavenging.ScavengingState
@@ -1265,7 +1275,17 @@ Add-Content $report "</tr>"
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRootC</font></td>" 
                     }
 
-                Add-Content $report "<td bgcolor='White' align=center>$DNSTomb</td>" 
+                $ScoreLimit ++
+                if ($DNSSRVRR -eq 'Missing')
+                    {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSSRVRR</font></td>" 
+                    }
+                else  
+                    {
+                        $ScoreCount ++ 
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSRVRR</td>"
+                    }
+
                 $ScoreLimit ++
                 if ($DNSRecur -eq $false)
                     {
@@ -2019,12 +2039,12 @@ if ($VerValid.StatusCode -eq 200)
             }
         else 
             {
-                Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/Merola132/ADxRay for lastest version and corrections.') -ForegroundColor Red
+                Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/Merola132/ADxRay for the lastest version and corrections.') -ForegroundColor Red
             }
     }
 elseif ($VerValid -eq $null ) 
     {
-        Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/Merola132/ADxRay for lastest version and corrections.') -ForegroundColor Red
+        Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/Merola132/ADxRay for the lastest version and corrections.') -ForegroundColor Red
     }
 
 
@@ -2038,14 +2058,16 @@ $index = Get-Content $report
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 if ($ScoreCount -eq $ScoreLimit)
     {
-        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='5'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
     }
     else
     {
-        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='7'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[46] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='5'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
     }
 
 $index | out-file $report
+
+sleep 10
 
 ######################################### CLOSING #############################################
 
