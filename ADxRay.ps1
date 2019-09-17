@@ -12,7 +12,10 @@
 #                                                                                                                                                                                    #                                             
 ######################################################################################################################################################################################
 
-$Ver = 0.9
+# Version
+$Ver = 1.0
+
+write-host 'Starting ADxRay Script'
 
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
@@ -388,7 +391,7 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### DC #############################################
 
-write-host 'Starting Overall Domain Controller Analysis..'
+write-host 'Starting Domain Controller Analysis..'
 
 Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers data catcher")
 Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Forest: "+$Forest)
@@ -506,6 +509,8 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Many Domain Controllers 
 
 add-content $report  "</CENTER>"
 
+write-host 'Domain Controller Initial Inventory Done.'
+
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
@@ -513,10 +518,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### DCs HEADER #############################################
 
-write-host 'Starting DCDiag Analysis..'
-
-add-content $report "<div id='DCHealth'></div>"
-
+write-host 'Starting DCDiag..'
 
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -543,11 +545,12 @@ $Job = Get-Job
 
 $DCDiag = Receive-Job -Job $job
 
+Write-Host ('DCDiag Done. Starting Analysis of: ') -NoNewline
+write-host $DCs.Count -NoNewline -ForegroundColor Magenta
+Write-Host ' DCs'
 
 ForEach ($DC in $DCs)
 {
-
-
 
 add-content $report  "<table width='50%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -1051,7 +1054,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### SYSVOL #############################################
 
-Add-Content $ADxRayLog ("SYSVolLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SYSVol Inventory")
+Add-Content $ADxRayLog ("SYSVolLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Inventory")
 
 add-content $report "<CENTER>"
 
@@ -1308,7 +1311,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### AD OBJECTS HEADER #############################################
 
-write-host 'Starting Users and Computers Analysis..'
+write-host 'Starting AD Object Analysis..'
 
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -1411,6 +1414,10 @@ add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This overview state of us
 
 add-content $report "</CENTER>"
 
+Write-Host ('User Account Analysis Done. Found: ') -NoNewline
+write-host $AllUsers -NoNewline -ForegroundColor Magenta
+Write-Host ' User Accounts'
+
 add-content $report "<BR><BR><BR><BR>"
 
 
@@ -1509,12 +1516,14 @@ add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>Those counters present a 
 
 add-content $report "</CENTER>"
 
+Write-Host ('Computer Account Analysis Done. Found: ') -NoNewline
+write-host $PCAllC -NoNewline -ForegroundColor Magenta
+Write-Host ' Computer Accounts'
+
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 ######################################### GROUPS HEADER #############################################
-
-write-host 'Starting AD Groups Analysis..'
 
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -1724,6 +1733,10 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having fair number of gr
 
 add-content $report "</CENTER>"
 
+Write-Host ('AD Groups Analysis Done. Found: ') -NoNewline
+write-host $GroupTotal -NoNewline -ForegroundColor Magenta
+Write-Host ' Groups'
+
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### GPO HEADER #############################################
@@ -1844,6 +1857,10 @@ add-content $report "<BR><BR>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Group Policy represent an important part of Active Directory management (without mention its impact on Servers and Workstation). Make sure GPO conflicts are avoided always as possible, also take GPO backups at a regular basis (<a href='https://docs.microsoft.com/en-us/powershell/module/grouppolicy/backup-gpo?view=win10-ps'>Backup-GPO</a>).</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
+
+Write-Host ('Found: ') -NoNewline
+write-host $GPOall -NoNewline -ForegroundColor Magenta
+Write-Host ' GPOs. Starting the Analyse them' 
 
 add-content $report "<BR><BR><BR><BR>"
 
@@ -2020,3 +2037,27 @@ Add-Content $report "</body>"
 Add-Content $report "</html>" 
 
 Invoke-Item $report
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
