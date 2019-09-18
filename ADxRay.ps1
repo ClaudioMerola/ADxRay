@@ -1195,8 +1195,9 @@ foreach ($DNSdomain in $Forest.domains)
                 remove-variable ldapRR
                 Add-Content $ADxRayLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring DNS Server: "+$DC)
                 $DNS = Get-DnsServer -ComputerName $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                $ldapRR = Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$DNSdomain) -Name '_ldap._tcp.dc' -ComputerName $DC
-                if ($ldapRR -eq $null) {$ldapRR = Get-DnsServerResourceRecord -ZoneName $DNSdomain -Name '_ldap._tcp.dc._msdcs' -ComputerName $DC}
+                try{$ldapRR = Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$DNSdomain) -Name '_ldap._tcp.dc' -ComputerName $DC}
+                catch {$ldapRR = Get-DnsServerResourceRecord -ZoneName $DNSdomain -Name '_ldap._tcp.dc._msdcs' -ComputerName $DC}
+                    
 
                 $DNSSRVRR = 'Ok'
                 Foreach ($DCOne in $DCs)
@@ -1206,10 +1207,6 @@ foreach ($DNSdomain in $Forest.domains)
                                 $DNSSRVRR = 'Missing'
                             }
                     }
-
-                if ($DNS -ne '')
-                    {
-
                 $DNSRootHintC = @()
                 Foreach ($dd in $dns.ServerRootHint.NameServer.RecordData)
                     {
@@ -1279,9 +1276,8 @@ foreach ($DNSdomain in $Forest.domains)
                 Add-Content $report "<td bgcolor='White' align=center>$DNSBindSec</td>" 
 
 
-                }
-
-            Add-Content $report "</tr>" 
+                Add-Content $report "</tr>" 
+            
             }
             Catch { 
 Add-Content $ADxRayLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
