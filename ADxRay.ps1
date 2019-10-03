@@ -13,7 +13,7 @@
 ######################################################################################################################################################################################
 
 # Version
-$Ver = '1.0'
+$Ver = '1.1'
 
 write-host 'Starting ADxRay Script'
 
@@ -407,7 +407,7 @@ add-content $report  "<table width='90%' border='1'>"
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Enabled</B></td>" 
+Add-Content $report  "<td width='5%' align='center'><B>Type</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>IPV4 Address</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Global Catalog</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Operating System</B></td>" 
@@ -429,7 +429,7 @@ foreach ($DC in $DCs)
 
     $Domain = $DCD.Domain
     $DCHostName = $DCD.Hostname
-    $DCEnabled = $DCD.Enabled
+    $DCEnabled = $DCD.IsReadOnly
     $DCIP = $DCD.IPv4Address
     $DCGC = $DCD.IsGlobalCatalog
     $DCOS = $DCD.OperatingSystem
@@ -441,7 +441,15 @@ foreach ($DC in $DCs)
 
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCEnabled</td>" 
+
+    if ($DCEnabled -eq $True)
+        {
+            Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
+        }
 
     Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting IP of: "+$DCHostName)
 
