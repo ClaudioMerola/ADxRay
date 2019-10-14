@@ -13,7 +13,7 @@
 ######################################################################################################################################################################################
 
 # Version
-$Ver = '1.1'
+$Ver = '1.2'
 
 write-host 'Starting ADxRay Script'
 
@@ -75,17 +75,10 @@ add-content $report "<BR><BR><BR><BR><BR><BR><BR>"
 
 ######################################### SCORE HEADER #############################################
 
-add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
-add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Environment Score Test<HR></font>" 
-add-content $report  "</td>" 
-add-content $report  "</tr>" 
-add-content $report  "</table>" 
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE>" 
-
-add-content $report "<BR><BR><BR><BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
+add-content $report "<BR>"
 add-content $report "<BR>"
 add-content $report "<BR>"
 
@@ -2017,14 +2010,17 @@ $Measure = $Runtime.Totalminutes.ToString('#######.##')
 $index = Get-Content $report
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
+
 if ($ScoreCount -eq $ScoreLimit)
     {
-        $Index[44] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='5'>Score</font></td></tr><tr><td align='center'bgcolor= 'Lime' align=center><font size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='7' height='70' align='left'><font face='verdana' color='#000000' size='62'>Environment Score: <font face='verdana' color='#00FF00' size='7'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
     }
     else
     {
-        $Index[44] = "<TABLE BORDER=1 WIDTH=20% align='center'><tr><td align='center' bgcolor='WhiteSmoke'><font size='5'>Score</font></td></tr><tr><td align='center'bgcolor= 'Red' align=center><font color='#FFFFFF' size='7'>$ScoreCount / $ScoreLimit</font></td></tr></TABLE><BR><BR><BR><BR><BR><BR><BR>"
+        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='7' height='70' align='left'><font face='verdana' color='#000000' size='62'>Environment Score: <font face='verdana' color='Red' size='7'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
     }
+
+$Index[38] =  "<TABLE BORDER=0 WIDTH=50%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE><BR><BR><BR><BR><BR>" 
 
 $index | out-file $report
 
