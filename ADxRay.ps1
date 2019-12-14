@@ -69,7 +69,7 @@ add-content $report  "</tr>"
 Add-Content $report "<tr><td><font face='tahoma' color='#000000' size='2'><strong>Version: $Ver</font></td></tr>"  
 add-content $report  "</table>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of their Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the server or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and we will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
-add-content $report "<BR><BR><BR><BR><BR><BR><BR>"
+add-content $report "<BR><BR>"
 
 
 
@@ -2013,11 +2013,11 @@ $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><fon
 
 if ($ScoreCount -eq $ScoreLimit)
     {
-        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='7' height='70' align='left'><font face='verdana' color='#000000' size='62'>Environment Score: <font face='verdana' color='#00FF00' size='7'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
+        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='3' height='70' align='left'><font face='verdana' color='#000000' size='3'>Environment Score: <font face='verdana' color='#00FF00' size='3'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
     }
     else
     {
-        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='7' height='70' align='left'><font face='verdana' color='#000000' size='62'>Environment Score: <font face='verdana' color='Red' size='7'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
+        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='3' height='70' align='left'><font face='verdana' color='#000000' size='3'>Environment Score: <font face='verdana' color='Red' size='3'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
     }
 
 $Index[38] =  "<TABLE BORDER=0 WIDTH=50%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE><BR><BR><BR><BR><BR>" 
