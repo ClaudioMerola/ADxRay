@@ -73,15 +73,6 @@ add-content $report "<BR><BR>"
 
 
 
-######################################### SCORE HEADER #############################################
-
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-add-content $report "<BR>"
-
 ######################################### FOREST HEADER #############################################
 
 
@@ -2010,17 +2001,6 @@ $Measure = $Runtime.Totalminutes.ToString('#######.##')
 $index = Get-Content $report
 
 $Index[23] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
-
-if ($ScoreCount -eq $ScoreLimit)
-    {
-        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='3' height='70' align='left'><font face='verdana' color='#000000' size='3'>Environment Score: <font face='verdana' color='#00FF00' size='3'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
-    }
-    else
-    {
-        $Index[37] = "<table width='50%' border='0'><tr bgcolor='White'><td colspan='3' height='70' align='left'><font face='verdana' color='#000000' size='3'>Environment Score: <font face='verdana' color='Red' size='3'>$ScoreCount / $ScoreLimit <HR></font></font></td></tr></table>" 
-    }
-
-$Index[38] =  "<TABLE BORDER=0 WIDTH=50%><tr><td>This score is the result of several tests and measures done in your environment. The measure pointers are detailed further in this report, understand and investigate all reported issues to 'fix' your environment and get higher scores in the report on future executions.</td></tr></TABLE><BR><BR><BR><BR><BR>" 
 
 $index | out-file $report
 
