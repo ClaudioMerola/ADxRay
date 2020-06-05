@@ -13,7 +13,7 @@
 ######################################################################################################################################################################################
 
 # Version
-$Ver = '1.3'
+$Ver = '1.4'
 
 write-host 'Starting ADxRay Script'
 
@@ -133,15 +133,15 @@ Add-Content $report "</tr>"
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
 $ScoreLimit ++
-    if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
+    if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*' -or $ForeMode -like '*2008*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
         }
-    elseif ($ForeMode -like '*2008*' -and $ForeMode -notlike '*2008R2*') 
+    elseif ($ForeMode -like '*2012*') 
         {
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
-    elseif ($ForeMode -like '*2012*' -or $ForeMode -like '*2016*') 
+    elseif ($ForeMode -like '*2019*' -or $ForeMode -like '*2016*') 
         {
             $ScoreCount ++        
             Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
@@ -449,11 +449,11 @@ foreach ($DC in $DCs)
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
         }
-    elseif ($DCOS -like '* 2008*' -or $DCOS -like '* 2008 R2*') 
+    elseif ($DCOS -like '* 2008*' -or $DCOS -like '* 2012*') 
         {
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$DCOS</td>" 
         }
-    elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
+    elseif ($DCOS -like '* 2016*' -or $DCOS -like '* 2019*') 
         {
             $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
@@ -1451,8 +1451,8 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
     $PCAllC = $PCAll.Count
     $PCServer = ($PCAll | where {$_ -like '* Server*'}).Count
     $PCWS = ($PCAll | where {$_ -notlike '* Server*'}).Count
-    $PCServerUnsupp = ($PCAll | where {$_ -like '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2003*'}).Count
-    $PCWSUnsupp = ($PCAll | where {$_ -notlike '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
+    $PCServerUnsupp = ($PCAll | where {$_ -like '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2003*' -or $_ -like '*2008*'}).Count
+    $PCWSUnsupp = ($PCAll | where {$_ -notlike '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 7*' -or $_ -like '* 8 *'  -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
 
 
     Add-Content $ADxRayLog ("ComputerDetailsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Computer Accounts in the Domain: "+$PCDomain)
