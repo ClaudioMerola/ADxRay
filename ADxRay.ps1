@@ -275,11 +275,12 @@ add-content $report  "<h3>Active Directory Domains View ($Forest)</h3>"
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
-add-content $report  "<table width='80%' border='1'>" 
+add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Topology</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Forest Name</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain Name</B></td>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain Controllers</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Parent Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>ChildDomain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Functional Level</B></td>"
@@ -302,6 +303,8 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     $D2Mode = $Domain1.DomainMode
     $D2CompCont = $Domain1.ComputersContainer
     $D2UserCont = $Domain1.UsersContainer
+    $D2Count = ($Forest.domains | where {$_.Name -eq $D2Name}).DomainControllers.Count 
+
     if ($Domain1.Children.Count -eq '' -and $Domain1.Parent.Count -eq '')
         {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Single-Domain</td>"
@@ -320,6 +323,7 @@ Foreach ($Domain0 in $Forest.Domains.Name)
 
     Add-Content $report "<td bgcolor='White' align=center>$ForeName</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Name</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$D2Count</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Parent</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Child</B></td>" 
     $ScoreLimit ++
