@@ -13,7 +13,7 @@
 ######################################################################################################################################################################################
 
 # Version
-$Ver = '1.4'
+$Ver = '1.5'
 
 write-host 'Starting ADxRay Script'
 
@@ -133,15 +133,15 @@ Add-Content $report "</tr>"
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
 $ScoreLimit ++
-    if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*' -or $ForeMode -like '*2008*')
+    if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
         }
-    elseif ($ForeMode -like '*2012*') 
+    elseif ($ForeMode -like '*2008*') 
         {
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
-    elseif ($ForeMode -like '*2019*' -or $ForeMode -like '*2016*') 
+    elseif ($ForeMode -like '*2019*' -or $ForeMode -like '*2016*' -or $ForeMode -like '*2012*') 
         {
             $ScoreCount ++        
             Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
@@ -1610,7 +1610,7 @@ Add-content $report  "</table>"
 
 add-content $report "<BR><BR>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having far too many users with more than necessary permissions may result in serius security breaches. Make sure only the very necessary user accounts are present in those groups, unautohorized users may cause big damage. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specialy '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'.</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having far too many users with more than necessary permissions may result in serius security breaches. Microsoft recommends the group Schema Admins should remains empty until there is a real need to change the environment´s schema, and any member should be removed after that change. Make sure only the very necessary user accounts are present in those groups, unautohorized users may cause big damage. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specialy '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
@@ -2012,7 +2012,7 @@ Add-Content $report "</tr>"
 Add-content $report  "</table>" 
 add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADxRay Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADxRay%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
-add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='More'><B>More:</B></A> If you wish to have a better inventory and reporting regarding your Active Directory environment, Get in touch with your Microsoft representative to run an On-Demand Assessment in your Active Directory environment. On-Demand Assessment will give you a deep view and understanding of every single issue existing in the environment. More details at: <a href='https://docs.microsoft.com/en-us/services-hub/health/'>Services Hub On-Demand Assessments</a></TD></TR></TABLE>"
+add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='More'><B>More:</B></A> If you wish to have a better inventory and reporting regarding your Active Directory environment, Get in touch with your Microsoft representative to run an On-Demand Assessment in your Active Directory environment. On-Demand Assessment will give you a deeper view and understanding of every single issue existing in the environment. More details at: <a href='https://docs.microsoft.com/en-us/services-hub/health/'>Services Hub On-Demand Assessments</a></TD></TR></TABLE>"
 Add-Content $report "</body>" 
 Add-Content $report "</html>" 
 
