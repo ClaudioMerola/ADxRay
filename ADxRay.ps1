@@ -932,9 +932,6 @@ add-content $report "<BR>"
 if ($SecCount -ge 1 -or $PolCount -ge 1 -or $AccCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1 -or $FWCount -ge 1)
 {
 
-add-content $report "<BR>"
-add-content $report "<BR>"
-
 add-content $report  "<CENTER>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Some of Security Policies recommended by Microsoft were not found applied in those Domain Controllers. Download the lastest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>.</font></td></tr></TABLE>" 
