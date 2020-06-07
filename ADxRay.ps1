@@ -578,7 +578,7 @@ add-content $report  "</table>"
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a detailed view of the Domain Controller's Security. This inventory is based on Microsoft´s public best practices and recommendations.</td></tr></TABLE>" 
 
 
-######################################### DCs  ###############################################
+######################################### DCs Security ###############################################
 
 
 Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Checking if RSOP Folder already exists.")    
@@ -740,13 +740,15 @@ $SecReg = 'SYSTEM\CurrentControlSet\Policies\EarlyLaunch','Software\Policies\Mic
 
 $SecAud = 'Audit Audit Policy Change','Audit Other Object Access Events','Audit Process Creation','Audit MPSSVC Rule-Level Policy Change','Audit Security State Change','Audit Directory Service Changes','Audit Sensitive Privilege Use','Audit System Integrity','Audit Computer Account Management','Audit Other System Events','Audit Security Group Management','Audit Kerberos Service Ticket Operations','Audit Directory Service Access','Audit Other Policy Change Events','Audit Authentication Policy Change','Audit File Share','Audit Account Lockout','Audit Special Logon','Audit Security System Extension','Audit Removable Storage','Audit Kerberos Authentication Service','Audit Logon','Audit Detailed File Share','Audit Other Account Management Events','Audit Credential Validation','Audit User Account Management','Audit Other Logon/Logoff Events'
 
+$UsrRRec = 'SeDenyBatchLogonRight','SeDenyRemoteInteractiveLogonRight','SeDenyNetworkLogonRight','SeDenyServiceLogonRight'
+
 write-host 'Starting Domain Controller Security Policies Inventory..'
 
 
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>Controllers Security Policies Inventory ($Forest)</h3>" 
+add-content $report  "<h3>Domain Controllers Security Policies Inventory ($Forest)</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
@@ -959,6 +961,130 @@ add-content $report "<BR>"
 add-content $report  "<CENTER>"
 
 add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This analysis is based on the Resultant Set of Policies applied on those Domain Controllers and comparing with Microsoft´s baseline security standards. Microsoft recommends the use of security baseline GPOs (<a href='https://techcommunity.microsoft.com/t5/microsoft-security-baselines/security-baseline-final-for-windows-10-v1909-and-windows-server/ba-p/1023093'>Security baseline (FINAL) for Windows 10 v1909 and Windows Server v1909</a>) in the environment, specially on Domain Controllers. Keep your environment protected with the lastest security baseline.</tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+write-host 'Domain Controller Security Policies Inventory Done.'
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+
+
+
+
+
+
+
+add-content $report "<CENTER>"
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Domain Controllers Security User Rights Assignments ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+ 
+add-content $report  "<table width='90%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Deny access to this computer from the network</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Deny log on as a batch job</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Deny log on as a service</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Deny log on through Remote Desktop Services</B></td>"
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller User Rights Assignments") 
+
+Add-Content $report "</tr>" 
+
+
+foreach ($DC in $DCs)
+    {
+    try {
+    $DCD = Get-ADDomainController -Server $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $DCD = $DCD | Sort-Object
+
+    $Domain = $DCD.Domain
+    $DCHostName = $DCD.Hostname
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller User Rights Assignments on the server: "+$DC) 
+
+    [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\RSOP\RSOP_"+$DC+".xml")
+
+    $us = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.UserRightsAssignment | where {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight' -or $_.Name -eq 'SeDenyBatchLogonRight' -or $_.Name -eq 'SeDenyNetworkLogonRight' -or $_.Name -eq 'SeDenyServiceLogonRight'}
+
+    $dnsvc = $us | where {$_.Name -eq 'SeDenyServiceLogonRight'}
+    $dnsvc = $dnsvc.Member.Name.'#text'
+    $dnnet = $us | where {$_.Name -eq 'SeDenyNetworkLogonRight'}
+    $dnnet = $dnnet.Member.Name.'#text'
+    $dnbat = $us | where {$_.Name -eq 'SeDenyBatchLogonRight'}
+    $dnbat = $dnbat.Member.Name.'#text'
+    $dnrdp = $us | where {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight'}
+    $dnrdp = $dnrdp.Member.Name.'#text'
+
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+    if ($dnnet -notlike '*Administrator*')
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnnet</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnnet</td>"    
+        }
+
+    if ($dnbat -notlike '*Administrator*')
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnbat</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnbat</td>"    
+        }
+
+    if ($dnsvc -notlike '*Administrator*')
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnsvc</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnsvc</td>"    
+        }
+
+    if ($dnrdp -notlike '*Administrator*')
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnrdp</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnrdp</td>"    
+        }
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Ending Domain Controller User Rights Assignments for: "+$DC)
+
+    Add-Content $report "</tr>" 
+}
+Catch{
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+}
+
+}
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>According Microsoft (<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/appendix-d--securing-built-in-administrator-accounts-in-active-directory'>Appendix D: Securing Built-In Administrator Accounts in Active Directory</a>) the Administrator Account should be denied logon trought network, Remote Desktop, as a batch job and as a service in all Domain Controllers in the environment.</tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
