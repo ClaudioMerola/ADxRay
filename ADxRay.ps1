@@ -711,7 +711,7 @@ write-host 'Starting Domain Controller Security Policies Inventory..'
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>Active Directory Domain Controllers Security Policies Inventory ($Forest)</h3>" 
+add-content $report  "<h3>Controllers Security Policies Inventory ($Forest)</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
