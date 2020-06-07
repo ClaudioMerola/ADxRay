@@ -13,7 +13,7 @@
 ######################################################################################################################################################################################
 
 # Version
-$Ver = '1.5'
+$Ver = '2.0'
 
 write-host 'Starting ADxRay Script'
 
@@ -88,12 +88,6 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section is intended
 
 add-content $report "<BR><BR><BR>"
 
-##################################### SCORE COUNTERS ###########################################
-
-
-$ScoreCount = 0
-$ScoreLimit = 0
-
 
 ######################################### FOREST #############################################
 
@@ -122,6 +116,21 @@ $ForeMode = $Forest.ForestMode
 $ForeGC = $Forest.GlobalCatalogs
 $ForeSites = $Forest.Sites
 
+
+Get-Job | Remove-Job
+
+start-job -scriptblock {setspn -X -F} 
+Get-Job | Wait-Job
+$Job = Get-Job
+
+$SPN = Receive-Job -Job $job
+
+$SPN = ($SPN | Select-String -Pattern ('group of duplicate SPNs'))
+$SPN = $SPN.Line
+
+Remove-Variable $Job
+
+
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Name</B></th>" 
 Add-Content $report "<td bgcolor='White' align=center>$ForeName</td>" 
@@ -132,7 +141,6 @@ Add-Content $report "<td bgcolor='White' align=center>$Dom</td>"
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
-$ScoreLimit ++
     if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
@@ -142,8 +150,7 @@ $ScoreLimit ++
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
         }
     elseif ($ForeMode -like '*2019*' -or $ForeMode -like '*2016*' -or $ForeMode -like '*2012*') 
-        {
-            $ScoreCount ++        
+        {      
             Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
         }
     else
@@ -157,14 +164,12 @@ Add-Content $report "<td bgcolor='White' align=center>$ForeGC</td>"
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
 Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Recycle Bin Enabled</B></th>" 
-$ScoreLimit ++
     if ($RecycleBin -ne 'Enabled')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RecycleBin</font></td>" 
         }
     else
         {
-            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$RecycleBin</td>" 
         }
 Add-Content $report "</tr>" 
@@ -173,6 +178,20 @@ Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Sites</B></th>"
 Add-Content $report "<td bgcolor='White' align=center>$ForeSites</td>" 
 
 Add-Content $report "</tr>" 
+
+Add-Content $report "<tr>" 
+Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Duplicate SPN</B></th>" 
+    if ($SPN -ne 'found 0 group of duplicate SPNs.')
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SPN</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$SPN</td>" 
+        }
+Add-Content $report "</tr>" 
+
+
 Add-Content $ADxRayLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - RecycleBin status: "+$RecycleBin)
 
 Add-Content $ADxRayLog ("ForestLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Forest inventory phase.")
@@ -326,7 +345,6 @@ Foreach ($Domain0 in $Forest.Domains.Name)
     Add-Content $report "<td bgcolor='White' align=center>$D2Count</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Parent</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2Child</B></td>" 
-    $ScoreLimit ++
     if ($D2Mode -like '*NT*' -or $D2Mode -like '*2000*' -or $D2Mode -like '*2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$D2Mode</font></td>" 
@@ -337,7 +355,6 @@ Foreach ($Domain0 in $Forest.Domains.Name)
         }
     elseif ($D2Mode -like '*2012*' -or $D2Mode -like '*2016*') 
         { 
-            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$D2Mode</td>" 
         }
     else
@@ -422,7 +439,7 @@ foreach ($DC in $DCs)
     $DCGC = $DCD.IsGlobalCatalog
     $DCOS = $DCD.OperatingSystem
     $DCOSD = $DCD.OperatingSystemVersion
-    $FSMO = $DCD.OperationMasterRoles 
+    $FSMO = $DCD.OperationMasterRoles
     $Site = $DCD.Site
 
     Add-Content $report "<tr>"
@@ -448,7 +465,6 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCGC</td>" 
 
     Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Operating System Version of: "+$DCHostName)
-    $ScoreLimit ++
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
@@ -459,7 +475,6 @@ foreach ($DC in $DCs)
         }
     elseif ($DCOS -like '* 2016*' -or $DCOS -like '* 2019*') 
         {
-            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
         }
     else
@@ -505,14 +520,447 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Many Domain Controllers 
 
 add-content $report  "</CENTER>"
 
-write-host 'Domain Controller Initial Inventory Done.'
+write-host 'Initial Domain Controller Inventory Done.'
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 
 
-######################################### DCs HEADER #############################################
+
+######################################### DCs Security HEADER #############################################
+
+write-host 'Starting Domain Controller Security Inventory..'
+
+add-content $report  "<table width='100%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='center'>" 
+add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller´s Security<HR></font>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a detailed view of the Domain Controller's Security. This inventory is based on Microsoft´s public best practices and recommendations.</td></tr></TABLE>" 
+
+
+######################################### DCs  ###############################################
+
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Checking if RSOP Folder already exists.")    
+if ((Test-Path -Path C:\ADxRay\RSOP -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\RSOP}
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Security Log Inventory.")   
+
+add-content $report "<BR><BR><BR>"
+
+
+add-content $report "<CENTER>"
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Active Directory Domain Controllers Event Log Inventory ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+ 
+add-content $report  "<table width='90%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>System Log Max Size (Kb)</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Recommended Size (Kb)</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Security Log Max Size (Kb)</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Recommended Size (Kb)</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>DNS Log Max Size (Kb)</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Recommended Size (Kb)</B></td>"
+Add-Content $report  "<td width='10%' align='center'><B>Critical Sec Events Logged</B></td>" 
+ 
+Add-Content $report "</tr>" 
+
+$CritEvents = 0
+
+foreach ($DC in $DCs)
+    {
+    Try{
+
+    Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Inventory of:"+$DC) 
+        
+    $DCD = Get-ADDomainController -Server $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $DCD = $DCD | Sort-Object
+
+    $SysLogSize = Get-EventLog -List -ComputerName $DC | where {$_.Log -eq 'System'}
+    
+    $SecLogSize = Get-EventLog -List -ComputerName $DC | where {$_.Log -eq 'Security'}
+    
+    $ADLogSize = Get-EventLog -List -ComputerName $DC | where {$_.Log -eq 'DNS Server'}
+    
+    $evt = Get-EventLog -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102 -ComputerName $DC
+
+    Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Log sizes adquired:"+$SysLogSize+" , "+$SecLogSize+" and "+$ADLogSize) 
+
+    $Domain = $DCD.Domain
+    $DCHostName = $DCD.Hostname
+    $DCSysLog = '{0:N0}' -f $SysLogSize.MaximumKilobytes
+    $SysRec = '{0:N0}' -f (1002400)
+    $DCSecLog = '{0:N0}' -f $SecLogSize.MaximumKilobytes
+    $SecRec = '{0:N0}' -f (4194240)
+    $DCDNSLog = '{0:N0}' -f $ADLogSize.MaximumKilobytes
+    $DNSRec = '{0:N0}' -f (1002400)
+    $DCEvt = $evt.Count
+
+    
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+        if ($SysLogSize.MaximumKilobytes -ge 1002400)
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCSysLog</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCSysLog</font></td>"   
+        }
+
+    Add-Content $report "<td bgcolor='White' align=center>$SysRec</td>" 
+
+        if ($SecLogSize.MaximumKilobytes -ge 4194240)
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCSecLog</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCSecLog</font></td>"   
+        }
+
+    Add-Content $report "<td bgcolor='White' align=center>$SecRec</td>" 
+
+        if ($ADLogSize.MaximumKilobytes -ge 1002400)
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCDNSLog</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCDNSLog</font></td>"   
+        }
+
+    Add-Content $report "<td bgcolor='White' align=center>$DNSRec</td>" 
+
+        if ($DCEvt -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCEvt</font></td>" 
+            $CritEvents ++  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCEvt</td>"    
+        }
+        Add-Content $report "</tr>" 
+        Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of server:"+$DC) 
+}
+Catch{
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+}
+}
+
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+if ($CritEvents -ge 1)
+{
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'> Critical Security Events were found in this environment! Investigate further following Microsoft´s <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor'>Events to Monitor in Active Directory</a>. </font></td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+}
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Event log size configuration must be a top priority. Often when those configurations are noticed is already too late. Make sure at least Security and System Events are adjusted to a regular size. This will ensure that vital information is recorded in time of need. Those recommendations were set based on the following pages: <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd349798(v=ws.10)'>Event Log</a> and <a href='https://docs.microsoft.com/en-us/windows/client-management/mdm/diagnosticlog-csp'>DiagnosticLog CSP</a>. If a SysLog Server is in place in the environment, those numbers may change.</td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+write-host 'Domain Controller Security Log Inventory Done.'
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+$SecOptions = 'MACHINE\System\CurrentControlSet\Control\Lsa\MSV1_0\NTLMMinServerSec','MACHINE\System\CurrentControlSet\Control\Lsa\MSV1_0\allownullsessionfallback','MACHINE\System\CurrentControlSet\Services\LDAP\LDAPClientIntegrity','MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymousSAM','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ConsentPromptBehaviorAdmin','MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\sealsecurechannel','MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Winlogon\ScRemoveOption','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableVirtualization','MACHINE\System\CurrentControlSet\Control\Lsa\LmCompatibilityLevel','MACHINE\System\CurrentControlSet\Services\NTDS\Parameters\LDAPServerIntegrity','MACHINE\System\CurrentControlSet\Services\LanManServer\Parameters\RequireSecuritySignature','MACHINE\System\CurrentControlSet\Control\Lsa\MSV1_0\NTLMMinClientSec','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\InactivityTimeoutSecs','MACHINE\System\CurrentControlSet\Services\LanManServer\Parameters\RestrictNullSessAccess','MACHINE\System\CurrentControlSet\Services\LanManServer\Parameters\EnableSecuritySignature','MACHINE\System\CurrentControlSet\Services\LanmanWorkstation\Parameters\EnablePlainTextPassword','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ConsentPromptBehaviorUser','MACHINE\System\CurrentControlSet\Control\Lsa\NoLMHash','MACHINE\System\CurrentControlSet\Control\Lsa\SCENoApplyLegacyAuditPolicy','MACHINE\System\CurrentControlSet\Services\LanmanWorkstation\Parameters\RequireSecuritySignature','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\FilterAdministratorToken','MACHINE\System\CurrentControlSet\Control\Session Manager\ProtectionMode','MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\signsecurechannel','MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\requirestrongkey','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableInstallerDetection','MACHINE\System\CurrentControlSet\Services\Netlogon\Parameters\RequireSignOrSeal','MACHINE\System\CurrentControlSet\Control\Lsa\LimitBlankPasswordUse','MACHINE\System\CurrentControlSet\Control\Lsa\RestrictAnonymous','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableSecureUIAPaths','MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\EnableLUA'
+
+$SecPolicies = 'Prevent enabling lock screen camera','Prevent enabling lock screen slide show','Configure SMB v1 client driver','Configure SMB v1 server','Enable Structured Exception Handling Overwrite Protection (SEHOP)','Extended Protection for LDAP Authentication (Domain Controllers only)','NetBT NodeType configuration','WDigest Authentication (disabling may require KB2871997)','MSS: (DisableIPSourceRouting IPv6) IP source routing protection level (protects against packet spoofing)','MSS: (DisableIPSourceRouting) IP source routing protection level (protects against packet spoofing)','MSS: (EnableICMPRedirect) Allow ICMP redirects to override OSPF generated routes','MSS: (NoNameReleaseOnDemand) Allow the computer to ignore NetBIOS name release requests except from WINS servers','Turn off multicast name resolution','Enable insecure guest logons','Windows Defender Firewall: Protect all network connections','Hardened UNC Paths','Encryption Oracle Remediation','Remote host allows delegation of non-exportable credentials','Boot-Start Driver Initialization Policy','Configure registry policy processing','Enumeration policy for external devices incompatible with Kernel DMA Protection','Disallow Autoplay for non-volume devices','Set the default behavior for AutoRun','Turn off Autoplay','Configure enhanced anti-spoofing','Specify the maximum log file size (KB)','Do not allow passwords to be saved','Do not allow drive redirection','Always prompt for password upon connection','Require secure RPC communication','Set client connection encryption level','Prevent downloading of enclosures','Allow indexing of encrypted files','Configure Windows Defender SmartScreen','Allow Windows Ink Workspace','Allow user control over installs','Always install with elevated privileges','Sign-in and lock last interactive user automatically after a restart','Turn on PowerShell Script Block Logging','Allow Basic authentication','Allow unencrypted traffic','Disallow Digest authentication','Allow Basic authentication','Allow unencrypted traffic','Disallow WinRM from storing RunAs credentials'
+
+$SecAccount = 'MaxRenewAge','MaximumPasswordAge','MinimumPasswordAge','MaxServiceAge','LockoutBadCount','MaxClockSkew','MaxTicketAge','PasswordHistorySize','MinimumPasswordLength','PasswordComplexity','ClearTextPassword','TicketValidateClient'
+
+$SecUsrR = 'SeMachineAccountPrivilege','SeChangeNotifyPrivilege','SeIncreaseBasePriorityPrivilege','SeTakeOwnershipPrivilege','SeRestorePrivilege','SeDebugPrivilege','SeSystemTimePrivilege','SeSecurityPrivilege','SeShutdownPrivilege','SeAuditPrivilege','SeInteractiveLogonRight','SeCreatePagefilePrivilege','SeBatchLogonRight','SeNetworkLogonRight','SeSystemProfilePrivilege','SeRemoteShutdownPrivilege','SeBackupPrivilege','SeEnableDelegationPrivilege','SeUndockPrivilege','SeSystemEnvironmentPrivilege','SeLoadDriverPrivilege','SeIncreaseQuotaPrivilege','SeProfileSingleProcessPrivilege','SeAssignPrimaryTokenPrivilege'
+
+$SecReg = 'SYSTEM\CurrentControlSet\Policies\EarlyLaunch','Software\Policies\Microsoft\Windows\NetworkProvider\HardenedPaths','Software\Policies\Microsoft\Windows\WinRM\Service','SYSTEM\CurrentControlSet\Services\Netbt\Parameters','SYSTEM\CurrentControlSet\Control\Session Manager\kernel','Software\Policies\Microsoft\Windows\LanmanWorkstation','Software\Policies\Microsoft\Windows\WinRM\Client','Software\Policies\Microsoft\WindowsFirewall\PublicProfile','Software\Policies\Microsoft\Windows\PowerShell\ScriptBlockLogging','Software\Policies\Microsoft\Internet Explorer\Feeds','Software\Policies\Microsoft\WindowsFirewall\DomainProfile','Software\Microsoft\Windows\CurrentVersion\Policies\System','Software\Policies\Microsoft\Windows\Installer','SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters','Software\Policies\Microsoft\Windows NT\Terminal Services','Software\Policies\Microsoft\Windows\Kernel DMA Protection','Software\Policies\Microsoft\Windows\CredentialsDelegation','Software\Policies\Microsoft\Windows\System','SYSTEM\CurrentControlSet\Services\Tcpip\Parameters','Software\Policies\Microsoft\WindowsFirewall\PrivateProfile','Software\Policies\Microsoft\WindowsInkWorkspace','Software\Policies\Microsoft\Windows\Group Policy\{35378EAC-683F-11D2-A89A-00C04FBBCFA2}','Software\Policies\Microsoft\Windows\Personalization','Software\Policies\Microsoft\WindowsFirewall','SYSTEM\CurrentControlSet\Services\NTDS\Parameters','Software\Policies\Microsoft\Windows\EventLog\Security','Software\Policies\Microsoft\Windows\Windows Search','Software\Microsoft\Windows\CurrentVersion\Policies\System\CredSSP\Parameters','SYSTEM\CurrentControlSet\Services\MrxSmb10','Software\Policies\Microsoft\Windows\Safer','Software\Policies\Microsoft\Windows\EventLog\Application','Software\Policies\Microsoft\Windows\Explorer','Software\Policies\Microsoft\Biometrics\FacialFeatures','SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest','Software\Policies\Microsoft\Windows\EventLog\System','Software\Microsoft\Windows\CurrentVersion\Policies\Explorer','SYSTEM\CurrentControlSet\Services\LanmanServer\Parameters'
+
+$SecAud = 'Audit Audit Policy Change','Audit Other Object Access Events','Audit Process Creation','Audit MPSSVC Rule-Level Policy Change','Audit Security State Change','Audit Directory Service Changes','Audit Sensitive Privilege Use','Audit System Integrity','Audit Computer Account Management','Audit Other System Events','Audit Security Group Management','Audit Kerberos Service Ticket Operations','Audit Directory Service Access','Audit Other Policy Change Events','Audit Authentication Policy Change','Audit File Share','Audit Account Lockout','Audit Special Logon','Audit Security System Extension','Audit Removable Storage','Audit Kerberos Authentication Service','Audit Logon','Audit Detailed File Share','Audit Other Account Management Events','Audit Credential Validation','Audit User Account Management','Audit Other Logon/Logoff Events'
+
+write-host 'Starting Domain Controller Security Policies Inventory..'
+
+
+add-content $report "<CENTER>"
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Active Directory Domain Controllers Security Policies Inventory ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+ 
+add-content $report  "<table width='90%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Missing Security Options Settings</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Missing Policies Settings</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Missing Audit Settings</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Missing Account Settings</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Missing User Right Assignment Settings</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Missing Security Registry Settings</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Missing Firewall Settings</B></td>"
+
+
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller Security Policies Inventory") 
+
+Add-Content $report "</tr>" 
+
+
+foreach ($DC in $DCs)
+    {
+    try {
+    $DCD = Get-ADDomainController -Server $DC -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $DCD = $DCD | Sort-Object
+
+    
+    $Domain = $DCD.Domain
+    $DCHostName = $DCD.Hostname
+
+    Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Verifying if RSOP file exists for "+$DC) 
+    if ((test-path ("C:\ADxRay\RSOP\RSOP_"+$DC+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\RSOP\RSOP_"+$DC+".xml") -Force}
+    Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Running RSOP on: "+$DC) 
+    Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\RSOP\RSOP_"+$DC+".xml") -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+    Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reading RSOP result for: " +$DC) 
+    [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\RSOP\RSOP_"+$DC+".xml")
+
+
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+
+    $SecCount = 0
+
+    $secs = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.SecurityOptions.KeyName
+
+    Foreach ($sec in $SecOptions){
+    if ($sec -notin $secs)
+    {
+        $SecCount ++
+    }
+    }
+
+    $PolCount = 0
+
+    $Pols = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.Policy.Name
+
+    Foreach ($Pol in $SecPolicies){
+    if ($Pol -notin $Pols)
+    {
+        $PolCount ++
+    }
+    }
+
+    $AccCount = 0
+
+    $Accs = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.Account.Name
+
+    Foreach ($Acc in $SecAccount){
+    if ($Acc -notin $Accs)
+    {
+        $AccCount ++
+    }
+    }
+
+    $UsrRCount = 0
+
+    $UsrRs = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.UserRightsAssignment.Name
+
+    Foreach ($UsrR in $SecUsrR){
+    if ($UsrR -notin $UsrRs)
+    {
+        $UsrRCount ++
+    }
+    }
+
+    $RegCount = 0
+
+    $Regs = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.RegistrySetting.KeyPath
+
+    Foreach ($reg in $SecReg){
+    if ($reg -notin $Regs)
+    {
+        $RegCount ++
+    }
+    }
+
+    $AudCount = 0
+    
+    $Auds = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.AuditSetting.SubCategoryName
+
+    Foreach ($aud in $SecAud){
+    if ($aud -notin $Auds)
+    {
+        $AudCount ++
+    }
+    }
+
+
+    $FWCount = 0
+
+    $DomFirewall = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.DomainProfile.EnableFirewall.Value
+    $PubFirewall = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.PublicProfile.EnableFirewall.Value
+    $PriFirewall = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.PrivateProfile.EnableFirewall.Value
+
+
+    if ($DomFirewall -ne $True)
+    {
+    $FWCount ++
+    }
+    if ($PubFirewall -ne $True)
+    {
+    $FWCount ++
+    }
+    if ($PriFirewall -ne $True)
+    {
+    $FWCount ++
+    }
+
+
+    if ($SecCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SecCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$SecCount</td>"    
+        }
+
+    if ($PolCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PolCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$PolCount</td>"    
+        }
+
+    if ($AudCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$AudCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$AudCount</td>"    
+        }
+
+    if ($AccCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$AccCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$AccCount</td>"    
+        }
+
+    if ($UsrRCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsrRCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$UsrRCount</td>"    
+        }
+
+    if ($RegCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RegCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$RegCount</td>"    
+        }
+
+    if ($FWCount -ge 1)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$FWCount</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$FWCount</td>"    
+        }
+
+        Add-Content $report "</tr>" 
+}
+Catch{
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+}
+
+}
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+
+
+if ($SecCount -ge 1 -or $PolCount -ge 1 -or $AccCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1 -or $FWCount -ge 1)
+{
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Some of Security Policies recommended by Microsoft were not found applied in those Domain Controllers. Download the lastest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>.</font></td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+}
+
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This analysis is based on the Resultant Set of Policies applied on those Domain Controllers and comparing with Microsoft´s baseline security standards. Microsoft recommends the use of security baseline GPOs (<a href='https://techcommunity.microsoft.com/t5/microsoft-security-baselines/security-baseline-final-for-windows-10-v1909-and-windows-server/ba-p/1023093'>Security baseline (FINAL) for Windows 10 v1909 and Windows Server v1909</a>) in the environment, specially on Domain Controllers. Keep your environment protected with the lastest security baseline.</tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+write-host 'Domain Controller Security Policies Inventory Done.'
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+
+######################################### DCs Health HEADER #############################################
 
 write-host 'Starting DCDiag..'
 
@@ -606,10 +1054,8 @@ Add-Content $report "</tr>"
 Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
-$ScoreLimit ++
 if(($DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
     {
-            $ScoreCount ++
             $Status = $DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
@@ -1014,7 +1460,7 @@ Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
-add-content $report "<BR><BR>"
+add-content $report "<BR><BR><BR>"
 
 }
 
@@ -1099,7 +1545,6 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm','.kix','.msi','.ps1','.cmd','.ico'))
                     {
-                        $ScoreLimit ++
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
                     }
                 else  
@@ -1223,11 +1668,9 @@ foreach ($DNSdomain in $Forest.domains)
                 Add-Content $ADxRayLog ("DNSServerLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Validating DNS Server: "+$DNSName)
 
                 Add-Content $report "<tr>"
-                $ScoreLimit ++
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
                     {
-                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
                     }
                 else  
@@ -1237,10 +1680,8 @@ foreach ($DNSdomain in $Forest.domains)
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneScavenge</td>" 
-                $ScoreLimit ++
                 if ($DNSRootC -eq '' -or $DNSRootC -eq 0)
                     {
-                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
                     }
                 else  
@@ -1248,21 +1689,17 @@ foreach ($DNSdomain in $Forest.domains)
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRootC</font></td>" 
                     }
 
-                $ScoreLimit ++
                 if ($DNSSRVRR -eq 'Missing')
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSSRVRR</font></td>" 
                     }
                 else  
                     {
-                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSRVRR</td>"
                     }
 
-                $ScoreLimit ++
                 if ($DNSRecur -eq $false)
                     {
-                        $ScoreCount ++
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSRecur</td>"
                     }
                 else  
@@ -1362,20 +1799,16 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
         Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
         Add-Content $report "<td bgcolor='White' align=center>$UsersEnabled</td>"               
         Add-Content $report "<td bgcolor='White' align=center>$UsersDisabled</td>"    
-        $ScoreLimit ++
         if ($UsersInactive -eq '' -or $UsersInactive -eq 0) 
             {
-                $ScoreCount ++
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
             { 
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersInactive</font></td>" 
             }
-        $ScoreLimit ++
         if ($UsersPWDNeverExpire -eq '' -or $UsersPWDNeverExpire -eq 0) 
             {
-                $ScoreCount ++
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
@@ -1466,21 +1899,17 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
     Add-Content $report "<td bgcolor='White' align=center>$PCDomain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$PCAllC</td>"         
     Add-Content $report "<td bgcolor='White' align=center>$PCWS</td>"
-    Add-Content $report "<td bgcolor='White' align=center>$PCServer</td>"
-    $ScoreLimit ++               
+    Add-Content $report "<td bgcolor='White' align=center>$PCServer</td>"           
     if ($PCWSUnsupp -eq '' -or $PCWSUnsupp -eq 0) 
         {
-            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
         }
      else 
         { 
            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
         }
-    $ScoreLimit ++
     if ($PCServerUnsupp -eq '' -or $PCServerUnsupp -eq 0)  
         {
-            $ScoreCount ++
             Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
         }
     else 
@@ -1574,7 +2003,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                     if ($GCounter -ge 5) 
                         {
-                            $ScoreLimit ++
                             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GCounter</font></td>"
                         }
                     else 
@@ -1666,27 +2094,22 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
         Add-Content $ADxRayLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Empty Groups in the Domain: "+$PCDomain)
         Add-Content $ADxRayLog ("GroupsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Empty Groups found: "+$GroupEmpty)
-        $ScoreLimit ++
         if ($GroupLarge -gt 30) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
             }
         else 
             {
-                $ScoreCount ++ 
                 Add-Content $report "<td bgcolor= 'Lime' align=center> $GroupLarge</td>" 
             }
-        $ScoreLimit ++
         if ($GroupEmpty -gt 20) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupEmpty</font></td>"
             }
         else 
             {
-                $ScoreCount ++ 
                 Add-Content $report "<td bgcolor= 'Lime' align=center>$GroupEmpty</td>" 
             }
-        $ScoreLimit ++
         if ($GroupAve -ge 1.00 -and $GroupAve -lt 3.00) 
             {
                 $GroupAve = $GroupAve.tostring("#.##")
@@ -1699,7 +2122,6 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
             }
         else 
             {
-                $ScoreCount ++
                 $GroupAve = $GroupAve.tostring("#.##") 
                 Add-Content $report "<td bgcolor='Lime' align=center>$GroupAve</td>" 
             }
@@ -1800,34 +2222,28 @@ Foreach ($Contr in $Forest.domains.PdcRoleOwner)
 
                 Add-Content $ADxRayLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group Policies in the Domain: "+$Domain)
                 Add-Content $ADxRayLog ("GPOsLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total GPOs found: "+$GpoAll)
-                $ScoreLimit ++
                 if ($GpoC2 -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoC2 GPOs</font></td>"
                     }
                 else 
                     {
-                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GpoC2 GPOs</td>" 
                     }
-                $ScoreLimit ++
                 if ($GPEmpt -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPEmpt GPOs</font></td>"
                     }
                 else 
                     {
-                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPEmpt GPOs</td>" 
                     }
-                $ScoreLimit ++
                 if ($GPBIG -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPBIG GPOs</font></td>"
                     }
                 else 
                     {
-                        $ScoreCount ++ 
                         Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
                     }
 
@@ -1978,12 +2394,10 @@ add-content $report "<BR><BR><BR><BR>"
 write-host 'Starting ADxRay Version Validation..'
 
 $VerValid = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Merola132/ADxRay/master/Docs/VersionControl" -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -TimeoutSec 5
-$ScoreLimit ++
 if ($VerValid.StatusCode -eq 200) 
     {
         if (($VerValid.Content[0]+$VerValid.Content[1]+$VerValid.Content[2]) -eq $Ver) 
             {
-                $ScoreCount ++
                 Write-Host ('Version: '+$Ver+' - This Version is up to date.') -ForegroundColor Green
             }
         else 
