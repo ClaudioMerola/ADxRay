@@ -17,6 +17,8 @@ $Ver = '2.0'
 
 write-host 'Starting ADxRay Script'
 
+$SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
+
 $Runtime = Measure-Command -Expression {
 if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
 
@@ -422,6 +424,8 @@ Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>"
  
 Add-Content $report "</tr>" 
 
+$svcchannel = 0
+
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers} | ForEach-Object {$_.Name} 
 
 foreach ($DC in $DCs)
@@ -482,7 +486,23 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor='White' align=center>$DCOS</td>" 
         }
      
-    Add-Content $report "<td bgcolor='White' align=center>$DCOSD</td>" 
+
+
+        if (($DCOS -eq 'Windows Server Standard' -or $DCOS -eq 'Windows Server Datacenter') -and $DCOSD -notin $SupBuilds)
+        {
+            $svcchannel ++
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOSD</font></td>" 
+        }
+    elseif (($DCOS -eq 'Windows Server Standard' -or $DCOS -eq 'Windows Server Datacenter') -and $DCOSD -in $SupBuilds)
+        {
+            $svcchannel ++
+            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOSD</td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor='White' align=center>$DCOSD</td>" 
+        }
+
 
     Add-Content $ADxRayLog ("DomainControllersLog - "+(get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting FSMO of: "+$DCHostName)
 
@@ -511,12 +531,27 @@ Add-content $report  "</table>"
 
 add-content $report "</CENTER>"
 
+
+if ($SvcChannel -ge 1)
+{
+
 add-content $report "<BR>"
 add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Many Domain Controllers does not represent a problem. But using an oversized topology might increase the administrative effort and decrease the security of the environment as every writable Domain Controller have a full copy of every user account along with their password. Make sure to keep a reasonable number of Domain Controllers and keep they secured as possible.</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Domain Controllers running Semi-Annual Servicing Channel were found in this environment. Since Windows Server 2019, Microsoft made available Semi-Annual Channels for Windows Server Builds <a href='https://docs.microsoft.com/en-us/windows-server/get-started-19/servicing-channels-19'>Windows Server servicing channels: LTSC and SAC</a>. Since this update model has a considerable lower lifecycle be sure to keep those servers up to date.</td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+}
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having too many Domain Controllers in the environment does not represent a problem. But using an oversized topology might increase the administrative effort and impact the security of the environment as every writable Domain Controller have a full copy of every user account along with their password. Make sure to keep a reasonable number of Domain Controllers and keep they as secured as possible. Also remember to keep supported versions of Windows, as unsupported versions may increase the attack surface in the environment.</td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -906,7 +941,7 @@ add-content $report "<BR>"
 
 
 
-if ($SecCount -ge 1 -or $PolCount -ge 1 -or $AccCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1 -or $FWCount -ge 1)
+if ($SecCount -ge 1 -or $PolCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1 -or $FWCount -ge 1)
 {
 
 add-content $report  "<CENTER>"
