@@ -159,6 +159,9 @@ Write-Host ' Domain Controllers..'
 
 Foreach ($DC in $DCs) {
 
+    Write-Host ('Starting the Inventory of: ') -NoNewline
+    write-host $DC.Name -ForegroundColor Yellow
+
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
 
     start-job -Name ($DC.Name+'_Infos') -scriptblock {Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
@@ -174,6 +177,8 @@ Foreach ($DC in $DCs) {
     start-job -Name ($DC.Name+'_Features') -scriptblock {Get-WindowsFeature -ComputerName $($args[0]) | where {$_.Installed -eq 'Installed'}} -ArgumentList $DC.Name | Out-Null
     
     start-job -Name ($DC.Name+'_EvtSecurity') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'Security'}} -ArgumentList $DC.Name | Out-Null
+
+    start-job -Name ($DC.Name+'_EvtBackup') -scriptblock {Get-winevent -LogName Microsoft-Windows-Backup -ComputerName $($args[0])| ? {$_.id -eq 4} } -ArgumentList $DC.Name | Out-Null
    
     start-job -Name ($DC.Name+'_Evts') -scriptblock {(Get-EventLog -ComputerName $args -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102).Count} -ArgumentList $DC.Name | Out-Null
 
@@ -198,9 +203,9 @@ while (get-job | ? {$_.State -eq 'Running'})
 {
 $c = (((((get-job).count - (get-job | ? {$_.State -eq 'Running'}).Count)) / (get-job).Count) * 100)
 $c = [math]::Round($c)
-Write-Progress -activity 'Running Inventory'  -Status "$c% Complete." -PercentComplete $c
+Write-Progress -activity 'Running Inventories'  -Status "$c% Complete." -PercentComplete $c
 }
-Write-Progress -activity 'Running Inventory' -Status "100% Complete." -Completed
+Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
 
 Get-Job | Wait-Job | Out-Null
 
@@ -271,7 +276,6 @@ $Trus | Export-Clixml -Path ('C:\ADxRay\Hammer\Trust_'+$Trust.Name+'.xml')
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domain Inventory")
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domains Details")
-
 
 Foreach ($Domain in $Forest.Domains)
     {
@@ -359,6 +363,7 @@ $LdapRR = Receive-Job -Name ($DC.Name+'_ldapRR') -ErrorAction SilentlyContinue -
 $Features = Receive-Job -Name ($DC.Name+'_Features') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $SWx64 = Receive-Job -Name ($DC.Name+'_x64Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $SWx86 = Receive-Job -Name ($DC.Name+'_x86Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$bkpEvents = Receive-Job -Name ($DC.Name+'_EvtBackup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 $DomControl = @{
 
@@ -375,13 +380,14 @@ $DomControl = @{
     'DCSysLog' = $EvtSys.MaximumKilobytes;
     'DCSecLog' = $EvtSec.MaximumKilobytes;
     'DCBatEvts' = $BatEvts;
+    'BackUpEvent' = $bkpEvents;
     'DCCleEvts' = $CleEvts;
     'HotFix' = $HotFix;
     'DNS' = $DNS;
     'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
     'InstalledFeatures' = $Features.Name;
-    'InstalledSoftwaresx64' = $SWx64 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+    'InstalledSoftwaresx64' = $SWx64 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
     'InstalledSoftwaresx86' = $SWx86 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
 
 }
@@ -2649,6 +2655,127 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 
+######################################### DCs Security BACKUP inventory  ###############################################
+
+
+write-host 'Starting Domain Controllers Backup Reporting..'
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Backup Reporting.")   
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Active Backups ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+
+add-content $report "<CENTER>"
+ 
+add-content $report  "<table width='60%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Latest Backup Date</B></td>" 
+Add-Content $report  "<td width='20%' align='center'><B>Latest Status</B></td>"
+
+ 
+Add-Content $report "</tr>" 
+
+$CritEvents = 0
+$NoBackups = 0
+Remove-Variable Backups
+
+foreach ($DC in $DCs)
+    {
+    Try{
+
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Reporting of Active Backups:"+$DC)
+        
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
+
+    $Backups = $DCD.BackUpEvent[0]
+
+    $BkpDate = $Backups.TimeCreated.ToShortDateString()
+
+    $Bkpmsg = $Backups.Message
+
+    $Domain = $DC.Domain
+
+    $DCHostName = $DC.name
+
+    if (!$Backups) {$NoBackups ++}
+
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Latest backup on: '+$DCHostname +'. was on:"+$BkpDate)
+    
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Latest backup Status on: '+$DCHostname +'. was: "+$Bkpmsg)
+    
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>"
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>"
+
+    if ((New-TimeSpan -Start $BkpDate -End (Get-Date)).Days -ge 30)
+    {
+    $CritEvents ++
+    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$BkpDate</font></td>" 
+    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Bkpmsg</font></td>" 
+    }
+    else 
+    {
+    Add-Content $report "<td bgcolor='White' align=center>$BkpDate</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$Bkpmsg</td>" 
+    }
+
+    Add-Content $report "</tr>" 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of BackUp for server:"+$DC)
+}
+Catch{
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during reporting: "+$_.Exception.Message)
+}
+}
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+if ($CritEvents -ge 1)
+{
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Outdated backups were found in the environment. Verify and make sure backups are been run in the Domain Controllers above.</font></td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+}
+
+if ($NoBackups -ge 1)
+{
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>No Backups were found at all!! Check the current backup policies and make sure this environment is been backed up correctly as soon as possible.</font></td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+}
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Keeping a regular Windows Servers Backup routine is important to make sure that, if a catastrophic event happens you are covered. Microsoft recommends that you keep Full Server Backups, because it can be restored to different hardware or a different operating system instance. Windows Server Backup is included in Windows Server (but is not enable by default). Consult: <a href=https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/manage/ad-forest-recovery-backing-up-a-full-server'>AD Forest Recovery - Backing up a full server</a> for more details.</td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+
 ######################################### DCs Security HotFix inventory  ###############################################
 
 
@@ -3373,6 +3500,9 @@ $index = Get-Content $report
 $Index[44] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 
 $index | out-file $report
+
+Write-Host ('Report complete. Report saved at: ') -NoNewline
+write-host $report -ForegroundColor Green -BackgroundColor Red
 
 sleep 5
 
