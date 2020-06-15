@@ -230,6 +230,13 @@ $DuplicatedZones += receive-job -Name ('Zone_'+$zone)
 
 if ((test-path 'C:\ADxRay\Hammer\Forest.xml') -eq $true) {remove-item -Path 'C:\ADxRay\Hammer\Forest.xml' -Force}
 
+
+$Trss = @()
+Foreach ($Trust in $Trusts)
+{
+$Trss += $Trust
+}
+
 $Fores = @{
 
 'ForestName' = $Forest.Name;
@@ -238,7 +245,7 @@ $Fores = @{
 'ForestMode' = $Forest.ForestMode;
 'GlobalCatalogs' = $Forest.GlobalCatalogs.Name;
 'Sites' = $Forest.Sites.Name;
-'Trusts' = $Trusts.name;
+'Trusts' = $Trss
 'SPN' = ($SPN | Select-String -Pattern ('group of duplicate SPNs')).ToString();
 'DuplicatedDNSZones' = $DuplicatedZones.DistinguishedName
 
@@ -247,31 +254,6 @@ $Fores = @{
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Registering Forest XML File")
 
 $Fores | Export-Clixml -Path 'C:\ADxRay\Hammer\Forest.xml'
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Trust Inventory")
-
-Foreach ($Trust in $Trusts)
-{
-
-if ((test-path ('C:\ADxRay\Hammer\Trust_'+$Trust.Name+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Trust_'+$Trust.Name+'.xml') -Force}
-
-$Trus = @{
-'ForestName' = $Forest.Name;
-'Name' = $Trust.Name;
-'Source' = $Trust.Source;
-'Target' = $Trust.Target;
-'Direction' = $Trust.Direction;
-'ForestTransitive' = $Trust.ForestTransitive;
-'IntraForest' = $Trust.IntraForest;
-'SIDFilteringForestAware' = $Trust.SIDFilteringForestAware
-
-        }
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Registering Trust XML File for: "+$Trust)
-
-$Trus | Export-Clixml -Path ('C:\ADxRay\Hammer\Trust_'+$Trust.Name+'.xml')
-
-}
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domain Inventory")
 
@@ -712,14 +694,12 @@ Foreach ($Trusts in $Trust)
     {
         Add-Content $report "<tr>" 
 
-        $Trust1 = Import-Clixml -Path ('C:\ADxRay\Hammer\Trust_'+$Trusts+'.xml')
-
-        $T3Source = $Trust1.Source
-        $T3Target = $Trust1.Target
-        $T3Dir = $Trust1.Direction
-        $T3Trans = $Trust1.ForestTransitive
-        $T3Intra = $Trust1.IntraForest
-        $T3SIDFil = $Trust1.SIDFilteringForestAware
+        $T3Source = $Trusts.Source
+        $T3Target = $Trusts.Target
+        $T3Dir = $Trusts.Direction
+        $T3Trans = $Trusts.ForestTransitive
+        $T3Intra = $Trusts.IntraForest
+        $T3SIDFil = $Trusts.SIDFilteringForestAware
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Trust Found for: "+$T3Source+ " To "+$T3Target)
     
@@ -3507,16 +3487,6 @@ write-host $report -ForegroundColor Green -BackgroundColor Red
 sleep 5
 
 Invoke-Item $report
-
-
-
-
-
-
-
-
-
-
 
 
 
