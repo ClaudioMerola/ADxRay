@@ -1966,7 +1966,324 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a
 
 ######################################### DCDiag´s  ###############################################
 
+if ($DCs.Count -ge 50) 
+{
 
+add-content $report "<BR><BR><BR>"
+
+add-content $report "<CENTER>"
+
+add-content $report  "<table width='90%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Connectivity</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>VerifyReferences</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Advertising</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>FrsEvent</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>DFSREvent</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>SysVolCheck</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>KccEvent</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>KnowsOfRoleHolders</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>MachineAccount</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>NCSecDesc</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>NetLogons</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>ObjectsReplicated</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Replications</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>RidManager</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Services</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>SystemLog</B></td>"
+Add-Content $report "<tr>"
+
+ForEach ($DC in $DCs)
+{
+    $Domain = $DC.Domain
+    $DCHostName = $DC.name
+
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Reporting of: "+$DC.Name)
+
+
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
+
+
+$DC = $DC.ToString()
+$DC = $DC.split('.')
+$DC = $DC[0]
+
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag initial validation: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
+    {
+    Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Advertising Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag FrsEvent: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag DFSREvent Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+                }
+
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SysvolCheck Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KccEvent Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
+
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag MachineAccount Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NCSecDesc Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NetLogons Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag ObjectsReplicated: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Replications: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag RIDManager: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+                }
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SystemLog Test: "+$DC)
+
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
+    {
+            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+    }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
+                {
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+                }
+                else
+                {
+                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+                }
+
+Add-Content $report "</tr>" 
+
+}
+
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR><BR><BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>For environments with more than 50 Domain Controllers, no details are presented for each category of DCDiag. I suggest you check : <a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'>What does DCDiag actually do</a>. For better understanding of what those results mean.</td></tr></TABLE>"
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+add-content $report "<BR><A HREF='#top'>Back to the top</A><BR>"
+add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='Disclaimer'><B>Disclaimer:</B></A> This report was generated using the ADxRay Powershell Script. The information provided in this report is provided 'as-is' and is intended for information purposes only. The information present at the script is licensed 'as-is'. You bear the risk of using it. The contributors give no express warranties, guarantees or conditions. You may have additional consumer rights under your local laws which this license cannot change. To the extent permitted under your local laws, the contributors exclude the implied warranties of merchantability, fitness for a particular purpose and non-infringement. Any feedback or improvements feel free to email me at: <a href='mailto:merola@outlook.com?Subject=ADxRay%20feedback' target='_top'>Claudio Merola</a></TD></TR></TABLE>"
+add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='More'><B>More:</B></A> If you wish to have a better inventory and reporting regarding your Active Directory environment, Get in touch with your Microsoft representative to run an On-Demand Assessment in your Active Directory environment. On-Demand Assessment will give you a deeper view and understanding of every single issue existing in the environment. More details at: <a href='https://docs.microsoft.com/en-us/services-hub/health/'>Services Hub On-Demand Assessments</a></TD></TR></TABLE>"
+
+add-content $report "<BR><BR><BR><BR>"
+
+
+}
+else
+{
 
 add-content $report "<BR><BR><BR>"
 
@@ -2459,6 +2776,10 @@ add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silv
 add-content $report "<BR><TABLE BORDER='1' CELLPADDING='5'><TR><TD BGCOLOR='Silver'><A NAME='More'><B>More:</B></A> If you wish to have a better inventory and reporting regarding your Active Directory environment, Get in touch with your Microsoft representative to run an On-Demand Assessment in your Active Directory environment. On-Demand Assessment will give you a deeper view and understanding of every single issue existing in the environment. More details at: <a href='https://docs.microsoft.com/en-us/services-hub/health/'>Services Hub On-Demand Assessments</a></TD></TR></TABLE>"
 
 add-content $report "<BR><BR><BR><BR>"
+
+
+}
+
 
 add-content $report "</div>"
 
@@ -3487,7 +3808,6 @@ write-host $report -ForegroundColor Green -BackgroundColor Red
 sleep 5
 
 Invoke-Item $report
-
 
 
 
