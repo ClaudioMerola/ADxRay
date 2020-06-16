@@ -21,6 +21,8 @@ $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
 $Runtime = Measure-Command -Expression {
 
+if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
+
 $report = ("C:\ADxRay\ADxRay_Report_"+(get-date -Format 'yyyy-MM-dd')+".htm") 
 if ((test-path $report) -eq $false) {new-item $report -Type file -Force}
 Clear-Content $report 
@@ -42,10 +44,6 @@ $Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Pre Inventory")
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers}
-
-if ((Test-Path -Path C:\ADxRay -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay}
-
-
 
 
 
