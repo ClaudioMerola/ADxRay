@@ -33,29 +33,29 @@ Internet connection might be use by the script for version validation, but is no
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/0.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/0.png)
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/1.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/1.png)
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/2.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/2.png)
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/3.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/3.png)
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/4.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/4.png)
 
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/5.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/5.png)
 
 
 
-![alt text](https://github.com/Merola132/ADxRay/raw/master/Docs/6.png)
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/6.png)
