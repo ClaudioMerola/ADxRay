@@ -4,7 +4,7 @@ I started this as a personal project to help me during my day to day work on dif
 
 The script does not record, create or modify anything in the environment (except for creating a folder named “ADxRay” in C:\ of the computer running the script. Inside that folder the log files and the main report file named “ADxRay_Report(YEAR-MONTH-DAY).htm” is created). 
 
-The script must be run at a Domain Controller or workstation (see requirements below) running at least Windows Server 2012 / Windows 8. 
+The script must be run at a Domain Controller running at least Windows Server 2012 (see requirements below). 
 
 The script must be run by a user with Domain Admin privileges (Enterprise Admins if dealing with multiple domains and forests).
 
