@@ -2946,7 +2946,7 @@ add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Event log size configuration must be a top priority. Often when those configurations are noticed is already too late. Make sure at least Security and System Events are adjusted to a regular size. This will ensure that vital information is recorded in time of need. Those recommendations were set based on the following pages: <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd349798(v=ws.10)'>Event Log</a> and <a href='https://docs.microsoft.com/en-us/windows/client-management/mdm/diagnosticlog-csp'>DiagnosticLog CSP</a>. If a SysLog Server is in place in the environment, those numbers may change.</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Event log configuration must be a top priority. Often when those configurations are noticed is already too late. Make sure at least Security and System Events are adjusted to a regular size. Even when you have a log centralization solution, in a catastrophic event you may lose access to that server, or even the server, and important logs may be lost. A good event size on the Domain Controllers Is a good strategy to be safe in a situation like that. Those recommendations were set based on the following pages: <a href='https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2008-R2-and-2008/dd349798(v=ws.10)'>Event Log</a> and <a href='https://docs.microsoft.com/en-us/windows/client-management/mdm/diagnosticlog-csp'>DiagnosticLog CSP</a>. If you don’t have a log centralization infrastructure in place. Check my other Github project <a href='https://github.com/ClaudioMerola/HFServerEventsV2'>HF Event Server</a>. This is a free project that configures a log centralization infrastructure powered by Elasticsearch and is (100% free).</td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3806,7 +3806,6 @@ write-host $report -ForegroundColor Green -BackgroundColor Red
 sleep 5
 
 Invoke-Item $report
-
 
 
 
