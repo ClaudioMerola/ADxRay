@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.0'
+$Ver = '3.1'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -160,8 +160,6 @@ Foreach ($DC in $DCs) {
 
     start-job -Name ($DC.Name+'_Infos') -scriptblock {Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Events Inventory on: "+$DC.Name)
-
     start-job -Name ($DC.Name+'_x64Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
 
     start-job -Name ($DC.Name+'_x86Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
@@ -171,6 +169,10 @@ Foreach ($DC in $DCs) {
     start-job -Name ($DC.Name+'_Backup') -scriptblock {repadmin /showbackup $($args[0])} -ArgumentList $DC.Name | Out-Null
 
     start-job -Name ($DC.Name+'_HW') -scriptblock {systeminfo /S $($args[0]) /fo CSV | ConvertFrom-Csv} -ArgumentList $DC.Name | Out-Null
+
+    start-job -Name ($DC.Name+'_NTP1') -scriptblock {W32TM /query /computer:$($args[0]) /status} -ArgumentList $DC.Name | Out-Null
+
+    start-job -Name ($DC.Name+'_NTP2') -scriptblock {W32TM /query /computer:$($args[0]) /configuration} -ArgumentList $DC.Name | Out-Null
     
     #start-job -Name ($DC.Name+'_EvtSecurity') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'Security'}} -ArgumentList $DC.Name | Out-Null
 
@@ -327,7 +329,8 @@ $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xm
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domain Controllers Inventory")
 
-Foreach ($DC in $DCs) {
+Foreach ($DC in $DCs)
+{
 
 if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
@@ -346,6 +349,8 @@ $SWx86 = Receive-Job -Name ($DC.Name+'_x86Softwares') -ErrorAction SilentlyConti
 #$bkpEvents = Receive-Job -Name ($DC.Name+'_EvtBackup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $bkp = Receive-Job -Name ($DC.Name+'_Backup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $HW = Receive-Job -Name ($DC.Name+'_HW') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 $DomControl = @{
 
@@ -367,6 +372,8 @@ $DomControl = @{
     'Backup' = $bkp;
     'Sysinfo' = $HW;
     'HotFix' = $HotFix;
+    'NTPStatus' = $NTP1;
+    'NTPConf' =  $NTP2;
     'DNS' = $DNS;
     'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
@@ -1687,6 +1694,15 @@ foreach ($DC in $DCs)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
+    Remove-Variable DCEnabled
+    Remove-Variable DCIP
+    Remove-Variable SMBv1
+    Remove-Variable DCGC
+    Remove-Variable DCOS
+    Remove-Variable DCOSD
+    Remove-Variable FSMO
+    Remove-Variable Site
+
     $Domain = $DC.Domain
     $DCHostName = $DC.name
     $DCEnabled = $DCD.IsReadOnly
@@ -1712,11 +1728,7 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
         }
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting IP of: "+$DCHostName)
-
     Add-Content $report "<td bgcolor='White' align=center>$DCIP</td>" 
-
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Global Catalog of: "+$DCHostName)
 
     if (!$SMBv1)
         {
@@ -1814,6 +1826,108 @@ add-content $report  "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
 
+
+
+
+######################################### NTP #############################################
+
+write-host 'Starting NTP Reporting..'
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NTP Reporting")
+
+add-content $report "<CENTER>"
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Active Directory Domain Controllers NTP Settings ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+ 
+add-content $report  "<table width='90%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>FSMO</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>NTP Source</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>Last Successful Sync Time</B></td>" 
+Add-Content $report  "<td width='15%' align='center'><B>Stratum</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Type</B></td>" 
+ 
+Add-Content $report "</tr>" 
+
+
+foreach ($DC in $DCs)
+    {
+    Try{
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Start NTP Reporting of: "+$DC)
+
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
+
+    $Domain = $DC.Domain
+    $DCHostName = $DC.name
+    $DCNTPStatus = $DCD.NTPStatus
+    $DCNTPConf = $DCD.NTPConf
+
+    $DCNTPSource = ($DCNTPStatus | Select-String -Pattern 'Source:').ToString().replace('Source: ','');
+    $DCNTPLastSync = [datetime]($DCNTPStatus | Select-String -Pattern 'Last Successful Sync Time:').ToString().replace('Last Successful Sync Time:','');
+    $DCNTPStratum = ($DCNTPStatus | Select-String -Pattern 'Stratum:').ToString().replace('Stratum: ','');
+    $DCNTPType = ($DCNTPConf | Select-String -Pattern 'Type:').ToString().replace('Type: ','');
+
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+    if ($DCD.OperationMasterRoles -like '*PDC*')
+        {
+            Add-Content $report "<td bgcolor='White' align=center>PDC Emulator</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor='White' align=center></td>"   
+        }
+
+    Add-Content $report "<td bgcolor='White' align=center>$DCNTPSource</td>" 
+
+        if ((New-TimeSpan -Start $DCNTPLastSync -end (get-date)).TotalDays -ge 15)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCNTPLastSync</font></td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor='White' align=center>$DCNTPLastSync</td>" 
+        }
+
+    Add-Content $report "<td bgcolor='White' align=center>$DCNTPStratum</td>" 
+
+    Add-Content $report "<td bgcolor='White' align=center>$DCNTPType</td>" 
+    
+    Add-Content $report "</tr>" 
+
+    }
+    Catch 
+            { 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)    
+            }
+    }
+
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NTP Reporting finished")
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Active Directory health depends deeply of time synchronization. Keeping the time synchronization working correctly should be a main concern of every system admin. </td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 
