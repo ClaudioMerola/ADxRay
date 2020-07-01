@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.1'
+$Ver = '3.2'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -31,17 +31,17 @@ $ADxRayLog = "C:\ADxRay\ADxRay.log"
 if ((test-path $ADxRayLog) -eq $false) {new-item $ADxRayLog -Type file -Force}
 Clear-Content $ADxRayLog 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting ADxRay Script")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Data Catcher")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Setting Error Action Preference")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting ADxRay Script")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Data Catcher")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Setting Error Action Preference")
 
 $ErrorActionPreference = "silentlycontinue"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Forest Pre Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Forest Pre Inventory")
 
 $Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Pre Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Pre Inventory")
 
 $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers}
 
@@ -56,35 +56,35 @@ function Hammer {
 
 write-host 'Starting The Hammer..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting The Hammer!")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting The Hammer!")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Creating Hammer Folder")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Creating Hammer Folder")
 
 if ((Test-Path -Path C:\ADxRay\Hammer -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\Hammer}
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Killing current running Powershell job")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Killing current running Powershell job")
 
 Get-Job | Remove-Job
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Calling DCDiag")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Calling DCDiag")
 
 Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
 
 start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Active Directory RecycleBin Check")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
 
 start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Duplicated SPNs check")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
 
 start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Trusts Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
 
 start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
 
 Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
 
@@ -149,14 +149,14 @@ Foreach ($Domain in $Forest.Domains)
 
 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory")
 
 
 Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentOperation 'Triggering Domain Controller Inventory..'
 
 Foreach ($DC in $DCs) {
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
 
     start-job -Name ($DC.Name+'_Infos') -scriptblock {Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
 
@@ -196,7 +196,7 @@ Foreach ($DC in $DCs) {
 
 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Waiting Inventories Conclusion")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
 
 $c = 0
 while (get-job | ? {$_.State -eq 'Running'})
@@ -209,15 +209,15 @@ Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Complet
 
 Get-Job | Wait-Job | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - All Inventories are not completed")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are not completed")
 
 write-host 'Inventories done..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process the Inventories")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process the Inventories")
 
 write-host 'Starting to Process the Results..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Forest Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Forest Inventory")
 
 $DuplicatedZones = @()
 $Diag = Receive-Job -Name 'Diag' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -251,13 +251,13 @@ $Fores = @{
 
 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Registering Forest XML File")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Forest XML File")
 
 $Fores | Export-Clixml -Path 'C:\ADxRay\Hammer\Forest.xml'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domain Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Inventory")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domains Details")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domains Details")
 
 Foreach ($Domain in $Forest.Domains)
     {
@@ -327,7 +327,7 @@ $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xm
 }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting to Process Domain Controllers Inventory")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Controllers Inventory")
 
 Foreach ($DC in $DCs)
 {
@@ -383,7 +383,7 @@ $DomControl = @{
 
 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Registering Domain Controller XML file for: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Domain Controller XML file for: "+$DC)
 
 $DomControl | Export-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
 
@@ -396,12 +396,12 @@ $JbName = $jb.Name
 $jbcmd = $jb.command
 if ($JB.State -eq 'Failed') 
 {
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following Inventory Job Failed: "+$jbName)
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - With the following Command Line: "+$jbcmd)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job Failed: "+$jbName)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - With the following Command Line: "+$jbcmd)
 }
 $time = New-TimeSpan -Start $JB.PSBeginTime -End $JB.PSEndTime
 $TimeJobMin = $time.TotalMinutes.ToString('#######.##')
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following Inventory Job: "+$jbName+'. run time was: '+$TimeJobMin+' Minutes.')
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job: "+$jbName+'. run time was: '+$TimeJobMin+' Minutes.')
 }
 
 Write-Host ('End of Hammer phase. ') -NoNewline
@@ -410,7 +410,7 @@ Write-Host ' Inventory jobs completed and ' -NoNewline
 write-host ($jbs | ? {$_.State -eq 'Failed'}).Count -NoNewline -ForegroundColor Red
 Write-Host ' Inventory jobs failed..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Hammer")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Hammer")
 
 Get-Job | Remove-Job
 
@@ -529,7 +529,7 @@ add-content $report "<BR><BR><BR>"
 
 ######################################### FOREST #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Forest Report: "+$Forest)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Forest Report: "+$Forest)
 
 write-host 'Starting Forest Analysis..'
 
@@ -646,15 +646,15 @@ Add-Content $report "</tr>"
 
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - RecycleBin status: "+$RecycleBin)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - RecycleBin status: "+$RecycleBin)
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Forest Reporting phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Forest Reporting phase.")
 
 
 }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 
 Add-content $report  "</table>"
@@ -674,7 +674,7 @@ add-content $report "<BR><BR><BR><BR>"
 
 write-host 'Starting Trust Analysis..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Trust reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trust reporting")
 
 $Trust = $Fore.Trusts
 
@@ -713,7 +713,7 @@ Foreach ($Trusts in $Trust)
         $T3Intra = $Trusts.IntraForest
         $T3SIDFil = $Trusts.SIDFilteringForestAware
 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Trust Found for: "+$T3Source+ " To "+$T3Target)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Trust Found for: "+$T3Source+ " To "+$T3Target)
     
         Add-Content $report "<td bgcolor='White' align=center>$T3Source</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$T3Target</td>" 
@@ -728,9 +728,9 @@ Foreach ($Trusts in $Trust)
 }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
 }
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of TRUST Report phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of TRUST Report phase.")
 
 Add-content $report  "</table>"
 
@@ -780,7 +780,7 @@ add-content $report "<BR><BR><BR>"
 
 write-host 'Starting Domains Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domains Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domains Reporting")
 
 
 add-content $report "<CENTER>"
@@ -809,7 +809,7 @@ Foreach ($Domain0 in $Forest.Domains.name)
     $D2UserCont = $Domain1.UsersContainer
     $D2Count = $Domain1.DCCount 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting the following domain: "+$D2Name)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting the following domain: "+$D2Name)
 
 add-content $report  "<table width='40%' align='center' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
@@ -887,9 +887,9 @@ Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default User Con
 }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during domain reporting: "+$_.Exception.Message)
 }
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Domain phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Domain phase.")
 
 Add-content $report  "</table>"
 
@@ -909,7 +909,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### SYSVOL #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting SysVol Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting SysVol Reporting")
 
 add-content $report "<CENTER>"
 
@@ -957,7 +957,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
                     {
                         Add-Content $report "<td bgcolor= 'White' align=center>$SYSEXT</td>"
                     }
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - "+$SYSEXT+" extension found, total of: "+$SYSCOUNT+" files ("+$SYSSIZE+")")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - "+$SYSEXT+" extension found, total of: "+$SYSCOUNT+" files ("+$SYSSIZE+")")
                 Add-Content $report "<td bgcolor='White' align=center>$SYSCOUNT</td>" 
 
                 if ($sys.Totalsize -ge 839436544)
@@ -974,7 +974,7 @@ $SYSSIZE = $sys.'TotalSize (MB)'
             }
     }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of SYSVol Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of SYSVol Reporting")
 
 Add-content $report  "</table>"
 
@@ -993,7 +993,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### USERS #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting User Accounts Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting User Accounts Reporting")
 
 
 add-content $report "<CENTER>"
@@ -1029,8 +1029,8 @@ Foreach ($Domain in $Forest.domains.name)
         $UsersPWDNeverExpire = $usrs.USR_PasswordNeverExpires
 
 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring User Accounts in the Domain: "+$UsDomain)
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total users found: "+$AllUsers)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring User Accounts in the Domain: "+$UsDomain)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total users found: "+$AllUsers)
 
         Add-Content $report "<tr>" 
 
@@ -1058,15 +1058,15 @@ Foreach ($Domain in $Forest.domains.name)
     Add-Content $report "</tr>"
     }
 Catch { 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the User Accounts Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found  -------------")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during user accounts reporting: "+$_.Exception.Message)
 }
     }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - User Accounts Reporting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - User Accounts Reporting finished")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of User Account phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of User Account phase.")
  
 Add-content $report  "</table>" 
 
@@ -1086,7 +1086,7 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### COMPUTER ACCOUNTS #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Computer Accounts reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Computer Accounts reporting")
 
 
 add-content $report "<CENTER>"
@@ -1127,8 +1127,8 @@ Foreach ($Domain in $Forest.domains.name)
     $PCWSUnsupp = ($PCAll | where {$_ -notlike '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 7*' -or $_ -like '* 8 *'  -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Computer Accounts in the Domain: "+$Domain)
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Computers found: "+$PCAllC)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Computer Accounts in the Domain: "+$Domain)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total Computers found: "+$PCAllC)
 
 
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
@@ -1154,14 +1154,14 @@ Foreach ($Domain in $Forest.domains.name)
     Add-Content $report "</tr>"
     }
 Catch { 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Computer Accounts Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found  -------------")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during computer account reporting: "+$_.Exception.Message)
 }
     }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Computer Accounts Reporting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Computer Accounts Reporting finished")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Computer Account phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Computer Account phase.")
 
 Add-content $report  "</table>" 
 
@@ -1209,7 +1209,7 @@ add-content $report "</CENTER>"
 
 ######################################### TIERING #################################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Groups Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Groups Reporting")
 
 add-content $report "<CENTER>"
 
@@ -1249,8 +1249,8 @@ Foreach ($Domain in $Forest.domains.name)
                     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
                     Add-Content $report "<td bgcolor='White' align=center>$GName</td>" 
 
-                    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group: "+$GName)
-                    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total members found: "+$GCounter)
+                    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring Group: "+$GName)
+                    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total members found: "+$GCounter)
 
                     if ($GCounter -ge 1 -and $CritGrp -ge 1) 
                         {
@@ -1269,12 +1269,12 @@ Foreach ($Domain in $Forest.domains.name)
             } 
             }
             Catch { 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Domain Groups Reporting -------------")
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found -------------")
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during groups reporting: "+$_.Exception.Message)
                 }
     }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Groups Inventory finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Domain Groups Inventory finished")
 
 
 Add-content $report  "</table>"
@@ -1291,7 +1291,7 @@ add-content $report "<BR><BR><BR><BR>"
 
 ######################################### EMPTY GROUPS #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Empty Groups Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Empty Groups Reporting")
 
 
 add-content $report "<CENTER>"
@@ -1339,8 +1339,8 @@ Foreach ($Domain in $Forest.domains.name)
         Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
         Add-Content $report "<td bgcolor='White' align=center>$GroupTotal</td>" 
 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Empty Groups in the Domain: "+$Domain)
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total Empty Groups found: "+$GroupEmpty)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Empty Groups in the Domain: "+$Domain)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total Empty Groups found: "+$GroupEmpty)
         if ($GroupLarge -gt 30) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
@@ -1378,13 +1378,13 @@ Foreach ($Domain in $Forest.domains.name)
         }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Empty Domain Groups Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
 }
     }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Empty Domain Groups Inventory finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Empty Domain Groups Inventory finished")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Groups phase.")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Groups phase.")
 
 Add-content $report  "</table>"
 
@@ -1404,7 +1404,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### GPOs #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Group Policy Objects Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Group Policy Objects Reporting")
 
 add-content $report "<CENTER>"
 
@@ -1447,8 +1447,8 @@ Foreach ($Domain in $Forest.domains.name)
                 Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
                 Add-Content $report "<td bgcolor='White' align=center>$GPOAll</td>" 
 
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring Group Policies in the Domain: "+$Domain)
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Total GPOs found: "+$GPOAll)
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring Group Policies in the Domain: "+$Domain)
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total GPOs found: "+$GPOAll)
                 if ($GPOWithouLink -ge 1) 
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPOWithouLink GPOs</font></td>"
@@ -1487,13 +1487,13 @@ Foreach ($Domain in $Forest.domains.name)
                 Add-Content $report "</tr>"
                 }
 Catch { 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPOs Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found -------------")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during GPO reporting: "+$_.Exception.Message)
 }
     }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs Repoorting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - GPOs Repoorting finished")
 
 
 Add-content $report  "</table>" 
@@ -1514,7 +1514,7 @@ add-content $report "<BR><BR><BR><BR>"
 ######################################### GPOs WITHOUT LINK #############################################
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting GPOs Without Link Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting GPOs Without Link Reporting")
 
 
 add-content $report "<CENTER>"
@@ -1554,7 +1554,7 @@ Foreach ($Domain in $Forest.domains.name)
     $GposNoLink = $GPO | where {!$_.LinksTo}
     $GpoModDate =  $Gpo.ModifiedTime
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Inventoring the Following GPO: "+$GpoName)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring the Following GPO: "+$GpoName)
 
     if ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0 -and $Gpo.Name -in $GposNoLink.Name)
         { 
@@ -1607,14 +1607,14 @@ Foreach ($Domain in $Forest.domains.name)
                    }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPO Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
 }
 
 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - GPOs without link Inventory finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - GPOs without link Inventory finished")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of log file")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of log file")
 
 Add-content $report  "</table>" 
 
@@ -1661,7 +1661,7 @@ add-content $report "<BR><BR><BR>"
 
 write-host 'Starting Domain Controller Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controllers Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Reporting")
 
 add-content $report "<CENTER>"
 
@@ -1690,7 +1690,7 @@ $svcchannel = 0
 foreach ($DC in $DCs)
     {
     Try{
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Start Reporting of: "+$DC)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start Reporting of: "+$DC)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -1741,7 +1741,7 @@ foreach ($DC in $DCs)
 
     Add-Content $report "<td bgcolor='White' align=center>$DCGC</td>" 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Operating System Version of: "+$DCHostName)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Operating System Version of: "+$DCHostName)
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*')
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
@@ -1775,11 +1775,11 @@ foreach ($DC in $DCs)
         }
 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting FSMO of: "+$DCHostName)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting FSMO of: "+$DCHostName)
 
     Add-Content $report "<td bgcolor='White' align=center>$FSMO</td>" 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting Site of: "+$DCHostName)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Site of: "+$DCHostName)
 
     Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
     
@@ -1789,12 +1789,12 @@ foreach ($DC in $DCs)
     Catch 
             { 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)    
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)    
             }
     }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Domain Controllers Reporting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Domain Controllers Reporting finished")
 
 Add-content $report  "</table>" 
 
@@ -1833,7 +1833,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 write-host 'Starting NTP Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting NTP Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting NTP Reporting")
 
 add-content $report "<CENTER>"
 
@@ -1858,7 +1858,7 @@ Add-Content $report "</tr>"
 foreach ($DC in $DCs)
     {
     Try{
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Start NTP Reporting of: "+$DC)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start NTP Reporting of: "+$DC)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -1907,12 +1907,12 @@ foreach ($DC in $DCs)
     Catch 
             { 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)    
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)    
             }
     }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - NTP Reporting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - NTP Reporting finished")
 
 Add-content $report  "</table>" 
 
@@ -1933,7 +1933,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### DNS Server #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DNS Server Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DNS Server Reporting")
 
 add-content $report "<CENTER>"
 
@@ -1966,7 +1966,7 @@ Add-Content $report "</tr>"
 
                 $DNS = $DCD.DNS
 
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reporting DNS Server: "+$DC)
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting DNS Server: "+$DC)
 
                 $ldapRR = $DCD.ldapRR
                     
@@ -1996,7 +1996,7 @@ Add-Content $report "</tr>"
                 $DNSRootC = $DNSRootHintC.Count
 
 
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Validating DNS Server: "+$DNSName)
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Validating DNS Server: "+$DNSName)
 
                 Add-Content $report "<tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
@@ -2045,12 +2045,12 @@ Add-Content $report "</tr>"
             }
             Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
             }
     }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - DNS Servers Reporting finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - DNS Servers Reporting finished")
 
 Add-content $report  "</table>"
 
@@ -2119,7 +2119,7 @@ ForEach ($DC in $DCs)
     $Domain = $DC.Domain
     $DCHostName = $DC.name
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Reporting of: "+$DC.Name)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Reporting of: "+$DC.Name)
 
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
@@ -2134,7 +2134,7 @@ $DC = $DC[0]
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag initial validation: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag initial validation: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
     {
@@ -2149,7 +2149,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Cou
                     Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag VerifyReference Test: "+$DC)
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
     {
     Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
@@ -2163,7 +2163,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences'))
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Advertising Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Advertising Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
     {
@@ -2178,7 +2178,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Coun
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag FrsEvent: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag FrsEvent: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
     {
@@ -2193,7 +2193,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -
                     Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag DFSREvent Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag DFSREvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
     {
@@ -2209,7 +2209,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count 
                 }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SysvolCheck Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SysvolCheck Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
     {
@@ -2224,7 +2224,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Coun
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KccEvent Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KccEvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
     {
@@ -2239,7 +2239,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
 
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
@@ -2255,7 +2255,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders'
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag MachineAccount Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag MachineAccount Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
     {
@@ -2270,7 +2270,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).C
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NCSecDesc Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NCSecDesc Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
     {
@@ -2285,7 +2285,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count 
                     Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NetLogons Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NetLogons Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
     {
@@ -2300,7 +2300,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count 
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag ObjectsReplicated: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag ObjectsReplicated: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
     {
@@ -2315,7 +2315,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Replications: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Replications: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
     {
@@ -2330,7 +2330,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Cou
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag RIDManager: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag RIDManager: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
     {
@@ -2358,7 +2358,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -
                     Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
                 }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SystemLog Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SystemLog Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
     {
@@ -2417,7 +2417,7 @@ add-content $report  "</td>"
 add-content $report  "</tr>" 
 add-content $report  "</table>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Reporting of: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Reporting of: "+$DC)
 
 
 $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
@@ -2440,7 +2440,7 @@ Add-Content $report  "<td width='60%' align='center'><B>Description</B></td>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag initial validation: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag initial validation: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
     {
@@ -2468,7 +2468,7 @@ Add-Content $report "</tr>"
 Add-Content $report "<tr>"
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag VerifyReference Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag VerifyReference Test: "+$DC)
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
@@ -2494,7 +2494,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Advertising Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Advertising Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
     {
@@ -2521,7 +2521,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag FrsEvent: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag FrsEvent: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
     {
@@ -2548,7 +2548,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag DFSREvent Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag DFSREvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
     {
@@ -2575,7 +2575,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SysvolCheck Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SysvolCheck Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
     {
@@ -2602,7 +2602,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KccEvent Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KccEvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
     {
@@ -2629,7 +2629,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
 
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
@@ -2657,7 +2657,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag MachineAccount Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag MachineAccount Test: "+$DC)
 
 
 
@@ -2686,7 +2686,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NCSecDesc Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NCSecDesc Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
     {
@@ -2713,7 +2713,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag NetLogons Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NetLogons Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
     {
@@ -2740,7 +2740,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag ObjectsReplicated: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag ObjectsReplicated: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
     {
@@ -2767,7 +2767,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag Replications: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Replications: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
     {
@@ -2794,7 +2794,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag RIDManager: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag RIDManager: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
     {
@@ -2846,7 +2846,7 @@ Add-Content $report "</tr>"
 
 Add-Content $report "<tr>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting DCDiag SystemLog Test: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SystemLog Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
     {
@@ -2930,9 +2930,9 @@ add-content $report "<BR><BR><BR>"
 
 write-host 'Starting Domain Controller Security Log Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Checking if RSOP Folder already exists.")    
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Checking if RSOP Folder already exists.")    
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Security Log Reporting.")   
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Security Log Reporting.")   
 
 add-content $report "<CENTER>"
 
@@ -2961,7 +2961,7 @@ foreach ($DC in $DCs)
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Event Viewer Log Inventory of:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Event Viewer Log Inventory of:"+$DC) 
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3039,10 +3039,10 @@ foreach ($DC in $DCs)
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCEvt</td>"    
         }
         Add-Content $report "</tr>" 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of server:"+$DC) 
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of server:"+$DC) 
 }
 Catch{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message) 
 }
 }
 
@@ -3085,7 +3085,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 write-host 'Starting Domain Controllers Backup Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Backup Reporting.")   
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Backup Reporting.")   
 
 add-content $report  "<CENTER>"
 add-content $report  "<h3>Active Directory Backups ($Forest)</h3>" 
@@ -3111,7 +3111,7 @@ foreach ($DC in $DCs)
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Reporting of Active Backups:"+$DC)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Reporting of Active Backups:"+$DC)
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3130,7 +3130,7 @@ foreach ($DC in $DCs)
 
     if (!$Backup) {$NoBackups ++}
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Latest backup on: '+$DCHostname +'. was on:"+$Backup)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Latest backup on: '+$DCHostname +'. was on:"+$Backup)
     
     Add-Content $report "<tr>"
 
@@ -3148,10 +3148,10 @@ foreach ($DC in $DCs)
     }
 
     Add-Content $report "</tr>" 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of BackUp for server:"+$DC)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of BackUp for server:"+$DC)
 }
 Catch{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during reporting: "+$_.Exception.Message)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during reporting: "+$_.Exception.Message)
 }
 }
 
@@ -3204,7 +3204,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 write-host 'Starting Domain Controllers HotFix Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Hotfix Reporting.")   
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Hotfix Reporting.")   
 
 add-content $report  "<CENTER>"
 add-content $report  "<h3>Installed HotFix ($Forest)</h3>" 
@@ -3229,7 +3229,7 @@ foreach ($DC in $DCs)
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining HotFix Inventory of:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining HotFix Inventory of:"+$DC) 
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3241,9 +3241,9 @@ foreach ($DC in $DCs)
 
     $HFID = $Result.HotFixID
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Latest Hotfix installed on:"+$HFDate)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Latest Hotfix installed on:"+$HFDate)
     
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Latest Hotfix installed:"+$HFID) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Latest Hotfix installed:"+$HFID) 
 
     $Domain = $DC.Domain
     $DCHostName = $DC.name
@@ -3266,10 +3266,10 @@ foreach ($DC in $DCs)
     }
    
     Add-Content $report "</tr>" 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Hotfix Inventory for server:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Hotfix Inventory for server:"+$DC) 
 }
 Catch{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message) 
 }
 }
 
@@ -3345,7 +3345,7 @@ Add-Content $report  "<td width='8%' align='center'><B>Missing Security Registry
 Add-Content $report  "<td width='8%' align='center'><B>Missing Firewall Settings</B></td>"
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller Security Policies Reporting") 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controller Security Policies Reporting") 
 
 Add-Content $report "</tr>" 
 
@@ -3359,7 +3359,7 @@ foreach ($DC in $DCs)
     $DCHostName = $DC.name
 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Reading RSOP result for: " +$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reading RSOP result for: " +$DC) 
     [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\Hammer\RSOP_"+$DC+".xml")
 
 
@@ -3503,7 +3503,7 @@ foreach ($DC in $DCs)
 }
 Catch{
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message) 
 }
 
 }
@@ -3561,7 +3561,7 @@ Add-Content $report  "<td width='15%' align='center'><B>Deny log on as a batch j
 Add-Content $report  "<td width='15%' align='center'><B>Deny log on as a service</B></td>"
 Add-Content $report  "<td width='15%' align='center'><B>Deny log on through Remote Desktop Services</B></td>"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller User Rights Assignments reporting") 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controller User Rights Assignments reporting") 
 
 Add-Content $report "</tr>" 
 
@@ -3573,7 +3573,7 @@ foreach ($DC in $DCs)
     $Domain = $DC.Domain
     $DCHostName = $DC.name
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Domain Controller User Rights Assignments on the server: "+$DC) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controller User Rights Assignments on the server: "+$DC) 
 
     [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\Hammer\RSOP_"+$DC.Name+".xml")
 
@@ -3635,13 +3635,13 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting D
         }
 
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Ending Domain Controller User Rights Assignments for: "+$DC)
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Ending Domain Controller User Rights Assignments for: "+$DC)
 
     Add-Content $report "</tr>" 
 }
 Catch{
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during catcher: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message) 
 }
 
 }
@@ -3697,7 +3697,7 @@ add-content $report "<BR><BR><BR>"
 
 write-host 'Starting Domain Controllers Installed Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Hardware Reporting.")   
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Hardware Reporting.")   
 
 
 add-content $report  "<CENTER>"
@@ -3723,7 +3723,7 @@ foreach ($DC in $DCs)
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Software Reporting of:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Software Reporting of:"+$DC) 
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3762,10 +3762,10 @@ foreach ($DC in $DCs)
    
     Add-Content $report "</tr>" 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Hardware Reporting for server:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Hardware Reporting for server:"+$DC) 
 }
 Catch{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during Reporting: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during Reporting: "+$_.Exception.Message) 
 }
 }
 
@@ -3791,7 +3791,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 write-host 'Starting Domain Controllers Installed Reporting..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Domain Controller's Installed Software Reporting.")   
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Installed Software Reporting.")   
 
 add-content $report  "<CENTER>"
 add-content $report  "<h3>Software Inventory ($Forest)</h3>" 
@@ -3818,7 +3818,7 @@ foreach ($DC in $DCs)
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Begining Software Reporting of:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Software Reporting of:"+$DC) 
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3848,7 +3848,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Reporting of:"+$SWD)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Reporting of:"+$SWD)
 
         if ($SWDP -like '*Microsoft*')
         {
@@ -3892,7 +3892,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Starting Reporting of:"+$SWD)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Reporting of:"+$SWD)
 
         if ($SWDP -like '*Microsoft*')
         {
@@ -3917,10 +3917,10 @@ foreach ($DC in $DCs)
     }
     }
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - End of Software Reporting for server:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Software Reporting for server:"+$DC) 
 }
 Catch{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - The following error ocurred during Reporting: "+$_.Exception.Message) 
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during Reporting: "+$_.Exception.Message) 
 }
 }
 
