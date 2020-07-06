@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.2'
+$Ver = '3.3'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -111,41 +111,13 @@ Foreach ($Domain in $Forest.Domains)
 
     start-job -Name ($Domain.name+'_UsrTotal') -scriptblock {(dsquery * -filter sAMAccountType=805306368 -s $($args) -attr samAccountName -attrsonly -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
-    start-job -Name ($Domain.name+'_UsrEnable') -scriptblock {(dsquery user -s $($args) -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
     start-job -Name ($Domain.name+'_UsrDisable') -scriptblock {(dsquery user -disabled -s $($args) -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
     start-job -Name ($Domain.name+'_UsrInactive') -scriptblock {(dsquery user -inactive 12 -s $($args) -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
     start-job -Name ($Domain.name+'_Comps') -scriptblock {dsquery * -filter sAMAccountType=805306369 -s $($args) -Attr OperatingSystem  -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
-    start-job -Name ($Domain.name+'_GrpDomain_Admins') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Domain Admins))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpSchema_Admins') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Schema Admins))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpEnterprise_Admins') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Enterprise Admins))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpServer_Operators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Server Operators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpAdministrators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Administrators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpAccount_Operators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Account Operators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpBackup_Operators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Backup Operators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpPrint_Operators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Print Operators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpDomain_Controllers') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Domain Controllers))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpRODC') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Read-only Domain Controllers))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpGPCreator_Owners') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Group Policy Creator Owners))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpCryptographic_Operators') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Cryptographic Operators))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpDCOM_Users') -scriptblock {(dsquery * -filter '(&(objectclass=group)(sAMAccountName=Distributed COM Users))' -s $($args) -Attr member -limit 0)} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_GrpAll') -scriptblock {dsquery * -filter objectclass=group -s $($args) -Attr member -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+    start-job -Name ($Domain.name+'_GrpAll') -scriptblock {ForEach($grp in (Get-ADGroup -Filter *).Name) {@{$grp = ((dsquery * -filter "(&(objectclass=group)(name=$grp))" -s $($args) -attr member -limit 0).split(";") | where {$_ -like '*DC*'}).count}}} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
 }
 
@@ -268,23 +240,9 @@ if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-i
     $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $UsrPWDNeverExpires = Receive-Job -Name ($Domain.Name+'_UsrPWDNeverExpires') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $UsrTotal = Receive-Job -Name ($Domain.name+'_UsrTotal') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $UsrEnable = Receive-Job -Name ($Domain.name+'_UsrEnable') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $UsrDisable = Receive-Job -Name ($Domain.name+'_UsrDisable') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $UsrInactive = Receive-Job -Name ($Domain.name+'_UsrInactive') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpDomAdmins = Receive-Job -Name ($Domain.name+'_GrpDomain_Admins') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpSchemaAdmins = Receive-Job -Name ($Domain.name+'_GrpSchema_Admins') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpEntAdmins = Receive-Job -Name ($Domain.name+'_GrpEnterprise_Admins') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpSrvOpers = Receive-Job -Name ($Domain.name+'_GrpServer_Operators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpAdms = Receive-Job -Name ($Domain.name+'_GrpAdministrators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpSrvOpers = Receive-Job -Name ($Domain.name+'_GrpAccount_Operators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpBkpOpers = Receive-Job -Name ($Domain.name+'_GrpBackup_Operators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpPrnOpers = Receive-Job -Name ($Domain.name+'_GrpPrint_Operators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpDomCtrls = Receive-Job -Name ($Domain.name+'_GrpDomain_Controllers') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpRODCs = Receive-Job -Name ($Domain.name+'_GrpRODC') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpGPOCres = Receive-Job -Name ($Domain.name+'_GrpGPCreator_Owners') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpCrypOpers = Receive-Job -Name ($Domain.name+'_GrpCryptographic_Operators') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpDCOMUsrs = Receive-Job -Name ($Domain.name+'_GrpDCOM_Users') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
@@ -301,24 +259,10 @@ $DomainTable = @{
 'SysVolContent' = $SysVolDom;
 'USR_PasswordNeverExpires' = $UsrPWDNeverExpires;
 'USR_Totalusers' = $UsrTotal;
-'USR_EnabledUsers' = $UsrEnable;
 'USR_DisableUsers' = $UsrDisable;
 'USR_InactiveUsers' = $UsrInactive;
 'Computers' = $Comps;
-'Domain Admins'=$GrpDomAdmins;
-'Schema Admins'=$GrpSchemaAdmins;
-'Enterprise Admins'=$GrpEntAdmins;
-'Server Operators'=$GrpSrvOpers;
-'Account Operators' = $GrpSrvOpers;
-'Backup Operators' = $GrpBkpOpers;
-'Print Operators' = $GrpPrnOpers;
-'Domain Controllers' = $GrpDomCtrls;
-'Read-only Domain Controllers' = $GrpRODCs;
-'Group Policy Creator Owners' = $GrpGPOCres;
-'Cryptographic Operators' = $GrpCrypOpers;
-'Distributed COM Users' = $GrpDCOMUsrs;
-'Administrators'=$GrpAdms;
-'All'=$GrpAll
+'Groups'=$GrpAll
 
 }
 
@@ -1014,7 +958,7 @@ Add-Content $report  "<td width='10%' align='center'><B>Password Never Expires</
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain in $Forest.domains.name) 
+Foreach ($Domain in $Forest.domains.name)
     {
         Try{
         $UsDomain = $Domain
@@ -1024,7 +968,7 @@ Foreach ($Domain in $Forest.domains.name)
         $AllUsers = $Usrs.USR_Totalusers
 
         $UsersDisabled = $Usrs.USR_DisableUsers
-        $UsersEnabled = $Usrs.USR_EnabledUsers
+        $UsersEnabled = ($Usrs.USR_Totalusers - $Usrs.USR_DisableUsers)
         $UsersInactive = $Usrs.USR_InactiveUsers
         $UsersPWDNeverExpire = $usrs.USR_PasswordNeverExpires
 
@@ -1235,14 +1179,16 @@ Foreach ($Domain in $Forest.domains.name)
 
     $Grp =  Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-        Foreach ($gp in $Groups) 
+    $Grp = $Grp.Groups
+
+        Foreach ($gp in $Groups)
             {
             $GpTemp = 0
             $GpTemp = $Grp.($gp)
             $CritGrp = 0
 
             if ($gp -in ('Schema Admins','Domain Controllers','Read-only Domain Controllers','Cryptographic Operators','Distributed COM Users')) {$CritGrp ++}
-            $GCounter = (($GpTemp -split(';') | where {$_ -like '*DC*'})).Count 
+            $GCounter = $GpTemp
 
                     $GName = $gp
                     Add-Content $report "<tr>"
@@ -1312,36 +1258,29 @@ Add-Content $report  "<td width='5%' align='center'><B>Average Members</B></td>"
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain in $Forest.domains.name)
+Foreach ($Domain in $Forest.domains.name) 
     {
 
     Try{
 
     $Grp =  Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-    $GroupsMembers = @()
+    $GroupAll = $Grp.Groups.count
 
-    $GroupAll = $Grp.All
-    $Counter = @()
-            Foreach ($gp in $GroupAll)
-            {
-                $Counter += (($gp -split(';') | where {$_ -like '*DC*'})).Count 
-            }
+    $Grp = $Grp.Groups
 
-
-        $GroupTotal = $Counter.Count
-        $GroupLarge = ($Counter | where {$_ -ge 50}).Count
-        $GroupEmpty = ($Counter | where {$_ -eq 0}).Count
-        $GroupAve = ($Counter | Measure-Object -Average).Average
+        $GroupLarge = ($Grp.Values | where {$_ -ge 1000}).Count
+        $GroupEmpty = ($Grp.Values | where {$_ -le 1}).Count
+        $GroupAve = ($Grp.Values | Measure-Object -Average).Average
         
         Add-Content $report "<tr>" 
 
         Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$GroupTotal</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$GroupAll</td>" 
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Empty Groups in the Domain: "+$Domain)
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total Empty Groups found: "+$GroupEmpty)
-        if ($GroupLarge -gt 30) 
+        if ($GroupLarge -gt 5) 
             {
                 Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
             }
@@ -1439,7 +1378,7 @@ Foreach ($Domain in $Forest.domains.name)
     $GPEmpt = ($Gpo | where {$_.User.VersionDirectory -eq 0 -and $_.User.VersionSysVol -eq 0 -and $_.Computer.VersionDirectory -eq 0 -and $_.Computer.VersionSysVol -eq 0}).Name.Count
     $GPBIG = ($Gpo | Where {(([int]$_.User.VersionDirectory) + ([int]$_.Computer.VersionDirectory)) -ge 1000}).Name.Count
     $GPOAll = $GPO.Count
-    $GPOWithouLink = ($GPO  | where {!$_.LinksTo} ).Count
+    $GPOWithouLink = ($GPO  | where {!$_.LinksTo}).name.Count
     $GPODisables = ($GPO.LinksTo.Enabled | where {$_ -eq $false}).Count
 
  Add-Content $report "<tr>"
@@ -1455,7 +1394,7 @@ Foreach ($Domain in $Forest.domains.name)
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$GPOWithouLink GPOs</td>" 
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
                     }
                 if ($GPEmpt -ge 1) 
                     {
@@ -1463,7 +1402,7 @@ Foreach ($Domain in $Forest.domains.name)
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$GPEmpt GPOs</td>" 
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
                     }
 
                 if ($GPODisables -ge 1) 
@@ -1472,7 +1411,7 @@ Foreach ($Domain in $Forest.domains.name)
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$GPODisables GPOs</td>" 
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
                     }
 
                 if ($GPBIG -ge 1) 
@@ -1481,7 +1420,7 @@ Foreach ($Domain in $Forest.domains.name)
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$GPBIG GPOs</td>" 
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
                     }
 
                 Add-Content $report "</tr>"
