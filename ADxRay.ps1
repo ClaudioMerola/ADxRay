@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.3'
+$Ver = '3.4'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -262,7 +262,9 @@ $DomainTable = @{
 'USR_DisableUsers' = $UsrDisable;
 'USR_InactiveUsers' = $UsrInactive;
 'Computers' = $Comps;
-'Groups'=$GrpAll
+'AdminGroups'=$GrpAll | ? {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
+'Groups'=$GrpAll | sort Values,Keys -desc | Select-Object -Index 0,1,2,3,4,5,6,7,8,9;
+'SmallGroups' = ($GrpAll | sort Values | group Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
 
 }
 
@@ -1179,7 +1181,7 @@ Foreach ($Domain in $Forest.domains.name)
 
     $Grp =  Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-    $Grp = $Grp.Groups
+    $Grp = $Grp.AdminGroups
 
         Foreach ($gp in $Groups)
             {
@@ -1235,25 +1237,23 @@ add-content $report "<BR><BR><BR><BR>"
 
 
 
-######################################### EMPTY GROUPS #############################################
+######################################### LARGE GROUPS #############################################
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Empty Groups Reporting")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Largest Groups Reporting")
 
 
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
-add-content $report  "<h3>Active Directory General Groups</h3>" 
+add-content $report  "<h3>Top 10 Largest Active Directory Groups</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
 add-content $report  "<table width='60%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Groups</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Large Groups</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Empty Groups</B></td>" 
-Add-Content $report  "<td width='5%' align='center'><B>Average Members</B></td>" 
+Add-Content $report  "<td width='20%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='20%' align='center'><B>Group Name</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Number of Members</B></td>" 
  
 
 Add-Content $report "</tr>" 
@@ -1265,63 +1265,39 @@ Foreach ($Domain in $Forest.domains.name)
 
     $Grp =  Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-    $GroupAll = $Grp.Groups.count
-
     $Grp = $Grp.Groups
 
-        $GroupLarge = ($Grp.Values | where {$_ -ge 1000}).Count
-        $GroupEmpty = ($Grp.Values | where {$_ -le 1}).Count
-        $GroupAve = ($Grp.Values | Measure-Object -Average).Average
+    Foreach ($Grpp in $Grp)
+    {
+        $Group = $Grpp.Keys
+        $GroupMembers = $Grpp.Values
         
         Add-Content $report "<tr>" 
 
         Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$GroupAll</td>" 
+        Add-Content $report "<td bgcolor='White' align=center>$Group</td>" 
 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Empty Groups in the Domain: "+$Domain)
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total Empty Groups found: "+$GroupEmpty)
-        if ($GroupLarge -gt 5) 
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Largest Groups found: "+$Group)
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Number of Members: "+$GroupMembers)
+        if ($GroupMembers -gt 50000) 
             {
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupLarge</font></td>"
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupMembers</font></td>"
             }
         else 
             {
-                Add-Content $report "<td bgcolor= 'Lime' align=center> $GroupLarge</td>" 
+                Add-Content $report "<td bgcolor= 'White' align=center>$GroupMembers</td>" 
             }
-        if ($GroupEmpty -gt 20) 
-            {
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupEmpty</font></td>"
-            }
-        else 
-            {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>$GroupEmpty</td>" 
-            }
-        if ($GroupAve -ge 1.00 -and $GroupAve -lt 3.00) 
-            {
-                $GroupAve = $GroupAve.tostring("#.##")
-                Add-Content $report "<td bgcolor= 'Yellow' align=center>$GroupAve</td>"
-            }
-        elseif ($GroupAve -ge 0.00 -and $GroupAve -lt 1.00) 
-            {
-                $GroupAve = $GroupAve.tostring("#.##")
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupAve</font></td>"
-            }
-        else 
-            {
-                $GroupAve = $GroupAve.tostring("#.##") 
-                Add-Content $report "<td bgcolor='Lime' align=center>$GroupAve</td>" 
-            }
-
 
         Add-Content $report "<tr>"
         }
+}
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Empty Domain Groups Inventoring -------------")
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
 }
     }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Empty Domain Groups Inventory finished")
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Largest Groups reporting finished")
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Groups phase.")
 
@@ -1329,7 +1305,7 @@ Add-content $report  "</table>"
 
 add-content $report "<BR><BR>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having a fair number of groups is not just a good practice, it's vital to ensure an easier and 'clean' management of Active Directory, usually don't make sense have more groups than users or even groups with only few users. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specially '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'. </td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having a fair number of groups is not just a good practice, it's vital to ensure an easier and 'clean' management of Active Directory. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specially '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'. </td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
@@ -1338,6 +1314,26 @@ write-host $GroupTotal -NoNewline -ForegroundColor Magenta
 Write-Host ' Groups'
 
 add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
+
+
+######################################### GPOs #############################################
+
+
+
+
+add-content $report  "<table width='50%' border='0'>" 
+add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<td colspan='7' height='70' align='left'>" 
+add-content $report  "<H2>Group Policy Objects<HR><H2>" 
+add-content $report  "</td>" 
+add-content $report  "</tr>" 
+add-content $report  "</table>"
+add-content $report "<BR><BR>"
+add-content $report "</CENTER>"
+
 
 
 
