@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.4'
+$Ver = '3.5'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -123,7 +123,6 @@ Foreach ($Domain in $Forest.Domains)
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory")
 
-
 Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentOperation 'Triggering Domain Controller Inventory..'
 
 Foreach ($DC in $DCs) {
@@ -158,7 +157,7 @@ Foreach ($DC in $DCs) {
 
     #start-job -Name ($DC.Name+'_CleartxtEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			8*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
     
-    start-job -Name ($DC.Name+'_HotFix') -scriptblock {Get-HotFix -ComputerName $args | sort HotFixID,{ [datetime]$_.InstalledOn } -desc | group HotFixID | % { $_.group[0] }} -ArgumentList $DC.Name | Out-Null
+    start-job -Name ($DC.Name+'_HotFix') -scriptblock {Get-HotFix -ComputerName $args | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1} -ArgumentList $DC.Name | Out-Null
 
     start-job -Name ($DC.Name+'_GPResult') -scriptblock {Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$args+".xml")} -ArgumentList $DC.Name | Out-Null
 
@@ -263,7 +262,7 @@ $DomainTable = @{
 'USR_InactiveUsers' = $UsrInactive;
 'Computers' = $Comps;
 'AdminGroups'=$GrpAll | ? {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
-'Groups'=$GrpAll | sort Values,Keys -desc | Select-Object -Index 0,1,2,3,4,5,6,7,8,9;
+'Groups'=$GrpAll | sort Values,Keys -desc | Select-Object -First 10;
 'SmallGroups' = ($GrpAll | sort Values | group Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
 
 }
