@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.5'
+$Ver = '3.6'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -144,6 +144,11 @@ Foreach ($DC in $DCs) {
     start-job -Name ($DC.Name+'_NTP1') -scriptblock {W32TM /query /computer:$($args[0]) /status} -ArgumentList $DC.Name | Out-Null
 
     start-job -Name ($DC.Name+'_NTP2') -scriptblock {W32TM /query /computer:$($args[0]) /configuration} -ArgumentList $DC.Name | Out-Null
+
+    start-job -Name ($DC.Name+'_LogicalProc') -scriptblock {(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[0])).NumberOfLogicalProcessors} -ArgumentList $DC.Name | Out-Null
+
+    start-job -Name ($DC.Name+'_FreeSpace') -scriptblock {(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[0])).CounterSamples} -ArgumentList $DC.Name | Out-Null
+
     
     #start-job -Name ($DC.Name+'_EvtSecurity') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'Security'}} -ArgumentList $DC.Name | Out-Null
 
@@ -170,15 +175,19 @@ Foreach ($DC in $DCs) {
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
 
 $c = 0
+$WaitTime = get-date
 while (get-job | ? {$_.State -eq 'Running'})
 {
 $c = (((((get-job).count - (get-job | ? {$_.State -eq 'Running'}).Count)) / (get-job).Count) * 100)
 $c = [math]::Round($c)
 Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
+if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
+{
+Get-Job | Wait-Job -Timeout 5 | Out-Null
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
+}
 }
 Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
-
-Get-Job | Wait-Job | Out-Null
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are not completed")
 
@@ -296,6 +305,8 @@ $bkp = Receive-Job -Name ($DC.Name+'_Backup') -ErrorAction SilentlyContinue -War
 $HW = Receive-Job -Name ($DC.Name+'_HW') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$PROC = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$FSPACE = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 $DomControl = @{
 
@@ -319,6 +330,8 @@ $DomControl = @{
     'HotFix' = $HotFix;
     'NTPStatus' = $NTP1;
     'NTPConf' =  $NTP2;
+    'LogicalProc' = $PROC;
+    'FreeSpace' = $FSPACE;
     'DNS' = $DNS;
     'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
@@ -3642,22 +3655,24 @@ add-content $report "<BR>"
 
 add-content $report "<CENTER>"
  
-add-content $report  "<table width='80%' border='1'>" 
+add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Total Physical Memory</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Total Physical Memory</B></td>"
+Add-Content $report  "<td width='8%' align='center'><B>Total CPU Cores</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>% Free Space C:</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Last Boot Time</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>System Install Date</B></td>"
 Add-Content $report  "<td width='25%' align='center'><B>BIOS Version</B></td>"
 
 Add-Content $report "</tr>" 
 
-foreach ($DC in $DCs)
+foreach ($DC in $DCs) 
     {
     Try{
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Software Reporting of:"+$DC) 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Hardware Reporting of:"+$DC) 
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
@@ -3665,6 +3680,9 @@ foreach ($DC in $DCs)
     $DCHostName = $DC.name
 
     $Inv = $DCD.Sysinfo
+    $Proc = $DCD.LogicalProc
+    $FreeSpace = ($DCD.FreeSpace | ? {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
+    $FreeSpace = [double]$FreeSpace
 
     $InvMem = $Inv.'Total Physical Memory'
     $InvBoot = $Inv.'System Boot Time'
@@ -3683,6 +3701,18 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
 
     Add-Content $report "<td bgcolor='White' align=center>$InvMem</td>"
+    Add-Content $report "<td bgcolor='White' align=center>$Proc</td>"
+
+    if($FreeSpace -le 10)
+        {
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$FreeSpace</font></td>"
+        }
+        else
+        {
+            Add-Content $report "<td bgcolor='White' align=center>$FreeSpace</td>"
+        }
+
+
     Add-Content $report "<td bgcolor='White' align=center>$InvBoot</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$InvInst</td>" 
     if((New-TimeSpan -Start $InvBiosDate -End (Get-Date)).TotalDays -ge 365)
