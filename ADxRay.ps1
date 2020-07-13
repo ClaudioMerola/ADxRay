@@ -3243,7 +3243,7 @@ add-content $report "<BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>According to Microsoft: ‘While seemingly harmless, any authenticated user can remotely connect to a domain controller print spooler service, and request an update on new print jobs. In addition, users can tell the domain controller to send the notification to the system with unconstrained delegation. These actions test the connection and expose the domain controller computer account credential (Print spooler is owned by SYSTEM).’. <a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/atp-cas-isp-print-spooler'>Security assessment: Domain controllers with Print spooler service available</a>. For a deeper insight and better security monitoring of your domain controller’s environment give a look and perhaps a try on Azure Advanced Treat Protection (<a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/what-is-atp>What is Azure Advanced Threat Protection?</a>).</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>According to Microsoft: ‘While seemingly harmless, any authenticated user can remotely connect to a domain controller print spooler service, and request an update on new print jobs. In addition, users can tell the domain controller to send the notification to the system with unconstrained delegation. These actions test the connection and expose the domain controller computer account credential (Print spooler is owned by SYSTEM).’. <a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/atp-cas-isp-print-spooler'>Security assessment: Domain controllers with Print spooler service available</a>. For a deeper insight and better security view, monitor and protection of your domain controller’s environment give a look and perhaps a try on Azure Advanced Treat Protection (<a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/what-is-atp>What is Azure Advanced Threat Protection?</a>).</td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -4075,6 +4075,7 @@ Add-Content $report "</html>"
 Hammer
 sleep 10
 Report
+
 
 
 
