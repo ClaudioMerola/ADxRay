@@ -107,13 +107,7 @@ Foreach ($Domain in $Forest.Domains)
 
     start-job -Name ($Domain.Name+'_GPOs') -scriptblock {Get-GPOReport -All -ReportType XML -Path ("C:\ADxRay\Hammer\GPOs_"+$args+".xml")} -ArgumentList $Domain.Name | Out-Null
 
-    start-job -Name ($Domain.name+'_UsrPWDNeverExpires') -scriptblock {(dsquery * -filter "(&(objectCategory=person)(objectClass=user)(userAccountControl:1.2.840.113556.1.4.803:=65536))" -s $($args)).Count} -ArgumentList $Domain.PdcRoleOwner.Name | Out-Null
-
-    start-job -Name ($Domain.name+'_UsrTotal') -scriptblock {(dsquery * -filter sAMAccountType=805306368 -s $($args) -attr samAccountName -attrsonly -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_UsrDisable') -scriptblock {(dsquery user -disabled -s $($args) -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
-
-    start-job -Name ($Domain.name+'_UsrInactive') -scriptblock {(dsquery user -inactive 12 -s $($args) -limit 0).Count} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+    start-job -Name ($Domain.name+'_Usrs') -scriptblock {dsquery * -filter sAMAccountType=805306368 -s $($args) -attr userAccountControl -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
     start-job -Name ($Domain.name+'_Comps') -scriptblock {dsquery * -filter sAMAccountType=805306369 -s $($args) -Attr OperatingSystem  -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
@@ -246,13 +240,15 @@ if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-i
 
     $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $UsrPWDNeverExpires = Receive-Job -Name ($Domain.Name+'_UsrPWDNeverExpires') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $UsrTotal = Receive-Job -Name ($Domain.name+'_UsrTotal') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $UsrDisable = Receive-Job -Name ($Domain.name+'_UsrDisable') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $UsrInactive = Receive-Job -Name ($Domain.name+'_UsrInactive') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+$att = @()
+foreach ($UAC in $Usrs){
+$att += 1..25 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
+} 
 
 $DomainTable = @{
 
@@ -265,10 +261,7 @@ $DomainTable = @{
 'UsersContainer' = $InvDom.UsersContainer;
 'DCCount' = ($Forest.domains | where {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
 'SysVolContent' = $SysVolDom;
-'USR_PasswordNeverExpires' = $UsrPWDNeverExpires;
-'USR_Totalusers' = $UsrTotal;
-'USR_DisableUsers' = $UsrDisable;
-'USR_InactiveUsers' = $UsrInactive;
+'Users' = $att | Group-Object;
 'Computers' = $Comps;
 'AdminGroups'=$GrpAll | ? {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
 'Groups'=$GrpAll | sort Values,Keys -desc | Select-Object -First 10;
@@ -308,6 +301,7 @@ $NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -Warn
 $PROC = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $FSPACE = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
+
 $DomControl = @{
 
     'Domain' = $DC0.Domain;
@@ -326,12 +320,15 @@ $DomControl = @{
 #    'BackUpEvent' = $bkpEvents;
 #    'DCCleEvts' = $CleEvts;
     'Backup' = $bkp;
-    'Sysinfo' = $HW;
+    'HW_Mem' = $HW.'Total Physical Memory';
+    'HW_Boot' = $HW.'System Boot Time';
+    'HW_Install' = $HW.'Original Install Date';
+    'HW_BIOS' = $HW.'BIOS Version';
     'HotFix' = $HotFix;
     'NTPStatus' = $NTP1;
     'NTPConf' =  $NTP2;
-    'LogicalProc' = $PROC;
-    'FreeSpace' = $FSPACE;
+    'HW_LogicalProc' = $PROC;
+    'HW_FreeSpace' = $FSPACE;
     'DNS' = $DNS;
     'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
@@ -961,14 +958,16 @@ add-content $report  "<h3>User Accounts</h3>"
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
-add-content $report  "<table width='60%' border='1'>" 
+add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Total Users</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Enabled Users</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Disabled Users</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Inactive Users</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Password Never Expires</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Disabled Users</B></td>"
+Add-Content $report  "<td width='10%' align='center'><B>Reversible Encryption</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Password Not Required</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Password Never Expires</B></td>"
+Add-Content $report  "<td width='10%' align='center'><B>Use Kerberos DES</B></td>" 
 
 Add-Content $report "</tr>" 
 
@@ -979,12 +978,13 @@ Foreach ($Domain in $Forest.domains.name)
 
         $Usrs = Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-        $AllUsers = $Usrs.USR_Totalusers
-
-        $UsersDisabled = $Usrs.USR_DisableUsers
-        $UsersEnabled = ($Usrs.USR_Totalusers - $Usrs.USR_DisableUsers)
-        $UsersInactive = $Usrs.USR_InactiveUsers
-        $UsersPWDNeverExpire = $usrs.USR_PasswordNeverExpires
+        $AllUsers = ($Usrs.Users | ? {$_.Name -eq 9}).Count
+        $UsersDisabled = ($Usrs.Users | ? {$_.Name -eq 1}).Count
+        $UsersEnabled = (($Usrs.Users | ? {$_.Name -eq 9}).Count - ($Usrs.Users | ? {$_.Name -eq 1}).Count)
+        $UsersDES = ($Usrs.Users | ? {$_.Name -eq 21}).Count
+        $UsersReversePWD = ($Usrs.Users | ? {$_.Name -eq 7}).Count
+        $UsersPWDNotReq = ($Usrs.Users | ? {$_.Name -eq 5}).Count
+        $UsersPWDNeverExpire = ($Usrs.Users | ? {$_.Name -eq 16}).Count
 
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring User Accounts in the Domain: "+$UsDomain)
@@ -996,21 +996,37 @@ Foreach ($Domain in $Forest.domains.name)
         Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
         Add-Content $report "<td bgcolor='White' align=center>$UsersEnabled</td>"               
         Add-Content $report "<td bgcolor='White' align=center>$UsersDisabled</td>"    
-        if ($UsersInactive -eq '' -or $UsersInactive -eq 0) 
+        if ($UsersReversePWD -eq 0) 
             {
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersInactive</font></td>" 
+                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersReversePWD</font></td>" 
             }
-        if ($UsersPWDNeverExpire -eq '' -or $UsersPWDNeverExpire -eq 0) 
+        if ($UsersPWDNotReq -eq 0) 
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+            }
+        else 
+            { 
+                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersPWDNotReq</td>" 
+            }
+        if ($UsersPWDNeverExpire -eq 0) 
             {
                 Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
             }
         else 
             { 
                 Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersPWDNeverExpire</td>" 
+            }
+        if ($UsersDES -eq 0) 
+            {
+                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+            }
+        else 
+            { 
+                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersDES</td>" 
             }
 
     Add-Content $report "</tr>"
@@ -1030,7 +1046,7 @@ Add-content $report  "</table>"
 
 add-content $report "<BR><BR>"
 
-add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This overview state of user accounts will present the <B>Total number of users</b>, as so as the total number of <B>Disabled User Accounts</B>, <B>Inactive User Accounts </B> and User Accounts that have the <B>'Password Never Expires'</B> option set. Most of those counters should be <B>0</B> or the smallest as possible. Exceptions may apply, but should not be a common practice.</td></tr></TABLE>" 
+add-content $report "<TABLE BORDER=0 WIDTH=95%><tr><td>This overview state of user accounts will present the <B>Total number of users</b>, as so as the total number of <B>Disabled User Accounts</B>, <B>Accounts storing password with Reversible Encryption</B>, <B>Accounts checked with password not required</B>, <B>Accounts using Kerberos DES encryption</B> and User Accounts that have the <B>'Password Never Expires'</B> option set. According to <a href='https://docs.microsoft.com/en-us/azure-advanced-threat-protection/atp-cas-isp-unsecure-account-attributes'>Security assessment: Unsecure account attributes</a> those counters should be <B>0</B> or the smallest as possible. Exceptions may apply, but should not be a common practice.</td></tr></TABLE>" 
 
 add-content $report "</CENTER>"
 
@@ -3679,19 +3695,16 @@ foreach ($DC in $DCs)
     $Domain = $DC.Domain.Name
     $DCHostName = $DC.name
 
-    $Inv = $DCD.Sysinfo
-    $Proc = $DCD.LogicalProc
-    $FreeSpace = ($DCD.FreeSpace | ? {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
+    $Proc = $DCD.HW_LogicalProc
+    $FreeSpace = ($DCD.HW_FreeSpace | ? {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
     $FreeSpace = [double]$FreeSpace
 
-    $InvMem = $Inv.'Total Physical Memory'
-    $InvBoot = $Inv.'System Boot Time'
-    $InvInst = $Inv.'Original Install Date'
-    $InvBios = $Inv.'BIOS Version'
+    $InvMem = $DCD.HW_Mem
+    $InvBoot = $DCD.HW_Boot
+    $InvInst = $DCD.HW_Install
+    $InvBios = $DCD.HW_BIOS
 
     $InvBiosDate = ($InvBios.Split(",")[1])
-
-    #$InvBiosDate = [datetime]::parseexact($InvBiosDate, 'MM/dd/yyyy',$null)
 
     $InvBiosDate = [Convert]::ToDateTime($InvBiosDate, [System.Globalization.DateTimeFormatInfo]::CurrentInfo)
 
