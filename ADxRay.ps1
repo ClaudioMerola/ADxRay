@@ -143,7 +143,8 @@ Foreach ($DC in $DCs) {
 
     start-job -Name ($DC.Name+'_FreeSpace') -scriptblock {(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[0])).CounterSamples} -ArgumentList $DC.Name | Out-Null
 
-    
+    start-job -Name ($DC.Name+'_Spooler') -scriptblock {Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
+
     #start-job -Name ($DC.Name+'_EvtSecurity') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'Security'}} -ArgumentList $DC.Name | Out-Null
 
     #start-job -Name ($DC.Name+'_EvtSystem') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'System'}} -ArgumentList $DC.Name | Out-Null
@@ -300,6 +301,7 @@ $NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -Warn
 $NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $PROC = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 $FSPACE = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$Spooler = Receive-Job -Name ($DC.Name+'_Spooler') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 
 $DomControl = @{
@@ -329,6 +331,8 @@ $DomControl = @{
     'NTPConf' =  $NTP2;
     'HW_LogicalProc' = $PROC;
     'HW_FreeSpace' = $FSPACE;
+    'Spooler_State' = $Spooler.State;
+    'Spooler_StartMode' = $Spooler.StartMode;
     'DNS' = $DNS;
     'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
@@ -3162,6 +3166,91 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 
+######################################### DCs Security PRINT SPOOLER inventory  ###############################################
+
+
+write-host 'Starting Domain Controllers Print Spooler Reporting..'
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Print Spooler Reporting.")   
+
+add-content $report  "<CENTER>"
+add-content $report  "<h3>Print Spooler Service Status ($Forest)</h3>" 
+add-content $report  "</CENTER>"
+add-content $report "<BR>"
+
+add-content $report "<CENTER>"
+ 
+add-content $report  "<table width='60%' border='1'>" 
+Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Print Spooler Status</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Print Spooler Startup Mode</B></td>"
+
+ 
+Add-Content $report "</tr>" 
+
+foreach ($DC in $DCs) 
+    {
+    Try{
+
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Print Spooler Reporting of:"+$DC) 
+        
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
+
+    $State = $DCD.Spooler_State
+
+    $Startup = $DCD.Spooler_StartMode 
+
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Print Spooler Status:"+$State)
+    
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Print Spooler Startup Mode:"+$Startup) 
+
+    $Domain = $DC.Domain
+    $DCHostName = $DC.name
+    
+    Add-Content $report "<tr>"
+
+    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+
+    if ($State -eq 'Running')
+    {
+    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$State</font></td>" 
+    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Startup</font></td>" 
+    }
+    else 
+    {
+    Add-Content $report "<td bgcolor='Lime' align=center>$State</td>" 
+    Add-Content $report "<td bgcolor='Lime' align=center>$Startup</td>" 
+    }
+   
+    Add-Content $report "</tr>" 
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Print Spooler Reporting for server:"+$DC) 
+}
+Catch{
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during reporting: "+$_.Exception.Message) 
+}
+}
+
+
+Add-content $report  "</table>" 
+
+add-content $report "</CENTER>"
+
+add-content $report "<BR>"
+add-content $report "<BR>"
+
+add-content $report  "<CENTER>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>According to Microsoft: ‘While seemingly harmless, any authenticated user can remotely connect to a domain controller print spooler service, and request an update on new print jobs. In addition, users can tell the domain controller to send the notification to the system with unconstrained delegation. These actions test the connection and expose the domain controller computer account credential (Print spooler is owned by SYSTEM).’. <a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/atp-cas-isp-print-spooler'>Security assessment: Domain controllers with Print spooler service available</a>. For a deeper insight and better security monitoring of your domain controller’s environment give a look and perhaps a try on Azure Advanced Treat Protection (<a href=’https://docs.microsoft.com/en-us/azure-advanced-threat-protection/what-is-atp>What is Azure Advanced Threat Protection?</a>).</td></tr></TABLE>" 
+
+add-content $report  "</CENTER>"
+
+add-content $report "<BR><BR><BR><BR><BR><BR>"
+
+
+
 ######################################### DCs Security HotFix inventory  ###############################################
 
 
@@ -3981,10 +4070,11 @@ Add-Content $report "</html>"
 ############################# RUNNING FUNCTIONS ##########################################
 
 
+
+
 Hammer
 sleep 10
 Report
-
 
 
 
@@ -3994,8 +4084,6 @@ Report
 
 }
 $Measure = $Runtime.Totalminutes.ToString('#######.##')
-
-#$report = ("C:\ADxRay\ADxRay_Report_"+(get-date -Format 'yyyy-MM-dd')+".htm") 
 
 $index = Get-Content $report
 
