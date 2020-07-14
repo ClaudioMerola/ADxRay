@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.6'
+$Ver = '3.7'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -123,48 +123,47 @@ Foreach ($DC in $DCs) {
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
 
-    start-job -Name ($DC.Name+'_Infos') -scriptblock {Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
+    Remove-Variable var
 
-    start-job -Name ($DC.Name+'_x64Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_x86Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_Features') -scriptblock {Get-WindowsFeature -ComputerName $($args[0]) | where {$_.Installed -eq 'Installed'}} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_Backup') -scriptblock {repadmin /showbackup $($args[0])} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_HW') -scriptblock {systeminfo /S $($args[0]) /fo CSV | ConvertFrom-Csv} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_NTP1') -scriptblock {W32TM /query /computer:$($args[0]) /status} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_NTP2') -scriptblock {W32TM /query /computer:$($args[0]) /configuration} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_LogicalProc') -scriptblock {(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[0])).NumberOfLogicalProcessors} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_FreeSpace') -scriptblock {(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[0])).CounterSamples} -ArgumentList $DC.Name | Out-Null
-
-    start-job -Name ($DC.Name+'_Spooler') -scriptblock {Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
-
-    #start-job -Name ($DC.Name+'_EvtSecurity') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'Security'}} -ArgumentList $DC.Name | Out-Null
-
-    #start-job -Name ($DC.Name+'_EvtSystem') -scriptblock {Get-EventLog -List -ComputerName $args | where {$_.Log -eq 'System'}} -ArgumentList $DC.Name | Out-Null
-
-    #start-job -Name ($DC.Name+'_EvtBackup') -scriptblock {Get-winevent -Filterhashtable @{logname='Microsoft-Windows-Backup/operational';ID=4} -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
-   
-    #start-job -Name ($DC.Name+'_Evts') -scriptblock {(Get-EventLog -ComputerName $args -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102).Count} -ArgumentList $DC.Name | Out-Null
-
-    #start-job -Name ($DC.Name+'_BatchJobEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			4*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
-
-    #start-job -Name ($DC.Name+'_CleartxtEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			8*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
+    start-job -Name ($DC.Name+'_Inv') -scriptblock {
     
-    start-job -Name ($DC.Name+'_HotFix') -scriptblock {Get-HotFix -ComputerName $args | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1} -ArgumentList $DC.Name | Out-Null
+    $var = @{
+    
+    'Inv'= Get-ADDomainController -Server $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
-    start-job -Name ($DC.Name+'_GPResult') -scriptblock {Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$args+".xml")} -ArgumentList $DC.Name | Out-Null
+    'x64Softwares' = Invoke-Command -cn $($args[1]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}
 
-    start-job -Name ($DC.Name+'_DNS') -scriptblock {Get-DnsServer -ComputerName $args -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
+    'x86Softwares' = Invoke-Command -cn $($args[1]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}
 
-    start-job -Name ($DC.Name+'_ldapRR') -scriptblock {Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$($args[0])) -Name '_ldap._tcp.dc' -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Domain,$DC.Name | Out-Null
+    'Features' = (Get-WindowsFeature -ComputerName $($args[1]) | where {$_.Installed -eq 'Installed'}).Name
 
+    'Backup' = repadmin /showbackup $($args[1])
+
+    'HW' = systeminfo /S $($args[1]) /fo CSV | ConvertFrom-Csv
+
+    'NTP1' = W32TM /query /computer:$($args[1]) /status
+
+    'NTP2' = W32TM /query /computer:$($args[1]) /configuration
+
+    'LogicalProc' = (Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[1])).NumberOfLogicalProcessors
+
+    'FreeSpace' = (Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[1])).CounterSamples
+
+    'Spooler' = Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[1])
+    
+    'HotFix' = Get-HotFix -ComputerName $($args[1]) | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1
+
+    'GPResult' = Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$($args[1])+".xml")
+
+    'DNS' = Get-DnsServer -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+    'ldapRR' = Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$($args[0])) -Name '_ldap._tcp.dc' -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    
+    }
+
+    } -ArgumentList $DC.Domain,$DC.Name | Out-Null
+
+    $Var
 }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
@@ -248,7 +247,7 @@ if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-i
 
 $att = @()
 foreach ($UAC in $Usrs){
-$att += 1..25 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
+$att += 1..26 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
 } 
 
 $DomainTable = @{
@@ -283,62 +282,36 @@ Foreach ($DC in $DCs)
 if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
 $DC0 = Receive-Job -Name ($DC.Name+'_Infos') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$EvtSys = Receive-Job -Name ($DC.Name+'_EvtSystem') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$EvtSec = Receive-Job -Name ($DC.Name+'_EvtSecurity') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$Evts = Receive-Job -Name ($DC.Name+'_Evts') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$BatEvts = Receive-Job -Name ($DC.Name+'_BatchJobEvt') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$CleEvts = Receive-Job -Name ($DC.Name+'_CleartxtEvt') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$HotFix = Receive-Job -Name ($DC.Name+'_HotFix') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$DNS = Receive-Job -Name ($DC.Name+'_DNS') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$LdapRR = Receive-Job -Name ($DC.Name+'_ldapRR') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$Features = Receive-Job -Name ($DC.Name+'_Features') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$SWx64 = Receive-Job -Name ($DC.Name+'_x64Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$SWx86 = Receive-Job -Name ($DC.Name+'_x86Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-#$bkpEvents = Receive-Job -Name ($DC.Name+'_EvtBackup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$bkp = Receive-Job -Name ($DC.Name+'_Backup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$HW = Receive-Job -Name ($DC.Name+'_HW') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$PROC = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$FSPACE = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$Spooler = Receive-Job -Name ($DC.Name+'_Spooler') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-
 
 $DomControl = @{
 
-    'Domain' = $DC0.Domain;
-    'Hostname' = $DC0.Hostname;
-    'IsReadOnly' = $DC0.IsReadOnly;
-    'IPv4Address' = $DC0.IPv4Address;
-    'IsGlobalCatalog' = $DC0.IsGlobalCatalog;
-    'OperatingSystem' = $DC0.OperatingSystem;
-    'OperatingSystemVersion' = $DC0.OperatingSystemVersion;
-    'OperationMasterRoles' = $DC0.OperationMasterRoles;
-    'Site' = $DC0.Site;
-    'CriticalEvts' = $Evts;
-#    'DCSysLog' = $EvtSys.MaximumKilobytes;
-#    'DCSecLog' = $EvtSec.MaximumKilobytes;
-#    'DCBatEvts' = $BatEvts;
-#    'BackUpEvent' = $bkpEvents;
-#    'DCCleEvts' = $CleEvts;
-    'Backup' = $bkp;
-    'HW_Mem' = $HW.'Total Physical Memory';
-    'HW_Boot' = $HW.'System Boot Time';
-    'HW_Install' = $HW.'Original Install Date';
-    'HW_BIOS' = $HW.'BIOS Version';
-    'HotFix' = $HotFix;
-    'NTPStatus' = $NTP1;
-    'NTPConf' =  $NTP2;
-    'HW_LogicalProc' = $PROC;
-    'HW_FreeSpace' = $FSPACE;
-    'Spooler_State' = $Spooler.State;
-    'Spooler_StartMode' = $Spooler.StartMode;
-    'DNS' = $DNS;
-    'ldapRR' = $LdapRR;
+    'Domain' = $DC0.Inv.Domain;
+    'Hostname' = $DC0.Inv.Hostname;
+    'IsReadOnly' = $DC0.Inv.IsReadOnly;
+    'IPv4Address' = $DC0.Inv.IPv4Address;
+    'IsGlobalCatalog' = $DC0.Inv.IsGlobalCatalog;
+    'OperatingSystem' = $DC0.Inv.OperatingSystem;
+    'OperatingSystemVersion' = $DC0.Inv.OperatingSystemVersion;
+    'OperationMasterRoles' = $DC0.Inv.OperationMasterRoles;
+    'Site' = $DC0.Inv.Site;
+    'Backup' = $DC0.Backup;
+    'HW_Mem' = $DC0.HW.'Total Physical Memory';
+    'HW_Boot' = $DC0.HW.'System Boot Time';
+    'HW_Install' = $DC0.HW.'Original Install Date';
+    'HW_BIOS' = $DC0.HW.'BIOS Version';
+    'HotFix' = $DC0.HotFix;
+    'NTPStatus' = $DC0.NTP1;
+    'NTPConf' =  $DC0.NTP2;
+    'HW_LogicalProc' = $DC0.LogicalProc;
+    'HW_FreeSpace' = $DC0.FreeSpace;
+    'Spooler_State' = $DC0.Spooler.State;
+    'Spooler_StartMode' = $DC0.Spooler.StartMode;
+    'DNS' = $DC0.DNS;
+    'ldapRR' = $DC0.LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
-    'InstalledFeatures' = $Features.Name;
-    'InstalledSoftwaresx64' = $SWx64 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
-    'InstalledSoftwaresx86' = $SWx86 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+    'InstalledFeatures' = $DC0.Features;
+    'InstalledSoftwaresx64' = $DC0.x64Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
+    'InstalledSoftwaresx86' = $DC0.x86Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
 
 }
 
@@ -4075,7 +4048,6 @@ Add-Content $report "</html>"
 Hammer
 sleep 10
 Report
-
 
 
 
