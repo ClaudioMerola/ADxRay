@@ -281,7 +281,7 @@ Foreach ($DC in $DCs)
 
 if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
-$DC0 = Receive-Job -Name ($DC.Name+'_Infos') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$DC0 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
 $DomControl = @{
 
