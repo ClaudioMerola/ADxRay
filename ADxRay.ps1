@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.7'
+$Ver = '3.9'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -122,48 +122,37 @@ Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentO
 Foreach ($DC in $DCs) {
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
-
-    Remove-Variable var
-
-    start-job -Name ($DC.Name+'_Inv') -scriptblock {
     
-    $var = @{
-    
-    'Inv'= Get-ADDomainController -Server $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    start-job -Name ($DC.Name+'_Inv') -scriptblock { Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
 
-    'x64Softwares' = Invoke-Command -cn $($args[1]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}
+    start-job -Name ($DC.Name+'_x64Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
 
-    'x86Softwares' = Invoke-Command -cn $($args[1]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}
+    start-job -Name ($DC.Name+'_x86Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
 
-    'Features' = (Get-WindowsFeature -ComputerName $($args[1]) | where {$_.Installed -eq 'Installed'}).Name
+    start-job -Name ($DC.Name+'_HW') -scriptblock {systeminfo /S $($args[0]) /fo CSV | ConvertFrom-Csv} -ArgumentList $DC.Name | Out-Null
 
-    'Backup' = repadmin /showbackup $($args[1])
+    start-job -Name ($DC.Name+'_Features') -scriptblock {(Get-WindowsFeature -ComputerName $($args[0]) | where {$_.Installed -eq 'Installed'}).Name} -ArgumentList $DC.Name | Out-Null
 
-    'HW' = systeminfo /S $($args[1]) /fo CSV | ConvertFrom-Csv
+    start-job -Name ($DC.Name+'_Backup') -scriptblock {repadmin /showbackup $($args[0])} -ArgumentList $DC.Name | Out-Null
 
-    'NTP1' = W32TM /query /computer:$($args[1]) /status
+    start-job -Name ($DC.Name+'_NTP1') -scriptblock {W32TM /query /computer:$($args[0]) /status} -ArgumentList $DC.Name | Out-Null
 
-    'NTP2' = W32TM /query /computer:$($args[1]) /configuration
+    start-job -Name ($DC.Name+'_NTP2') -scriptblock {W32TM /query /computer:$($args[0]) /configuration} -ArgumentList $DC.Name | Out-Null
 
-    'LogicalProc' = (Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[1])).NumberOfLogicalProcessors
+    start-job -Name ($DC.Name+'_HotFix') -scriptblock {Get-HotFix -ComputerName $($args[0]) | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1} -ArgumentList $DC.Name | Out-Null
 
-    'FreeSpace' = (Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[1])).CounterSamples
+    start-job -Name ($DC.Name+'_LogicalProc') -scriptblock {(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[0])).NumberOfLogicalProcessors} -ArgumentList $DC.Name | Out-Null
 
-    'Spooler' = Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[1])
-    
-    'HotFix' = Get-HotFix -ComputerName $($args[1]) | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1
+    start-job -Name ($DC.Name+'_FreeSpace') -scriptblock {(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[0])).CounterSamples} -ArgumentList $DC.Name | Out-Null
 
-    'GPResult' = Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$($args[1])+".xml")
+    start-job -Name ($DC.Name+'_Spooler') -scriptblock {Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
 
-    'DNS' = Get-DnsServer -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    start-job -Name ($DC.Name+'_GPResult') -scriptblock {Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$($args[0])+".xml")} -ArgumentList $DC.Name | Out-Null
 
-    'ldapRR' = Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$($args[0])) -Name '_ldap._tcp.dc' -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    
-    }
+    start-job -Name ($DC.Name+'_DNS') -scriptblock {Get-DnsServer -ComputerName $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
 
-    } -ArgumentList $DC.Domain,$DC.Name | Out-Null
+    start-job -Name ($DC.Name+'_ldapRR') -scriptblock {Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$($args[0])) -Name '_ldap._tcp.dc' -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Domain,$DC.Name | Out-Null
 
-    $Var
 }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
@@ -281,37 +270,50 @@ Foreach ($DC in $DCs)
 
 if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
-$DC0 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$bkp = Receive-Job -Name ($DC.Name+'_Backup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$HW = Receive-Job -Name ($DC.Name+'_HW') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$Hotfix = Receive-Job -Name ($DC.Name+'_HotFix') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$LogicalProc = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$FreeSpace = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$Spooler = Receive-Job -Name ($DC.Name+'_Spooler') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$DNS = Receive-Job -Name ($DC.Name+'_DNS') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$LdapRR = Receive-Job -Name ($DC.Name+'_LdapRR') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$x64Softwares = Receive-Job -Name ($DC.Name+'_x64Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+$x86Softwares = Receive-Job -Name ($DC.Name+'_x86Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
 
 $DomControl = @{
 
-    'Domain' = $DC0.Inv.Domain;
-    'Hostname' = $DC0.Inv.Hostname;
-    'IsReadOnly' = $DC0.Inv.IsReadOnly;
-    'IPv4Address' = $DC0.Inv.IPv4Address;
-    'IsGlobalCatalog' = $DC0.Inv.IsGlobalCatalog;
-    'OperatingSystem' = $DC0.Inv.OperatingSystem;
-    'OperatingSystemVersion' = $DC0.Inv.OperatingSystemVersion;
-    'OperationMasterRoles' = $DC0.Inv.OperationMasterRoles;
-    'Site' = $DC0.Inv.Site;
-    'Backup' = $DC0.Backup;
-    'HW_Mem' = $DC0.HW.'Total Physical Memory';
-    'HW_Boot' = $DC0.HW.'System Boot Time';
-    'HW_Install' = $DC0.HW.'Original Install Date';
-    'HW_BIOS' = $DC0.HW.'BIOS Version';
-    'HotFix' = $DC0.HotFix;
-    'NTPStatus' = $DC0.NTP1;
-    'NTPConf' =  $DC0.NTP2;
-    'HW_LogicalProc' = $DC0.LogicalProc;
-    'HW_FreeSpace' = $DC0.FreeSpace;
-    'Spooler_State' = $DC0.Spooler.State;
-    'Spooler_StartMode' = $DC0.Spooler.StartMode;
-    'DNS' = $DC0.DNS;
-    'ldapRR' = $DC0.LdapRR;
+    'Domain' = $Inv1.Domain;
+    'Hostname' = $Inv1.Hostname;
+    'IsReadOnly' = $Inv1.IsReadOnly;
+    'IPv4Address' = $Inv1.IPv4Address;
+    'IsGlobalCatalog' = $Inv1.IsGlobalCatalog;
+    'OperatingSystem' = $Inv1.OperatingSystem;
+    'OperatingSystemVersion' = $Inv1.OperatingSystemVersion;
+    'OperationMasterRoles' = $Inv1.OperationMasterRoles;
+    'Site' = $Inv1.Site;
+    'Backup' = $bkp;
+    'HW_Mem' = $HW.'Total Physical Memory';
+    'HW_Boot' = $HW.'System Boot Time';
+    'HW_Install' = $HW.'Original Install Date';
+    'HW_BIOS' = $HW.'BIOS Version';
+    'HotFix' = $HotFix;
+    'NTPStatus' = $NTP1;
+    'NTPConf' =  $NTP2;
+    'HW_LogicalProc' = $LogicalProc;
+    'HW_FreeSpace' = $FreeSpace;
+    'Spooler_State' = $Spooler.State;
+    'Spooler_StartMode' = $Spooler.StartMode;
+    'DNS' = $DNS;
+    'ldapRR' = $LdapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
-    'InstalledFeatures' = $DC0.Features;
-    'InstalledSoftwaresx64' = $DC0.x64Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
-    'InstalledSoftwaresx86' = $DC0.x86Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+    'InstalledFeatures' = $Inv1.Features;
+    'InstalledSoftwaresx64' = $x64Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
+    'InstalledSoftwaresx86' = $x86Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
 
 }
 
@@ -4003,12 +4005,12 @@ if ($VerValid.StatusCode -eq 200)
             }
         else 
             {
-                Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/Merola132/ADxRay for the lastest version and corrections.') -ForegroundColor Red
+                Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/ClaudioMerola/ADxRay for the lastest version and corrections.') -ForegroundColor Red
             }
     }
 elseif ($VerValid -eq $null ) 
     {
-        Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/Merola132/ADxRay for the lastest version and corrections.') -ForegroundColor Red
+        Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/ClaudioMerola/ADxRay for the lastest version and corrections.') -ForegroundColor Red
     }
 
 
