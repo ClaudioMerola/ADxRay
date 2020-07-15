@@ -15,7 +15,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '3.9'
+$Ver = '4.0'
 
 $SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
 
@@ -88,6 +88,8 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
 Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
 
+$SecGroups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
+
 Foreach ($zone in $Forest.ApplicationPartitions.Name)
     {
     start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
@@ -111,7 +113,7 @@ Foreach ($Domain in $Forest.Domains)
 
     start-job -Name ($Domain.name+'_Comps') -scriptblock {dsquery * -filter sAMAccountType=805306369 -s $($args) -Attr OperatingSystem  -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
 
-    start-job -Name ($Domain.name+'_GrpAll') -scriptblock {ForEach($grp in (Get-ADGroup -Filter *).Name) {@{$grp = ((dsquery * -filter "(&(objectclass=group)(name=$grp))" -s $($args) -attr member -limit 0).split(";") | where {$_ -like '*DC*'}).count}}} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+    start-job -Name ($Domain.name+'_GrpAll') -scriptblock {ForEach($grp in $($args[1])) {@{$grp = ((dsquery * -filter "(&(objectclass=group)(name=$grp))" -s $($args[0]) -attr member -limit 0).split(";") | where {$_ -like '*DC*'}).count}}} -ArgumentList $Domain.PdcRoleOwner.Name,$SecGroups  | Out-Null
 
 }
 
@@ -121,47 +123,138 @@ Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentO
 
 Foreach ($DC in $DCs) {
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Basic Inventory on: "+$DC.Name)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory of: "+$DC.Name+'. On: '+$DC.Domain)
+
+    Start-job -Name ($DC.Name+'_Inv') -ScriptBlock {
     
-    start-job -Name ($DC.Name+'_Inv') -scriptblock { Get-ADDomainController -Server $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
+    $job = @()
 
-    start-job -Name ($DC.Name+'_x64Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
+    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl }).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_x86Softwares') -scriptblock {Invoke-Command -cn $($args[0]) -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}} -ArgumentList $DC.Name | Out-Null
+    $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_HW') -scriptblock {systeminfo /S $($args[0]) /fo CSV | ConvertFrom-Csv} -ArgumentList $DC.Name | Out-Null
+    $Software86 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_Features') -scriptblock {(Get-WindowsFeature -ComputerName $($args[0]) | where {$_.Installed -eq 'Installed'}).Name} -ArgumentList $DC.Name | Out-Null
+    $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Get-WindowsFeature -ComputerName $DomControl | where {$_.Installed -eq 'Installed'}}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_Backup') -scriptblock {repadmin /showbackup $($args[0])} -ArgumentList $DC.Name | Out-Null
+    $HW = ([PowerShell]::Create()).AddScript({param($DomControl)systeminfo /S $DomControl /fo CSV | ConvertFrom-Csv}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_NTP1') -scriptblock {W32TM /query /computer:$($args[0]) /status} -ArgumentList $DC.Name | Out-Null
+    $Backup = ([PowerShell]::Create()).AddScript({param($DomControl)repadmin /showbackup $DomControl}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_NTP2') -scriptblock {W32TM /query /computer:$($args[0]) /configuration} -ArgumentList $DC.Name | Out-Null
+    $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /status}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_HotFix') -scriptblock {Get-HotFix -ComputerName $($args[0]) | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1} -ArgumentList $DC.Name | Out-Null
+    $NTP2 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /configuration}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_LogicalProc') -scriptblock {(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $($args[0])).NumberOfLogicalProcessors} -ArgumentList $DC.Name | Out-Null
+    $HotFix = ([PowerShell]::Create()).AddScript({param($DomControl)Get-HotFix -ComputerName $DomControl | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_FreeSpace') -scriptblock {(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $($args[0])).CounterSamples} -ArgumentList $DC.Name | Out-Null
+    $Proc = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $DomControl).NumberOfLogicalProcessors}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_Spooler') -scriptblock {Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
+    $FreeSpace = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $DomControl).CounterSamples}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_GPResult') -scriptblock {Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$($args[0])+".xml")} -ArgumentList $DC.Name | Out-Null
+    $Spooler = ([PowerShell]::Create()).AddScript({param($DomControl)Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $DomControl}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_DNS') -scriptblock {Get-DnsServer -ComputerName $($args[0]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Name | Out-Null
+    $GPResult = ([PowerShell]::Create()).AddScript({param($DomControl)Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$DomControl+".xml")}).AddArgument($($args[0]))
 
-    start-job -Name ($DC.Name+'_ldapRR') -scriptblock {Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$($args[0])) -Name '_ldap._tcp.dc' -ComputerName $($args[1]) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $DC.Domain,$DC.Name | Out-Null
+    $DNS = ([PowerShell]::Create()).AddScript({param($DomControl)Get-DnsServer -ComputerName $DomControl}).AddArgument($($args[0]))
+
+    $ldapRR = ([PowerShell]::Create()).AddScript({param($DomControl,$Dom)Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$Dom) -Name '_ldap._tcp.dc' -ComputerName $DomControl}).AddArgument($($args[0])).AddArgument($($args[1]))
+
+    $jobInv = $Inv.BeginInvoke()
+    $jobSW64 = $Software64.BeginInvoke()
+    $jobSW86 = $Software86.BeginInvoke()
+    $jobFeature = $Feature.BeginInvoke()
+    $jobHW = $HW.BeginInvoke()
+    $jobBackup = $Backup.BeginInvoke()
+    $jobNTP1 = $NTP1.BeginInvoke()
+    $jobNTP2 = $NTP2.BeginInvoke()
+    $JobHotFix = $HotFix.BeginInvoke()
+    $jobProc = $Proc.BeginInvoke()
+    $jobFreeSpace = $FreeSpace.BeginInvoke()
+    $jobSpooler = $Spooler.BeginInvoke()
+    $jobGPResult = $GPResult.BeginInvoke()
+    $jobDNS = $DNS.BeginInvoke()
+    $jobLdapRR = $ldapRR.BeginInvoke()
+
+    $job += $jobInv
+    $job += $jobSW64
+    $job += $jobSW86
+    $job += $jobFeature
+    $job += $jobHW
+    $job += $jobBackup
+    $job += $jobNTP1
+    $job += $jobNTP2
+    $job += $JobHotFix
+    $job += $jobProc
+    $job += $jobFreeSpace
+    $job += $jobSpooler
+    $job += $jobGPResult
+    $job += $jobDNS
+    $job += $jobLdapRR
+
+    while ($Job.Runspace.IsCompleted -contains $false) {}
+
+    $InvS = $Inv.EndInvoke($jobInv)
+    $SW64S = $Software64.EndInvoke($jobSW64)
+    $SW86S = $Software86.EndInvoke($jobSW86)
+    $FeatureS = $Feature.EndInvoke($jobFeature)
+    $HWS = $HW.EndInvoke($jobHW)
+    $BackupS = $Backup.EndInvoke($jobBackup)
+    $NTP1S = $NTP1.EndInvoke($jobNTP1)
+    $NTP2S = $NTP2.EndInvoke($jobNTP2)
+    $HotFixS = $HotFix.EndInvoke($jobHotFix)
+    $ProcS = $Proc.EndInvoke($jobProc)
+    $FreeSpaceS = $FreeSpace.EndInvoke($jobFreeSpace)
+    $SpoolerS = $Spooler.EndInvoke($jobSpooler)
+    $DNSS = $DNS.EndInvoke($jobDNS)
+    $ldapRRS = $ldapRR.EndInvoke($jobLdapRR)
+
+    $Inv.Dispose()
+    $Software64.Dispose()
+    $Software86.Dispose()
+    $Feature.Dispose()
+    $HW.Dispose()
+    $Backup.Dispose()
+    $NTP1.Dispose()
+    $NTP2.Dispose()
+    $HotFix.Dispose()
+    $Proc.Dispose()
+    $FreeSpace.Dispose()
+    $Spooler.Dispose()
+    $GPResult.Dispose()
+    $DNS.Dispose()
+    $ldapRR.Dispose()
+
+    $DataServer = @{
+    'Inventory' = $InvS;
+    'Software_64' = $SW64S;
+    'Software_86' = $SW86S;
+    'Installed_Features' = $FeatureS.Name;
+    'Hardware' = $HWS;
+    'Backup' = $BackupS;
+    'NTP_Status' = $NTP1S;
+    'NTP_Config' = $NTP2S;
+    'HotFix' = $HotFixS;
+    'Processor' = $ProcS;
+    'FreeSpace' = $FreeSpaceS;
+    'Spooler' = $SpoolerS;
+    'DNS' = $DNSS;
+    'ldapRR' = $ldapRRS}
+
+    $DataServer
+
+    } -ArgumentList $DC.Name,$DC.Domain
 
 }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
 
 $c = 0
+$cc = 0
 $WaitTime = get-date
 while (get-job | ? {$_.State -eq 'Running'})
 {
-$c = (((((get-job).count - (get-job | ? {$_.State -eq 'Running'}).Count)) / (get-job).Count) * 100)
+$jb = get-job
+$c = (((($jb.count - ($jb | ? {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
 $c = [math]::Round($c)
 Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
 if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
@@ -169,6 +262,7 @@ if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
 Get-Job | Wait-Job -Timeout 5 | Out-Null
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
 }
+Start-Sleep -Seconds 2
 }
 Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
 
@@ -271,49 +365,36 @@ Foreach ($DC in $DCs)
 if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
 $Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$bkp = Receive-Job -Name ($DC.Name+'_Backup') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$HW = Receive-Job -Name ($DC.Name+'_HW') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$Hotfix = Receive-Job -Name ($DC.Name+'_HotFix') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$NTP1 = Receive-Job -Name ($DC.Name+'_NTP1') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$NTP2 = Receive-Job -Name ($DC.Name+'_NTP2') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$LogicalProc = Receive-Job -Name ($DC.Name+'_LogicalProc') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$FreeSpace = Receive-Job -Name ($DC.Name+'_FreeSpace') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$Spooler = Receive-Job -Name ($DC.Name+'_Spooler') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$DNS = Receive-Job -Name ($DC.Name+'_DNS') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$LdapRR = Receive-Job -Name ($DC.Name+'_LdapRR') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$x64Softwares = Receive-Job -Name ($DC.Name+'_x64Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$x86Softwares = Receive-Job -Name ($DC.Name+'_x86Softwares') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-
 
 $DomControl = @{
 
-    'Domain' = $Inv1.Domain;
-    'Hostname' = $Inv1.Hostname;
-    'IsReadOnly' = $Inv1.IsReadOnly;
-    'IPv4Address' = $Inv1.IPv4Address;
-    'IsGlobalCatalog' = $Inv1.IsGlobalCatalog;
-    'OperatingSystem' = $Inv1.OperatingSystem;
-    'OperatingSystemVersion' = $Inv1.OperatingSystemVersion;
-    'OperationMasterRoles' = $Inv1.OperationMasterRoles;
-    'Site' = $Inv1.Site;
-    'Backup' = $bkp;
-    'HW_Mem' = $HW.'Total Physical Memory';
-    'HW_Boot' = $HW.'System Boot Time';
-    'HW_Install' = $HW.'Original Install Date';
-    'HW_BIOS' = $HW.'BIOS Version';
-    'HotFix' = $HotFix;
-    'NTPStatus' = $NTP1;
-    'NTPConf' =  $NTP2;
-    'HW_LogicalProc' = $LogicalProc;
-    'HW_FreeSpace' = $FreeSpace;
-    'Spooler_State' = $Spooler.State;
-    'Spooler_StartMode' = $Spooler.StartMode;
-    'DNS' = $DNS;
-    'ldapRR' = $LdapRR;
+    'Domain' = $Inv1.Inventory.Domain;
+    'Hostname' = $Inv1.Inventory.Hostname;
+    'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
+    'IPv4Address' = $Inv1.Inventory.IPv4Address;
+    'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
+    'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
+    'OperatingSystemVersion' = $Inv1.Inventory.OperatingSystemVersion;
+    'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
+    'Site' = $Inv1.Inventory.Site;
+    'Backup' = $Inv1.Backup;
+    'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
+    'HW_Boot' = $Inv1.Hardware.'System Boot Time';
+    'HW_Install' = $Inv1.Hardware.'Original Install Date';
+    'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
+    'HotFix' = $Inv1.HotFix;
+    'NTPStatus' = $Inv1.NTP_Status;
+    'NTPConf' =  $Inv1.NTP_Config;
+    'HW_LogicalProc' = $Inv1.Processor;
+    'HW_FreeSpace' = $Inv1.FreeSpace;
+    'Spooler_State' = $Inv1.Spooler.State;
+    'Spooler_StartMode' = $Inv1.Spooler.StartMode;
+    'DNS' = $Inv1.DNS;
+    'ldapRR' = $Inv1.ldapRR;
     'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
-    'InstalledFeatures' = $Inv1.Features;
-    'InstalledSoftwaresx64' = $x64Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
-    'InstalledSoftwaresx86' = $x86Softwares | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+    'InstalledFeatures' = $Inv1.Installed_Features;
+    'InstalledSoftwaresx64' = $Inv1.Software_64 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
+    'InstalledSoftwaresx86' = $Inv1.Software_86 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
 
 }
 
@@ -1241,87 +1322,6 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having too many users wi
 add-content $report "</CENTER>"
 
 add-content $report "<BR><BR><BR><BR>"
-
-
-
-######################################### LARGE GROUPS #############################################
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Largest Groups Reporting")
-
-
-add-content $report "<CENTER>"
-
-add-content $report  "<CENTER>"
-add-content $report  "<h3>Top 10 Largest Active Directory Groups</h3>" 
-add-content $report  "</CENTER>"
-add-content $report "<BR>"
- 
-add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
-Add-Content $report  "<td width='20%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='20%' align='center'><B>Group Name</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Number of Members</B></td>" 
- 
-
-Add-Content $report "</tr>" 
-
-Foreach ($Domain in $Forest.domains.name) 
-    {
-
-    Try{
-
-    $Grp =  Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
-
-    $Grp = $Grp.Groups
-
-    Foreach ($Grpp in $Grp)
-    {
-        $Group = $Grpp.Keys
-        $GroupMembers = $Grpp.Values
-        
-        Add-Content $report "<tr>" 
-
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$Group</td>" 
-
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Largest Groups found: "+$Group)
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Number of Members: "+$GroupMembers)
-        if ($GroupMembers -gt 50000) 
-            {
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GroupMembers</font></td>"
-            }
-        else 
-            {
-                Add-Content $report "<td bgcolor= 'White' align=center>$GroupMembers</td>" 
-            }
-
-        Add-Content $report "<tr>"
-        }
-}
-Catch { 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the Empty Domain Groups Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
-}
-    }
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Largest Groups reporting finished")
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Groups phase.")
-
-Add-content $report  "</table>"
-
-add-content $report "<BR><BR>"
-
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>Having a fair number of groups is not just a good practice, it's vital to ensure an easier and 'clean' management of Active Directory. And remember to review the <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/best-practices-for-securing-active-directory'>Best Practices for Securing Active Directory</a>. And specially '<a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/security-best-practices/implementing-least-privilege-administrative-models'>Implementing Least-Privilege Administrative Models</a>'. </td></tr></TABLE>" 
-
-add-content $report "</CENTER>"
-
-Write-Host ('AD Groups Reporting Done. Found: ') -NoNewline
-write-host $GroupTotal -NoNewline -ForegroundColor Magenta
-Write-Host ' Groups'
-
-add-content $report "<BR><BR><BR><BR><BR><BR>"
-
 
 
 
@@ -3842,15 +3842,15 @@ add-content $report "<BR>"
 
 add-content $report "<CENTER>"
  
-add-content $report  "<table width='65%' border='1'>" 
+add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='8%' align='center'><B>Domain</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Installed Softwares</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Architecture</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Version</B></td>"
+Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
+Add-Content $report  "<td width='25%' align='center'><B>Installed Softwares</B></td>" 
+Add-Content $report  "<td width='5%' align='center'><B>Architecture</B></td>" 
+Add-Content $report  "<td width='8%' align='center'><B>Version</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Publisher</B></td>"
-Add-Content $report  "<td width='15%' align='center'><B>Search for Known vulnerabilities</B></td>"
+Add-Content $report  "<td width='10%' align='center'><B>Search Known vulnerabilities</B></td>"
 
  
 Add-Content $report "</tr>" 
