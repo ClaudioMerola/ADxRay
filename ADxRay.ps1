@@ -15,9 +15,9 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Ver = '4.0'
+$Ver = '4.1'
 
-$SupBuilds = '10.0 (18362)','10.0 (18363)','10.0 (19041)'
+$SupBuilds = '10.0 (18362)','10.0 (19041)'
 
 $Runtime = Measure-Command -Expression {
 
@@ -54,388 +54,381 @@ $DCs = $Forest.domains | ForEach-Object {$_.DomainControllers}
 
 function Hammer {
 
-write-host 'Starting The Hammer..'
+    write-host 'Starting The Hammer..'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting The Hammer!")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting The Hammer!")
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Creating Hammer Folder")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Creating Hammer Folder")
 
-if ((Test-Path -Path C:\ADxRay\Hammer -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\Hammer}
+    if ((Test-Path -Path C:\ADxRay\Hammer -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\Hammer}
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Killing current running Powershell job")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Killing current running Powershell job")
 
-Get-Job | Remove-Job
+    Get-Job | Remove-Job
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Calling DCDiag")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Calling DCDiag")
 
-Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
+    Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
 
-start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+        start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
 
-start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
+        start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where-Object {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
 
-start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
+        start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
 
-start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+        start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
 
-Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
+    Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
 
-$SecGroups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
+    $SecGroups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
 
-Foreach ($zone in $Forest.ApplicationPartitions.Name)
-    {
-    start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
+    Foreach ($zone in $Forest.ApplicationPartitions.Name)
+        {
+            start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
+        }
+
+    Foreach ($Domain in $Forest.Domains)
+        { 
+            start-job -Name ($Domain.Name+'_Inv') -scriptblock {Get-ADDomain -Identity $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $Domain.Name | Out-Null
+
+            start-job -Name ($Domain.Name+'_SysVol') -scriptblock {Get-ChildItem  -path $($args) -Recurse | Where-Object -FilterScript {$_.PSIsContainer -eq $false} | Group-Object -Property Extension | ForEach-Object -Process {
+            New-Object -TypeName PSObject -Property @{
+                'Extension'= $_.name
+                'Count' = $_.count
+                'TotalSize (MB)'= '{0:N2}' -f ((($_.group | Measure-Object length -Sum).Sum) /1MB)
+                'TotalSize'    = (($_.group | Measure-Object length -Sum).Sum)
+                } } | Sort-Object -Descending -Property 'Totalsize'} -ArgumentList ('\\'+$Domain.Name+'\SYSVOL\'+$Domain.Name) | Out-Null
+
+            start-job -Name ($Domain.Name+'_GPOs') -scriptblock {Get-GPOReport -All -ReportType XML -Path ("C:\ADxRay\Hammer\GPOs_"+$args+".xml")} -ArgumentList $Domain.Name | Out-Null
+
+            start-job -Name ($Domain.name+'_Usrs') -scriptblock {dsquery * -filter sAMAccountType=805306368 -s $($args) -attr userAccountControl -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+
+            start-job -Name ($Domain.name+'_Comps') -scriptblock {dsquery * -filter sAMAccountType=805306369 -s $($args) -Attr OperatingSystem  -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+
+            start-job -Name ($Domain.name+'_GrpAll') -scriptblock {ForEach($grp in $($args[1])) {@{$grp = ((dsquery * -filter "(&(objectclass=group)(name=$grp))" -s $($args[0]) -attr member -limit 0).split(";") | Where-Object {$_ -like '*DC*'}).count}}} -ArgumentList $Domain.PdcRoleOwner.Name,$SecGroups  | Out-Null
+
     }
 
-Foreach ($Domain in $Forest.Domains)
-    { 
-    start-job -Name ($Domain.Name+'_Inv') -scriptblock {Get-ADDomain -Identity $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $Domain.Name | Out-Null
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory")
 
-    start-job -Name ($Domain.Name+'_SysVol') -scriptblock {Get-ChildItem  -path $($args) -Recurse | Where-Object -FilterScript {$_.PSIsContainer -eq $false} | Group-Object -Property Extension | ForEach-Object -Process {
-    New-Object -TypeName PSObject -Property @{
-        'Extension'= $_.name
-        'Count' = $_.count
-        'TotalSize (MB)'= '{0:N2}' -f ((($_.group | Measure-Object length -Sum).Sum) /1MB)
-        'TotalSize'    = (($_.group | Measure-Object length -Sum).Sum)
-        } } | Sort-Object -Descending -Property 'Totalsize'} -ArgumentList ('\\'+$Domain.Name+'\SYSVOL\'+$Domain.Name) | Out-Null
+    Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentOperation 'Triggering Domain Controller Inventory..'
 
-    start-job -Name ($Domain.Name+'_GPOs') -scriptblock {Get-GPOReport -All -ReportType XML -Path ("C:\ADxRay\Hammer\GPOs_"+$args+".xml")} -ArgumentList $Domain.Name | Out-Null
+    Foreach ($DC in $DCs) {
 
-    start-job -Name ($Domain.name+'_Usrs') -scriptblock {dsquery * -filter sAMAccountType=805306368 -s $($args) -attr userAccountControl -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+    #start-job -Name ($DC.Name+'_Evts') -scriptblock {(Get-EventLog -ComputerName $args -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102).Count} -ArgumentList $DC.Name | Out-Null
 
-    start-job -Name ($Domain.name+'_Comps') -scriptblock {dsquery * -filter sAMAccountType=805306369 -s $($args) -Attr OperatingSystem  -limit 0} -ArgumentList $Domain.PdcRoleOwner.Name  | Out-Null
+    #start-job -Name ($DC.Name+'_EvtBackup') -scriptblock {Get-winevent -Filterhashtable @{logname='Microsoft-Windows-Backup/operational';ID=4} -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
 
-    start-job -Name ($Domain.name+'_GrpAll') -scriptblock {ForEach($grp in $($args[1])) {@{$grp = ((dsquery * -filter "(&(objectclass=group)(name=$grp))" -s $($args[0]) -attr member -limit 0).split(";") | where {$_ -like '*DC*'}).count}}} -ArgumentList $Domain.PdcRoleOwner.Name,$SecGroups  | Out-Null
+    #start-job -Name ($DC.Name+'_BatchJobEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			4*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
 
-}
+    #start-job -Name ($DC.Name+'_CleartxtEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			8*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory")
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory of: "+$DC.Name+'. On: '+$DC.Domain)
 
-Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentOperation 'Triggering Domain Controller Inventory..'
+        Start-job -Name ($DC.Name+'_Inv') -ScriptBlock {
+        
+        $job = @()
 
-Foreach ($DC in $DCs) {
+        $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl }).AddArgument($($args[0]))
 
-#start-job -Name ($DC.Name+'_Evts') -scriptblock {(Get-EventLog -ComputerName $args -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102).Count} -ArgumentList $DC.Name | Out-Null
+        $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
-#start-job -Name ($DC.Name+'_EvtBackup') -scriptblock {Get-winevent -Filterhashtable @{logname='Microsoft-Windows-Backup/operational';ID=4} -ComputerName $($args[0])} -ArgumentList $DC.Name | Out-Null
+        $Software86 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
-#start-job -Name ($DC.Name+'_BatchJobEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			4*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
+        $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Get-WindowsFeature -ComputerName $DomControl | Where-Object {$_.Installed -eq 'Installed'}}).AddArgument($($args[0]))
 
-#start-job -Name ($DC.Name+'_CleartxtEvt') -scriptblock {(Get-EventLog -LogName Security -InstanceId 4624 -Message '*Logon Type:			8*' -ComputerName $args).Count} -ArgumentList $DC.Name | Out-Null
+        $HW = ([PowerShell]::Create()).AddScript({param($DomControl)systeminfo /S $DomControl /fo CSV | ConvertFrom-Csv}).AddArgument($($args[0]))
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory of: "+$DC.Name+'. On: '+$DC.Domain)
+        $Backup = ([PowerShell]::Create()).AddScript({param($DomControl)repadmin /showbackup $DomControl}).AddArgument($($args[0]))
 
-    Start-job -Name ($DC.Name+'_Inv') -ScriptBlock {
-    
-    $job = @()
+        $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /status}).AddArgument($($args[0]))
 
-    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl }).AddArgument($($args[0]))
+        $NTP2 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /configuration}).AddArgument($($args[0]))
 
-    $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
+        $HotFix = ([PowerShell]::Create()).AddScript({param($DomControl)Get-HotFix -ComputerName $DomControl | Sort-Object { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1}).AddArgument($($args[0]))
 
-    $Software86 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
+        $Proc = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $DomControl).NumberOfLogicalProcessors}).AddArgument($($args[0]))
 
-    $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Get-WindowsFeature -ComputerName $DomControl | where {$_.Installed -eq 'Installed'}}).AddArgument($($args[0]))
+        $FreeSpace = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $DomControl).CounterSamples}).AddArgument($($args[0]))
 
-    $HW = ([PowerShell]::Create()).AddScript({param($DomControl)systeminfo /S $DomControl /fo CSV | ConvertFrom-Csv}).AddArgument($($args[0]))
+        $Spooler = ([PowerShell]::Create()).AddScript({param($DomControl)Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $DomControl}).AddArgument($($args[0]))
 
-    $Backup = ([PowerShell]::Create()).AddScript({param($DomControl)repadmin /showbackup $DomControl}).AddArgument($($args[0]))
+        $GPResult = ([PowerShell]::Create()).AddScript({param($DomControl)Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$DomControl+".xml")}).AddArgument($($args[0]))
 
-    $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /status}).AddArgument($($args[0]))
+        $DNS = ([PowerShell]::Create()).AddScript({param($DomControl)Get-DnsServer -ComputerName $DomControl}).AddArgument($($args[0]))
 
-    $NTP2 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /configuration}).AddArgument($($args[0]))
+        $ldapRR = ([PowerShell]::Create()).AddScript({param($DomControl,$Dom)Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$Dom) -Name '_ldap._tcp.dc' -ComputerName $DomControl}).AddArgument($($args[0])).AddArgument($($args[1]))
 
-    $HotFix = ([PowerShell]::Create()).AddScript({param($DomControl)Get-HotFix -ComputerName $DomControl | sort { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1}).AddArgument($($args[0]))
+        $jobInv = $Inv.BeginInvoke()
+        $jobSW64 = $Software64.BeginInvoke()
+        $jobSW86 = $Software86.BeginInvoke()
+        $jobFeature = $Feature.BeginInvoke()
+        $jobHW = $HW.BeginInvoke()
+        $jobBackup = $Backup.BeginInvoke()
+        $jobNTP1 = $NTP1.BeginInvoke()
+        $jobNTP2 = $NTP2.BeginInvoke()
+        $JobHotFix = $HotFix.BeginInvoke()
+        $jobProc = $Proc.BeginInvoke()
+        $jobFreeSpace = $FreeSpace.BeginInvoke()
+        $jobSpooler = $Spooler.BeginInvoke()
+        $jobGPResult = $GPResult.BeginInvoke()
+        $jobDNS = $DNS.BeginInvoke()
+        $jobLdapRR = $ldapRR.BeginInvoke()
 
-    $Proc = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-CimInstance -Class Win32_ComputerSystem -ComputerName $DomControl).NumberOfLogicalProcessors}).AddArgument($($args[0]))
+        $job += $jobInv
+        $job += $jobSW64
+        $job += $jobSW86
+        $job += $jobFeature
+        $job += $jobHW
+        $job += $jobBackup
+        $job += $jobNTP1
+        $job += $jobNTP2
+        $job += $JobHotFix
+        $job += $jobProc
+        $job += $jobFreeSpace
+        $job += $jobSpooler
+        $job += $jobGPResult
+        $job += $jobDNS
+        $job += $jobLdapRR
 
-    $FreeSpace = ([PowerShell]::Create()).AddScript({param($DomControl)(Get-Counter -counter "\LogicalDisk(*)\% Free Space" -ComputerName $DomControl).CounterSamples}).AddArgument($($args[0]))
+        while ($Job.Runspace.IsCompleted -contains $false) {}
 
-    $Spooler = ([PowerShell]::Create()).AddScript({param($DomControl)Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $DomControl}).AddArgument($($args[0]))
+        $InvS = $Inv.EndInvoke($jobInv)
+        $SW64S = $Software64.EndInvoke($jobSW64)
+        $SW86S = $Software86.EndInvoke($jobSW86)
+        $FeatureS = $Feature.EndInvoke($jobFeature)
+        $HWS = $HW.EndInvoke($jobHW)
+        $BackupS = $Backup.EndInvoke($jobBackup)
+        $NTP1S = $NTP1.EndInvoke($jobNTP1)
+        $NTP2S = $NTP2.EndInvoke($jobNTP2)
+        $HotFixS = $HotFix.EndInvoke($jobHotFix)
+        $ProcS = $Proc.EndInvoke($jobProc)
+        $FreeSpaceS = $FreeSpace.EndInvoke($jobFreeSpace)
+        $SpoolerS = $Spooler.EndInvoke($jobSpooler)
+        $DNSS = $DNS.EndInvoke($jobDNS)
+        $ldapRRS = $ldapRR.EndInvoke($jobLdapRR)
 
-    $GPResult = ([PowerShell]::Create()).AddScript({param($DomControl)Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$DomControl+".xml")}).AddArgument($($args[0]))
+        $Inv.Dispose()
+        $Software64.Dispose()
+        $Software86.Dispose()
+        $Feature.Dispose()
+        $HW.Dispose()
+        $Backup.Dispose()
+        $NTP1.Dispose()
+        $NTP2.Dispose()
+        $HotFix.Dispose()
+        $Proc.Dispose()
+        $FreeSpace.Dispose()
+        $Spooler.Dispose()
+        $GPResult.Dispose()
+        $DNS.Dispose()
+        $ldapRR.Dispose()
 
-    $DNS = ([PowerShell]::Create()).AddScript({param($DomControl)Get-DnsServer -ComputerName $DomControl}).AddArgument($($args[0]))
+        $DataServer = @{
+        'Inventory' = $InvS;
+        'Software_64' = $SW64S;
+        'Software_86' = $SW86S;
+        'Installed_Features' = $FeatureS.Name;
+        'Hardware' = $HWS;
+        'Backup' = $BackupS;
+        'NTP_Status' = $NTP1S;
+        'NTP_Config' = $NTP2S;
+        'HotFix' = $HotFixS;
+        'Processor' = $ProcS;
+        'FreeSpace' = $FreeSpaceS;
+        'Spooler' = $SpoolerS;
+        'DNS' = $DNSS;
+        'ldapRR' = $ldapRRS}
 
-    $ldapRR = ([PowerShell]::Create()).AddScript({param($DomControl,$Dom)Get-DnsServerResourceRecord -ZoneName ('_msdcs.'+$Dom) -Name '_ldap._tcp.dc' -ComputerName $DomControl}).AddArgument($($args[0])).AddArgument($($args[1]))
+        $DataServer
 
-    $jobInv = $Inv.BeginInvoke()
-    $jobSW64 = $Software64.BeginInvoke()
-    $jobSW86 = $Software86.BeginInvoke()
-    $jobFeature = $Feature.BeginInvoke()
-    $jobHW = $HW.BeginInvoke()
-    $jobBackup = $Backup.BeginInvoke()
-    $jobNTP1 = $NTP1.BeginInvoke()
-    $jobNTP2 = $NTP2.BeginInvoke()
-    $JobHotFix = $HotFix.BeginInvoke()
-    $jobProc = $Proc.BeginInvoke()
-    $jobFreeSpace = $FreeSpace.BeginInvoke()
-    $jobSpooler = $Spooler.BeginInvoke()
-    $jobGPResult = $GPResult.BeginInvoke()
-    $jobDNS = $DNS.BeginInvoke()
-    $jobLdapRR = $ldapRR.BeginInvoke()
+        } -ArgumentList $DC.Name,$DC.Domain
 
-    $job += $jobInv
-    $job += $jobSW64
-    $job += $jobSW86
-    $job += $jobFeature
-    $job += $jobHW
-    $job += $jobBackup
-    $job += $jobNTP1
-    $job += $jobNTP2
-    $job += $JobHotFix
-    $job += $jobProc
-    $job += $jobFreeSpace
-    $job += $jobSpooler
-    $job += $jobGPResult
-    $job += $jobDNS
-    $job += $jobLdapRR
+    }
 
-    while ($Job.Runspace.IsCompleted -contains $false) {}
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
 
-    $InvS = $Inv.EndInvoke($jobInv)
-    $SW64S = $Software64.EndInvoke($jobSW64)
-    $SW86S = $Software86.EndInvoke($jobSW86)
-    $FeatureS = $Feature.EndInvoke($jobFeature)
-    $HWS = $HW.EndInvoke($jobHW)
-    $BackupS = $Backup.EndInvoke($jobBackup)
-    $NTP1S = $NTP1.EndInvoke($jobNTP1)
-    $NTP2S = $NTP2.EndInvoke($jobNTP2)
-    $HotFixS = $HotFix.EndInvoke($jobHotFix)
-    $ProcS = $Proc.EndInvoke($jobProc)
-    $FreeSpaceS = $FreeSpace.EndInvoke($jobFreeSpace)
-    $SpoolerS = $Spooler.EndInvoke($jobSpooler)
-    $DNSS = $DNS.EndInvoke($jobDNS)
-    $ldapRRS = $ldapRR.EndInvoke($jobLdapRR)
+    $c = 0
+    $WaitTime = get-date
+    while (get-job | Where-Object {$_.State -eq 'Running'})
+        {
+            $jb = get-job
+            $c = (((($jb.count - ($jb | Where-Object {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
+            $c = [math]::Round($c)
+            Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
+            if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
+                {
+                    Get-Job | Wait-Job -Timeout 5 | Out-Null
+                    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
+                }
+            Start-Sleep -Seconds 2
+        }
+    Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
 
-    $Inv.Dispose()
-    $Software64.Dispose()
-    $Software86.Dispose()
-    $Feature.Dispose()
-    $HW.Dispose()
-    $Backup.Dispose()
-    $NTP1.Dispose()
-    $NTP2.Dispose()
-    $HotFix.Dispose()
-    $Proc.Dispose()
-    $FreeSpace.Dispose()
-    $Spooler.Dispose()
-    $GPResult.Dispose()
-    $DNS.Dispose()
-    $ldapRR.Dispose()
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are not completed")
 
-    $DataServer = @{
-    'Inventory' = $InvS;
-    'Software_64' = $SW64S;
-    'Software_86' = $SW86S;
-    'Installed_Features' = $FeatureS.Name;
-    'Hardware' = $HWS;
-    'Backup' = $BackupS;
-    'NTP_Status' = $NTP1S;
-    'NTP_Config' = $NTP2S;
-    'HotFix' = $HotFixS;
-    'Processor' = $ProcS;
-    'FreeSpace' = $FreeSpaceS;
-    'Spooler' = $SpoolerS;
-    'DNS' = $DNSS;
-    'ldapRR' = $ldapRRS}
+    write-host 'Inventories done..'
 
-    $DataServer
+    write-host 'Starting to Process the Results..'
 
-    } -ArgumentList $DC.Name,$DC.Domain
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Forest Inventory")
 
-}
+    $DuplicatedZones = @()
+    $Diag = Receive-Job -Name 'Diag' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $RecycleBin = Receive-Job -Name 'RecycleBin' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $SPN = Receive-Job -Name 'SPN' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    $Trusts = Receive-Job -Name 'Trusts' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Waiting Inventories Conclusion")
+    Foreach ($zone in $Forest.ApplicationPartitions.Name)
+        {
+            $DuplicatedZones += receive-job -Name ('Zone_'+$zone) 
+        }
 
-$c = 0
-$cc = 0
-$WaitTime = get-date
-while (get-job | ? {$_.State -eq 'Running'})
-{
-$jb = get-job
-$c = (((($jb.count - ($jb | ? {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
-$c = [math]::Round($c)
-Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
-if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
-{
-Get-Job | Wait-Job -Timeout 5 | Out-Null
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
-}
-Start-Sleep -Seconds 2
-}
-Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
+    if ((test-path 'C:\ADxRay\Hammer\Forest.xml') -eq $true) {remove-item -Path 'C:\ADxRay\Hammer\Forest.xml' -Force}
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are not completed")
+    $Trss = @()
+    Foreach ($Trust in $Trusts)
+        {
+            $Trss += $Trust
+        }
 
-write-host 'Inventories done..'
+    $Fores = @{
+            'ForestName' = $Forest.Name;
+            'Domains' = $Forest.Domains.Name;
+            'RecycleBin' = $RecycleBin;
+            'ForestMode' = $Forest.ForestMode;
+            'GlobalCatalogs' = $Forest.GlobalCatalogs.Name;
+            'Sites' = $Forest.Sites.Name;
+            'Trusts' = $Trss
+            'SPN' = ($SPN | Select-String -Pattern ('group of duplicate SPNs')).ToString();
+            'DuplicatedDNSZones' = $DuplicatedZones.DistinguishedName
+        }
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process the Inventories")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Forest XML File")
 
-write-host 'Starting to Process the Results..'
+    $Fores | Export-Clixml -Path 'C:\ADxRay\Hammer\Forest.xml'
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Forest Inventory")
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Inventory")
 
-$DuplicatedZones = @()
-$Diag = Receive-Job -Name 'Diag' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$RecycleBin = Receive-Job -Name 'RecycleBin' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$SPN = Receive-Job -Name 'SPN' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-$Trusts = Receive-Job -Name 'Trusts' -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-Foreach ($zone in $Forest.ApplicationPartitions.Name){
-$DuplicatedZones += receive-job -Name ('Zone_'+$zone) 
-}
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domains Details")
 
-if ((test-path 'C:\ADxRay\Hammer\Forest.xml') -eq $true) {remove-item -Path 'C:\ADxRay\Hammer\Forest.xml' -Force}
+    Foreach ($Domain in $Forest.Domains)
+        {
+
+            if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml') -Force}
+
+            $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+
+            $att = @()
+            foreach ($UAC in $Usrs)
+                {
+                    $att += 1..26 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
+                } 
+
+            $DomainTable = @{
+                    'Domain' = $Domain.name;
+                    'DNSRoot' = $InvDom.DNSRoot;
+                    'ParentDomain' = $InvDom.ParentDomain;
+                    'ChildDomains' = $InvDom.ChildDomains;
+                    'DomainMode' = $InvDom.DomainMode;
+                    'ComputersContainer' = $InvDom.ComputersContainer;
+                    'UsersContainer' = $InvDom.UsersContainer;
+                    'DCCount' = ($Forest.domains | Where-Object {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
+                    'SysVolContent' = $SysVolDom;
+                    'Users' = $att | Group-Object;
+                    'Computers' = $Comps;
+                    'AdminGroups'=$GrpAll | Where-Object {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
+                    'Groups'=$GrpAll | Sort-Object Values,Keys -desc | Select-Object -First 10;
+                    'SmallGroups' = ($GrpAll | Sort-Object Values | Group-Object Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
+                }
+
+            $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml')
+
+    }
 
 
-$Trss = @()
-Foreach ($Trust in $Trusts)
-{
-$Trss += $Trust
-}
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Controllers Inventory")
 
-$Fores = @{
+    Foreach ($DC in $DCs)
+        {
 
-'ForestName' = $Forest.Name;
-'Domains' = $Forest.Domains.Name;
-'RecycleBin' = $RecycleBin;
-'ForestMode' = $Forest.ForestMode;
-'GlobalCatalogs' = $Forest.GlobalCatalogs.Name;
-'Sites' = $Forest.Sites.Name;
-'Trusts' = $Trss
-'SPN' = ($SPN | Select-String -Pattern ('group of duplicate SPNs')).ToString();
-'DuplicatedDNSZones' = $DuplicatedZones.DistinguishedName
+            if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
 
-}
+            $Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Forest XML File")
+            $DomControl = @{
+                    'Domain' = $Inv1.Inventory.Domain;
+                    'Hostname' = $Inv1.Inventory.Hostname;
+                    'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
+                    'IPv4Address' = $Inv1.Inventory.IPv4Address;
+                    'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
+                    'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
+                    'OperatingSystemVersion' = $Inv1.Inventory.OperatingSystemVersion;
+                    'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
+                    'Site' = $Inv1.Inventory.Site;
+                    'Backup' = $Inv1.Backup;
+                    'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
+                    'HW_Boot' = $Inv1.Hardware.'System Boot Time';
+                    'HW_Install' = $Inv1.Hardware.'Original Install Date';
+                    'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
+                    'HotFix' = $Inv1.HotFix;
+                    'NTPStatus' = $Inv1.NTP_Status;
+                    'NTPConf' =  $Inv1.NTP_Config;
+                    'HW_LogicalProc' = $Inv1.Processor;
+                    'HW_FreeSpace' = $Inv1.FreeSpace;
+                    'Spooler_State' = $Inv1.Spooler.State;
+                    'Spooler_StartMode' = $Inv1.Spooler.StartMode;
+                    'DNS' = $Inv1.DNS;
+                    'ldapRR' = $Inv1.ldapRR;
+                    'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
+                    'InstalledFeatures' = $Inv1.Installed_Features;
+                    'InstalledSoftwaresx64' = $Inv1.Software_64 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
+                    'InstalledSoftwaresx86' = $Inv1.Software_86 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+                }
 
-$Fores | Export-Clixml -Path 'C:\ADxRay\Hammer\Forest.xml'
+            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Domain Controller XML file for: "+$DC)
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Inventory")
+            $DomControl | Export-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domains Details")
+        }
 
-Foreach ($Domain in $Forest.Domains)
+    $jbs = Get-Job
+
+    foreach ($JB in $jbs){
+    $JbName = $jb.Name 
+    $jbcmd = $jb.command
+    if ($JB.State -eq 'Failed') 
     {
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job Failed: "+$jbName)
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - With the following Command Line: "+$jbcmd)
+    }
+    $time = New-TimeSpan -Start $JB.PSBeginTime -End $JB.PSEndTime
+    $TimeJobMin = $time.TotalMinutes.ToString('#######.##')
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job: "+$jbName+'. run time was: '+$TimeJobMin+' Minutes.')
+    }
 
-if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml') -Force}
+    Write-Host ('End of Hammer phase. ') -NoNewline
+    write-host ($jbs | Where-Object {$_.State -eq 'Completed'}).Count -NoNewline -ForegroundColor Magenta
+    Write-Host ' Inventory jobs completed and ' -NoNewline
+    write-host ($jbs | Where-Object {$_.State -eq 'Failed'}).Count -NoNewline -ForegroundColor Red
+    Write-Host ' Inventory jobs failed..'
 
-    $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-    $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Hammer")
 
-$att = @()
-foreach ($UAC in $Usrs){
-$att += 1..26 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
-} 
-
-$DomainTable = @{
-
-'Domain' = $Domain.name;
-'DNSRoot' = $InvDom.DNSRoot;
-'ParentDomain' = $InvDom.ParentDomain;
-'ChildDomains' = $InvDom.ChildDomains;
-'DomainMode' = $InvDom.DomainMode;
-'ComputersContainer' = $InvDom.ComputersContainer;
-'UsersContainer' = $InvDom.UsersContainer;
-'DCCount' = ($Forest.domains | where {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
-'SysVolContent' = $SysVolDom;
-'Users' = $att | Group-Object;
-'Computers' = $Comps;
-'AdminGroups'=$GrpAll | ? {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
-'Groups'=$GrpAll | sort Values,Keys -desc | Select-Object -First 10;
-'SmallGroups' = ($GrpAll | sort Values | group Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
-
-}
-
-$DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml')
-
-}
-
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Controllers Inventory")
-
-Foreach ($DC in $DCs)
-{
-
-if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
-
-$Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-
-$DomControl = @{
-
-    'Domain' = $Inv1.Inventory.Domain;
-    'Hostname' = $Inv1.Inventory.Hostname;
-    'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
-    'IPv4Address' = $Inv1.Inventory.IPv4Address;
-    'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
-    'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
-    'OperatingSystemVersion' = $Inv1.Inventory.OperatingSystemVersion;
-    'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
-    'Site' = $Inv1.Inventory.Site;
-    'Backup' = $Inv1.Backup;
-    'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
-    'HW_Boot' = $Inv1.Hardware.'System Boot Time';
-    'HW_Install' = $Inv1.Hardware.'Original Install Date';
-    'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
-    'HotFix' = $Inv1.HotFix;
-    'NTPStatus' = $Inv1.NTP_Status;
-    'NTPConf' =  $Inv1.NTP_Config;
-    'HW_LogicalProc' = $Inv1.Processor;
-    'HW_FreeSpace' = $Inv1.FreeSpace;
-    'Spooler_State' = $Inv1.Spooler.State;
-    'Spooler_StartMode' = $Inv1.Spooler.StartMode;
-    'DNS' = $Inv1.DNS;
-    'ldapRR' = $Inv1.ldapRR;
-    'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
-    'InstalledFeatures' = $Inv1.Installed_Features;
-    'InstalledSoftwaresx64' = $Inv1.Software_64 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
-    'InstalledSoftwaresx86' = $Inv1.Software_86 | ? {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
-
-}
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Domain Controller XML file for: "+$DC)
-
-$DomControl | Export-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
-
-}
-
-$jbs = Get-Job
-
-foreach ($JB in $jbs){
-$JbName = $jb.Name 
-$jbcmd = $jb.command
-if ($JB.State -eq 'Failed') 
-{
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job Failed: "+$jbName)
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - With the following Command Line: "+$jbcmd)
-}
-$time = New-TimeSpan -Start $JB.PSBeginTime -End $JB.PSEndTime
-$TimeJobMin = $time.TotalMinutes.ToString('#######.##')
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - The following Inventory Job: "+$jbName+'. run time was: '+$TimeJobMin+' Minutes.')
-}
-
-Write-Host ('End of Hammer phase. ') -NoNewline
-write-host ($jbs | ? {$_.State -eq 'Completed'}).Count -NoNewline -ForegroundColor Magenta
-Write-Host ' Inventory jobs completed and ' -NoNewline
-write-host ($jbs | ? {$_.State -eq 'Failed'}).Count -NoNewline -ForegroundColor Red
-Write-Host ' Inventory jobs failed..'
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Hammer")
-
-Get-Job | Remove-Job
+    Get-Job | Remove-Job
 
 }
 
@@ -1046,13 +1039,13 @@ Foreach ($Domain in $Forest.domains.name)
 
         $Usrs = Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
 
-        $AllUsers = ($Usrs.Users | ? {$_.Name -eq 9}).Count
-        $UsersDisabled = ($Usrs.Users | ? {$_.Name -eq 1}).Count
-        $UsersEnabled = (($Usrs.Users | ? {$_.Name -eq 9}).Count - ($Usrs.Users | ? {$_.Name -eq 1}).Count)
-        $UsersDES = ($Usrs.Users | ? {$_.Name -eq 21}).Count
-        $UsersReversePWD = ($Usrs.Users | ? {$_.Name -eq 7}).Count
-        $UsersPWDNotReq = ($Usrs.Users | ? {$_.Name -eq 5}).Count
-        $UsersPWDNeverExpire = ($Usrs.Users | ? {$_.Name -eq 16}).Count
+        $AllUsers = ($Usrs.Users | Where-Object {$_.Name -eq 9}).Count
+        $UsersDisabled = ($Usrs.Users | Where-Object {$_.Name -eq 1}).Count
+        $UsersEnabled = (($Usrs.Users | Where-Object {$_.Name -eq 9}).Count - ($Usrs.Users | Where-Object {$_.Name -eq 1}).Count)
+        $UsersDES = ($Usrs.Users | Where-Object {$_.Name -eq 21}).Count
+        $UsersReversePWD = ($Usrs.Users | Where-Object {$_.Name -eq 7}).Count
+        $UsersPWDNotReq = ($Usrs.Users | Where-Object {$_.Name -eq 5}).Count
+        $UsersPWDNeverExpire = ($Usrs.Users | Where-Object {$_.Name -eq 16}).Count
 
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring User Accounts in the Domain: "+$UsDomain)
@@ -1163,10 +1156,10 @@ Foreach ($Domain in $Forest.domains.name)
     $PCAll.RemoveAt(0)
 
     $PCAllC = $PCAll.Count
-    $PCServer = ($PCAll | where {$_ -like '* Server*'}).Count
-    $PCWS = ($PCAll | where {$_ -notlike '* Server*'}).Count
-    $PCServerUnsupp = ($PCAll | where {$_ -like '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2003*' -or $_ -like '*2008*'}).Count
-    $PCWSUnsupp = ($PCAll | where {$_ -notlike '* Server*'} | Where {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 7*' -or $_ -like '* 8 *'  -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
+    $PCServer = ($PCAll | Where-Object {$_ -like '* Server*'}).Count
+    $PCWS = ($PCAll | Where-Object {$_ -notlike '* Server*'}).Count
+    $PCServerUnsupp = ($PCAll | Where-Object {$_ -like '* Server*'} | Where-Object {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '*2003*' -or $_ -like '*2008*'}).Count
+    $PCWSUnsupp = ($PCAll | Where-Object {$_ -notlike '* Server*'} | Where-Object {$_ -like '* NT*' -or $_ -like '*2000*' -or $_ -like '* 95*' -or $_ -like '* 7*' -or $_ -like '* 8 *'  -or $_ -like '* 98*' -or $_ -like '*XP*' -or $_ -like '* Vista*'}).Count
 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Computer Accounts in the Domain: "+$Domain)
@@ -1385,12 +1378,11 @@ Foreach ($Domain in $Forest.domains.name)
 
     $GPO =  $XmlDocument.report.gpo
 
-    $GpoC = @()
-    $GPEmpt = ($Gpo | where {$_.User.VersionDirectory -eq 0 -and $_.User.VersionSysVol -eq 0 -and $_.Computer.VersionDirectory -eq 0 -and $_.Computer.VersionSysVol -eq 0}).Name.Count
-    $GPBIG = ($Gpo | Where {(([int]$_.User.VersionDirectory) + ([int]$_.Computer.VersionDirectory)) -ge 1000}).Name.Count
+    $GPEmpt = ($Gpo | Where-Object {$_.User.VersionDirectory -eq 0 -and $_.User.VersionSysVol -eq 0 -and $_.Computer.VersionDirectory -eq 0 -and $_.Computer.VersionSysVol -eq 0}).Name.Count
+    $GPBIG = ($Gpo | Where-Object {(([int]$_.User.VersionDirectory) + ([int]$_.Computer.VersionDirectory)) -ge 1000}).Name.Count
     $GPOAll = $GPO.Count
-    $GPOWithouLink = ($GPO  | where {!$_.LinksTo}).name.Count
-    $GPODisables = ($GPO.LinksTo.Enabled | where {$_ -eq $false}).Count
+    $GPOWithouLink = ($GPO  | Where-Object {!$_.LinksTo}).name.Count
+    $GPODisables = ($GPO.LinksTo.Enabled | Where-Object {$_ -eq $false}).Count
 
  Add-Content $report "<tr>"
 
@@ -1501,7 +1493,7 @@ Foreach ($Domain in $Forest.domains.name)
     $GpoName = $Gpo.Name
     $GpoUserADVer = $Gpo.User.VersionDirectory
     $GpoCompADVer = $Gpo.Computer.VersionDirectory
-    $GposNoLink = $GPO | where {!$_.LinksTo}
+    $GposNoLink = $GPO | Where-Object {!$_.LinksTo}
     $GpoModDate =  $Gpo.ModifiedTime
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring the Following GPO: "+$GpoName)
@@ -1657,7 +1649,7 @@ foreach ($DC in $DCs)
     $DCHostName = $DC.name
     $DCEnabled = $DCD.IsReadOnly
     $DCIP = $DCD.IPv4Address
-    $SMBv1 = $DCD.InstalledFeatures | ? {$_ -contains 'FS-SMB1'}
+    $SMBv1 = $DCD.InstalledFeatures | Where-Object {$_ -contains 'FS-SMB1'}
     $DCGC = $DCD.IsGlobalCatalog
     $DCOS = $DCD.OperatingSystem
     $DCOSD = $DCD.OperatingSystemVersion
@@ -1938,11 +1930,11 @@ Add-Content $report "</tr>"
                     }
 
                 $DNSName = $DNS.ServerSetting.ComputerName
-                $DNSZoneScavenge = ($dns.ServerZoneAging | where {$_.AgingEnabled -eq $True }).ToString.Count
+                $DNSZoneScavenge = ($dns.ServerZoneAging | Where-Object {$_.AgingEnabled -eq $True }).ToString.Count
                 $DNSBindSec = $DNS.ServerSetting.BindSecondaries
                 $DNSSca = $DNS.ServerScavenging.ScavengingState
                 $DNSRecur = $DNS.ServerRecursion.Enable
-                $DNSZoneCount = ($DNS.ServerZone | where {$_.ZoneName -notlike '*.arpa' -and $_.ZoneName -ne 'TrustAnchors'}).Count
+                $DNSZoneCount = ($DNS.ServerZone | Where-Object {$_.ZoneName -notlike '*.arpa' -and $_.ZoneName -ne 'TrustAnchors'}).Count
                 $DNSRootC = $DNSRootHintC.Count
 
 
@@ -3612,20 +3604,20 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
     [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\Hammer\RSOP_"+$DC.Name+".xml")
 
-    $us = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.UserRightsAssignment | where {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight' -or $_.Name -eq 'SeDenyBatchLogonRight' -or $_.Name -eq 'SeDenyNetworkLogonRight' -or $_.Name -eq 'SeDenyServiceLogonRight'}
+    $us = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.UserRightsAssignment | Where-Object {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight' -or $_.Name -eq 'SeDenyBatchLogonRight' -or $_.Name -eq 'SeDenyNetworkLogonRight' -or $_.Name -eq 'SeDenyServiceLogonRight'}
 
     $dnsvc = ''
     $dnnet = ''
     $dnbat = ''
     $dnrdp = ''
 
-    $dnsvc = $us | where {$_.Name -eq 'SeDenyServiceLogonRight'}
+    $dnsvc = $us | Where-Object {$_.Name -eq 'SeDenyServiceLogonRight'}
     $dnsvc = $dnsvc.Member.Name.'#text'
-    $dnnet = $us | where {$_.Name -eq 'SeDenyNetworkLogonRight'}
+    $dnnet = $us | Where-Object {$_.Name -eq 'SeDenyNetworkLogonRight'}
     $dnnet = $dnnet.Member.Name.'#text'
-    $dnbat = $us | where {$_.Name -eq 'SeDenyBatchLogonRight'}
+    $dnbat = $us | Where-Object {$_.Name -eq 'SeDenyBatchLogonRight'}
     $dnbat = $dnbat.Member.Name.'#text'
-    $dnrdp = $us | where {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight'}
+    $dnrdp = $us | Where-Object {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight'}
     $dnrdp = $dnrdp.Member.Name.'#text'
 
     Add-Content $report "<tr>"
@@ -3768,7 +3760,7 @@ foreach ($DC in $DCs)
     $DCHostName = $DC.name
 
     $Proc = $DCD.HW_LogicalProc
-    $FreeSpace = ($DCD.HW_FreeSpace | ? {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
+    $FreeSpace = ($DCD.HW_FreeSpace | Where-Object {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
     $FreeSpace = [double]$FreeSpace
 
     $InvMem = $DCD.HW_Mem
@@ -4016,7 +4008,7 @@ if ($VerValid.StatusCode -eq 200)
                 Write-Host ('Version: '+$Ver+' - This version of ADxRay is outdated. Please access https://github.com/ClaudioMerola/ADxRay for the lastest version and corrections.') -ForegroundColor Red
             }
     }
-elseif ($VerValid -eq $null ) 
+elseif ($null -eq $VerValid ) 
     {
         Write-Host ('Version: '+$Ver+' - ADxRay version validation was not possible. Please access https://github.com/ClaudioMerola/ADxRay for the lastest version and corrections.') -ForegroundColor Red
     }
@@ -4056,7 +4048,7 @@ Add-Content $report "</html>"
 
 
 Hammer
-sleep 10
+Start-Sleep 10
 Report
 
 
@@ -4077,7 +4069,7 @@ $index | out-file $report
 Write-Host ('Report complete. Report saved at: ') -NoNewline
 write-host $report -ForegroundColor Green -BackgroundColor Red
 
-sleep 5
+Start-Sleep 5
 
 Invoke-Item $report
 
