@@ -13,9 +13,9 @@
   Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-  Version:        5.0
+  Version:        5.1
   Author:         Claudio Merola
-  Date:           02/09/2021
+  Date:           02/19/2021
   Purpose/Change: Initial script development
   
 #>
@@ -25,7 +25,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Global:Ver = '5.0'
+$Global:Ver = '5.1'
 
 $Global:SupBuilds = '10.0 (18362)','10.0 (19041)'
 
@@ -296,7 +296,7 @@ function Hammer
                     }
                 Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
 
-                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are not completed")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are completed")
             
             }
 
@@ -355,8 +355,6 @@ function Hammer
                 Foreach ($Domain in $Forest.Domains)
                     {
 
-                        if ((test-path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml') -Force}
-
                         $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -364,31 +362,41 @@ function Hammer
                         $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
-                        $att = @()
-                        foreach ($UAC in $Usrs)
-                            {
-                                $att += 1..26 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
-                            } 
+                        Start-job -Name ($Domain.Name+'_job') -ScriptBlock {
+                            if ((test-path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml') -Force}
 
-                        $DomainTable = @{
-                                'Domain' = $Domain.name;
-                                'DNSRoot' = $InvDom.DNSRoot;
-                                'ParentDomain' = $InvDom.ParentDomain;
-                                'ChildDomains' = $InvDom.ChildDomains;
-                                'DomainMode' = $InvDom.DomainMode;
-                                'ComputersContainer' = $InvDom.ComputersContainer;
-                                'UsersContainer' = $InvDom.UsersContainer;
-                                'DCCount' = ($Forest.domains | Where-Object {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
-                                'SysVolContent' = $SysVolDom;
-                                'Users' = $att | Group-Object;
-                                'Computers' = $Comps;
-                                'AdminGroups'=$GrpAll | Where-Object {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
-                                'Groups'=$GrpAll | Sort-Object Values,Keys -desc | Select-Object -First 10;
-                                'SmallGroups' = ($GrpAll | Sort-Object Values | Group-Object Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
-                            }
+                            $InvDom = $($args[2])
+                            $SysVolDom = $($args[3])
+                            $Usrs = $($args[4])
+                            $Comps = $($args[5])
+                            $GrpAll = $($args[6])
+                            $GPOALL = $($args[7])
 
-                        $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain.Name+'.xml')
+                            $att = @()
+                            foreach ($UAC in $Usrs)
+                                {
+                                    $att += 1..26 | Where-Object {$UAC -bAnd [math]::Pow(2,$_)}
+                                } 
 
+                            $DomainTable = @{
+                                    'Domain' = $($args[0]).name;
+                                    'DNSRoot' = $InvDom.DNSRoot;
+                                    'ParentDomain' = $InvDom.ParentDomain;
+                                    'ChildDomains' = $InvDom.ChildDomains;
+                                    'DomainMode' = $InvDom.DomainMode;
+                                    'ComputersContainer' = $InvDom.ComputersContainer;
+                                    'UsersContainer' = $InvDom.UsersContainer;
+                                    'DCCount' = ($($args[1]) | Where-Object {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
+                                    'SysVolContent' = $SysVolDom;
+                                    'Users' = $att | Group-Object;
+                                    'Computers' = $Comps;
+                                    'AdminGroups'=$GrpAll | Where-Object {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
+                                    'Groups'=$GrpAll | Sort-Object Values,Keys -desc | Select-Object -First 10;
+                                    'SmallGroups' = ($GrpAll | Sort-Object Values | Group-Object Values | Select-Object -Index 0,1 | Measure-Object -Property Count -Sum).Sum
+                                }
+
+                            $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml')
+                        } -ArgumentList $Domain,$Forest.domains,$InvDom,$SysVolDom,$Usrs,$Comps,$GrpAll,$GPOALL
                     }
             }
 
@@ -400,46 +408,72 @@ function Hammer
                 Foreach ($DC in $DCs)
                     {
 
-                        if ((test-path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$DC.Name+".xml") -Force}
-
                         $Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                        Start-job -Name ($DC.Name+'_job') -ScriptBlock {
+                            if ((test-path ("C:\ADxRay\Hammer\Inv_"+$($args[0]).Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$($args[0]).Name+".xml") -Force}
 
-                        $DomControl = @{
-                                'Domain' = $Inv1.Inventory.Domain;
-                                'Hostname' = $Inv1.Inventory.Hostname;
-                                'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
-                                'IPv4Address' = $Inv1.Inventory.IPv4Address;
-                                'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
-                                'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
-                                'OperatingSystemVersion' = $Inv1.Inventory.OperatingSystemVersion;
-                                'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
-                                'Site' = $Inv1.Inventory.Site;
-                                'Backup' = $Inv1.Backup;
-                                'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
-                                'HW_Boot' = $Inv1.Hardware.'System Boot Time';
-                                'HW_Install' = $Inv1.Hardware.'Original Install Date';
-                                'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
-                                'HotFix' = $Inv1.HotFix;
-                                'NTPStatus' = $Inv1.NTP_Status;
-                                'NTPConf' =  $Inv1.NTP_Config;
-                                'HW_LogicalProc' = $Inv1.Processor;
-                                'HW_FreeSpace' = $Inv1.FreeSpace;
-                                'Spooler_State' = $Inv1.Spooler.State;
-                                'Spooler_StartMode' = $Inv1.Spooler.StartMode;
-                                'DNS' = $Inv1.DNS;
-                                'ldapRR' = $Inv1.ldapRR;
-                                'DCDiag' = $Diag | Select-String -Pattern ($DC.Name.Split('.')[0]);
-                                'InstalledFeatures' = $Inv1.Installed_Features;
-                                'InstalledSoftwaresx64' = $Inv1.Software_64 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
-                                'InstalledSoftwaresx86' = $Inv1.Software_86 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
-                            }
+                            $Inv1 = $($args[1])
 
-                        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Registering Domain Controller XML file for: "+$DC)
+                            $DomControl = @{
+                                    'Domain' = $Inv1.Inventory.Domain;
+                                    'Hostname' = $Inv1.Inventory.Hostname;
+                                    'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
+                                    'IPv4Address' = $Inv1.Inventory.IPv4Address;
+                                    'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
+                                    'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
+                                    'OperatingSystemVersion' = $Inv1.Inventory.OperatingSystemVersion;
+                                    'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
+                                    'Site' = $Inv1.Inventory.Site;
+                                    'Backup' = $Inv1.Backup;
+                                    'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
+                                    'HW_Boot' = $Inv1.Hardware.'System Boot Time';
+                                    'HW_Install' = $Inv1.Hardware.'Original Install Date';
+                                    'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
+                                    'HotFix' = $Inv1.HotFix;
+                                    'NTPStatus' = $Inv1.NTP_Status;
+                                    'NTPConf' =  $Inv1.NTP_Config;
+                                    'HW_LogicalProc' = $Inv1.Processor;
+                                    'HW_FreeSpace' = $Inv1.FreeSpace;
+                                    'Spooler_State' = $Inv1.Spooler.State;
+                                    'Spooler_StartMode' = $Inv1.Spooler.StartMode;
+                                    'DNS' = $Inv1.DNS;
+                                    'ldapRR' = $Inv1.ldapRR;
+                                    'DCDiag' = $($args[2]) | Select-String -Pattern ($($args[0]).Name.Split('.')[0]);
+                                    'InstalledFeatures' = $Inv1.Installed_Features;
+                                    'InstalledSoftwaresx64' = $Inv1.Software_64 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher;
+                                    'InstalledSoftwaresx86' = $Inv1.Software_86 | Where-Object {$_.DisplayName} | Select-Object DisplayName, DisplayVersion, Publisher
+                                }
 
-                        $DomControl | Export-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
-
+                            $DomControl | Export-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$($args[0]).Name+'.xml')
+                        } -ArgumentList $DC,$Inv1,$Diag
                     }
             }
+
+            function WaitJobs2
+            {
+
+                $c = 0
+                $WaitTime = get-date
+                while (get-job | Where-Object {$_.State -eq 'Running'})
+                    {
+                        $jb = get-job
+                        $c = (((($jb.count - ($jb | Where-Object {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
+                        $c = [math]::Round($c)
+                        Write-Progress -activity 'Processing Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Processing Jobs..'
+                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
+                            {
+                                Get-Job | Wait-Job -Timeout 5 | Out-Null
+                                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
+                            }
+                        Start-Sleep -Seconds 2
+                    }
+                Write-Progress -activity 'Running Inventories' -Status "100% Complete." -Completed
+
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - All Inventories are completed")
+            
+            }
+
+
 
     HammerForest
     HammerDomain
@@ -448,6 +482,7 @@ function Hammer
     ForestJob
     DomainJob
     DCjob
+    WaitJobs2
 
     $jbs = Get-Job
 
@@ -3766,7 +3801,7 @@ add-content $report "<BR><BR><BR>"
 ######################################### INSTALLED HARDWARE  ###############################################
 
 
-write-host 'Starting Domain Controllers Installed Reporting..'
+write-host 'Starting Domain Controllers Installed Hardware Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Hardware Reporting.")   
 
@@ -3873,7 +3908,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### INSTALLED SOFTWARES  ###############################################
 
 
-write-host 'Starting Domain Controllers Installed Reporting..'
+write-host 'Starting Domain Controllers Installed Software Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Installed Software Reporting.")   
 
