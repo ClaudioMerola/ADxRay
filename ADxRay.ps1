@@ -13,9 +13,9 @@
   Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-  Version:        5.1
+  Version:        5.2
   Author:         Claudio Merola
-  Date:           02/19/2021
+  Date:           02/21/2021
   Purpose/Change: Initial script development
   
 #>
@@ -25,7 +25,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Global:Ver = '5.1'
+$Global:Ver = '5.2'
 
 $Global:SupBuilds = '10.0 (18362)','10.0 (19041)'
 
@@ -164,13 +164,13 @@ function Hammer
 
                     $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Get-WindowsFeature -ComputerName $DomControl | Where-Object {$_.Installed -eq 'Installed'}}).AddArgument($($args[0]))
 
-                    $HW = ([PowerShell]::Create()).AddScript({param($DomControl)systeminfo /S $DomControl /fo CSV | ConvertFrom-Csv}).AddArgument($($args[0]))
+                    $HW = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {systeminfo /fo CSV | ConvertFrom-Csv}}).AddArgument($($args[0]))
 
                     $Backup = ([PowerShell]::Create()).AddScript({param($DomControl)repadmin /showbackup $DomControl}).AddArgument($($args[0]))
 
-                    $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /status}).AddArgument($($args[0]))
+                    $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {W32TM /query /status}}).AddArgument($($args[0]))
 
-                    $NTP2 = ([PowerShell]::Create()).AddScript({param($DomControl)W32TM /query /computer:$DomControl /configuration}).AddArgument($($args[0]))
+                    $NTP2 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {W32TM /query /configuration}}).AddArgument($($args[0]))
 
                     $HotFix = ([PowerShell]::Create()).AddScript({param($DomControl)Get-HotFix -ComputerName $DomControl | Sort-Object { [datetime]$_.InstalledOn },HotFixID -desc | Select-Object -First 1}).AddArgument($($args[0]))
 
@@ -1878,7 +1878,6 @@ Add-Content $report "</tr>"
 
 foreach ($DC in $DCs)
     {
-    Try{
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start NTP Reporting of: "+$DC)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
@@ -1889,7 +1888,9 @@ foreach ($DC in $DCs)
     $DCNTPConf = $DCD.NTPConf
 
     $DCNTPSource = ($DCNTPStatus | Select-String -Pattern 'Source:').ToString().replace('Source: ','');
-    $DCNTPLastSync = [datetime]($DCNTPStatus | Select-String -Pattern 'Last Successful Sync Time:').ToString().replace('Last Successful Sync Time:','');
+    $DCNTPLastSync = [string]($DCNTPStatus | Select-String -Pattern 'Last Successful Sync Time:');
+    $DCNTPLastSync = [string]$DCNTPLastSync.replace('Last Successful Sync Time:','');
+    $DCNTPLastSync = [datetime]$DCNTPLastSync;
     $DCNTPStratum = ($DCNTPStatus | Select-String -Pattern 'Stratum:').ToString().replace('Stratum: ','');
     $DCNTPType = ($DCNTPConf | Select-String -Pattern 'Type:').ToString().replace('Type: ','');
 
@@ -1924,12 +1925,6 @@ foreach ($DC in $DCs)
     
     Add-Content $report "</tr>" 
 
-    }
-    Catch 
-            { 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors found -------------")
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)    
-            }
     }
 
 
