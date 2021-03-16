@@ -16,7 +16,7 @@
   Version:        5.3
   Author:         Claudio Merola
   Date:           02/21/2021
-  Purpose/Change: Initial script development
+  Purpose/Change: Correction in GPResult Inventory
   
 #>
 
