@@ -13,7 +13,7 @@
   Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-  Version:        5.2
+  Version:        5.3
   Author:         Claudio Merola
   Date:           02/21/2021
   Purpose/Change: Initial script development
@@ -25,7 +25,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Global:Ver = '5.2'
+$Global:Ver = '5.3'
 
 $Global:SupBuilds = '10.0 (18362)','10.0 (19041)'
 
@@ -180,7 +180,7 @@ function Hammer
 
                     $Spooler = ([PowerShell]::Create()).AddScript({param($DomControl)Get-CimInstance -ClassName Win32_Service -Filter "Name = 'Spooler'" -Property State,StartMode -ComputerName $DomControl}).AddArgument($($args[0]))
 
-                    $GPResult = ([PowerShell]::Create()).AddScript({param($DomControl)Get-GPResultantSetOfPolicy -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$DomControl+".xml")}).AddArgument($($args[0]))
+                    $GPResult = ([PowerShell]::Create()).AddScript({param($DomControl)Get-GPResultantSetOfPolicy -Computer $DomControl -ReportType Xml -Path ("C:\ADxRay\Hammer\RSOP_"+$DomControl+".xml")}).AddArgument($($args[0]))
 
                     $DNS = ([PowerShell]::Create()).AddScript({param($DomControl)Get-DnsServer -ComputerName $DomControl}).AddArgument($($args[0]))
 
