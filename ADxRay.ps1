@@ -25,7 +25,7 @@
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Global:Ver = '5.3'
+$Global:Ver = '5.4'
 
 $Global:SupBuilds = '10.0 (18362)','10.0 (19041)'
 
@@ -3138,7 +3138,7 @@ foreach ($DC in $DCs)
     $oldbkp = 0
     if ((New-TimeSpan -Start $Backup -End (Get-Date)).Days -ge 30) {$oldbkp = 1}
 
-    $Backup = $Backup.tostring(“MM-dd-yyyy”)
+    $Backup = $Backup.tostring('MM-dd-yyyy')
 
     $Domain = $DC.Domain
 
