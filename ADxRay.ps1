@@ -6,7 +6,7 @@
 .DESCRIPTION
   This Script is based and inspired on Sukhija Vika's 'Active Directory Health Check' script 
   (https://gallery.technet.microsoft.com/scriptcenter/Active-Directory-Health-709336cd), the amazing Clint Huffman's 'Performance Analysis of Logs (PAL) tool' 
-  (https://github.com/clinthuffman/PAL) and Microsoft's Ned Pyle blogpost 'What does DCDIAG actually… do?'
+  (https://github.com/clinthuffman/PAL) and Microsoft's Ned Pyle blogpost 'What does DCDIAG actually... do?'
   https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/ 
 
 .OUTPUTS
@@ -3621,7 +3621,7 @@ if ($SecCount -ge 1 -or $PolCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Some of Security Policies recommended by Microsoft were not found in those Domain Controllers. Download the latest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>. Be careful when applying the Microsoft’s Security Baseline in the environment, as some settings may impact the overall experience of end users. Precaution is recommended and testing everything upfront might be a good idea.</font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Some of Security Policies recommended by Microsoft were not found in those Domain Controllers. Download the latest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>. Be careful when applying the Microsoft's Security Baseline in the environment, as some settings may impact the overall experience of end users. Precaution is recommended and testing everything upfront might be a good idea.</font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 

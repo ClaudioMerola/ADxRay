@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ## Active Directory xRay Script
 
 I started this as a personal project to help me during my day to day work on different Active Directory environments.
