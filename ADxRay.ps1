@@ -13,7 +13,7 @@
   Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-  Version:        5.3
+  Version:        5.4
   Author:         Claudio Merola
   Date:           02/21/2021
   Purpose/Change: Correction in GPResult Inventory
