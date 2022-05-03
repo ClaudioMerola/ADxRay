@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.0
+Version:        5.6.1
 Author:         Claudio Merola
 Date:           05/03/2022
 
@@ -21,9 +21,9 @@ Date:           05/03/2022
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
-param ($Clear,$DCTimeout=180)
+param ($Clear,$JobTimeout=180)
 
-write-host 'Starting ADxRay Script..'
+write-host 'Starting ADxRay Script..' -ForegroundColor Green
 
 # Version
 $Global:Ver = '5.6'
@@ -48,18 +48,30 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Set
 
 $ErrorActionPreference = "silentlycontinue"
 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Forest Pre Inventory")
-
-$Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
-
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Pre Inventory")
-
-$DCs = $Forest.domains | ForEach-Object {$_.DomainControllers}
-
-
 
 ########################################################################################################## BEGIN OF FUNCTIONS ################################################################################################
 
+###################################### HEADER FUNCTION ##########################################
+
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Selecting Script Option")
+Write-Host ""
+Write-Host "Select the desired option below:"
+Write-Host ""
+Write-Host "1)  " -NoNewline -ForegroundColor Magenta
+write-host "Full Inventory" -ForegroundColor Yellow
+Write-Host "2)  " -NoNewline -ForegroundColor Magenta
+write-host "Forest Inventory" -ForegroundColor Yellow
+Write-Host "3)  " -NoNewline -ForegroundColor Magenta
+write-host "Domain Inventory" -ForegroundColor Yellow
+Write-Host "4)  " -NoNewline -ForegroundColor Magenta
+write-host "Only Collect Inventory Files" -ForegroundColor Yellow
+Write-Host "5)  " -NoNewline -ForegroundColor Magenta
+write-host "Process Collected Inventory Files" -ForegroundColor Yellow
+Write-Host ""
+[int]$Global:Option = read-host "( default 1 )"
+if($Global:Option -eq 0){$Global:Option = 1}
+Write-Host ""
+Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Option: "+$Global:Option+" Selected")
 
 ###################################### HAMMER FUNCTION ##########################################
 
@@ -68,6 +80,7 @@ function Hammer
         write-host 'Starting The Hammer..'
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting The Hammer!")
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Creating Hammer Folder")
+
 
         if ((Test-Path -Path C:\ADxRay\Hammer -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\Hammer}
 
@@ -86,41 +99,41 @@ function Hammer
                     }
             }
 
-    function HammerForest 
-        {
+        function HammerForest 
+            {
 
-            Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
+                Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
 
-            Start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+                Start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
 
-            Start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where-Object {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
+                Start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where-Object {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
 
-            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
 
-            Start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
+                Start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
 
-            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
 
-            Start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+                Start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
-            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
+                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
 
-            Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
+                Write-Progress -activity 'Running Inventories' -Status "5% Complete." -CurrentOperation 'Triggering Domain Inventory..'
 
-            $Global:SecGroups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
+                $Global:SecGroups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
 
-            Foreach ($zone in $Forest.ApplicationPartitions.Name)
-                {
-                    Start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
-                }
-        }
+                Foreach ($zone in $Forest.ApplicationPartitions.Name)
+                    {
+                        Start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
+                    }
+            }
 
         function HammerDomain
             {
 
-                Foreach ($Domain in $Forest.Domains)
+                Foreach ($Domain in $Global:Domains)
                     { 
                         start-job -Name ($Domain.Name+'_Inv') -scriptblock {Get-ADDomain -Identity $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $Domain.Name | Out-Null
 
@@ -143,14 +156,14 @@ function Hammer
                 }
 
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory")
-        }        
+            }        
 
         function HammerDC
             {
 
                 Write-Progress -activity 'Running Inventories' -Status "10% Complete." -CurrentOperation 'Triggering Domain Controller Inventory..'
 
-                Foreach ($DC in $DCs) {
+                Foreach ($DC in $Global:DCs) {
 
                 #start-job -Name ($DC.Name+'_Evts') -scriptblock {(Get-EventLog -ComputerName $args -LogName Security -InstanceId 4618,4649,4719,4765,4766,4794,4897,4964,5124,1102).Count} -ArgumentList $DC.Name | Out-Null
 
@@ -162,7 +175,7 @@ function Hammer
 
                     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Inventory of: "+$DC.Name+'. On: '+$DC.Domain)
 
-                    Start-job -Name ($DC.Name+'_Inv') -ScriptBlock {
+                    Start-job -Name ('Inv_'+$DC.Name) -ScriptBlock {
                     
                     $job = @()
 
@@ -291,13 +304,23 @@ function Hammer
 
                 $c = 0
                 $WaitTime = get-date
+                $WaitTime2 = get-date
                 while (get-job | Where-Object {$_.State -eq 'Running'})
                     {
                         $jb = get-job
                         $c = (((($jb.count - ($jb | Where-Object {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
                         $c = [math]::Round($c)
                         Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
-                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge $DCTimeout)
+                        if ((New-TimeSpan -Start $WaitTime2 -End (get-date)).TotalMinutes -ge 10)
+                            {
+                                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Warn - Still Waiting for the following Inventory Jobs:")
+                                foreach($jbb in ($jb | Where-Object {$_.State -eq 'Running'}))
+                                    {
+                                        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Warn - Job: "+$jbb.Name)
+                                    }
+                                $WaitTime2 = get-date
+                            }
+                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge $JobTimeout)
                             {
                                 Get-Job | Stop-Job | Out-Null
                                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
@@ -362,7 +385,7 @@ function Hammer
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Inventory")
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domains Details")
 
-                Foreach ($Domain in $Forest.Domains)
+                Foreach ($Domain in $Global:Domains)
                     {
 
                         $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -370,7 +393,7 @@ function Hammer
                         $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $GrpAll = Receive-Job -Name ($Domain.name+'_GrpAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                        $GPOALL = Receive-Job -Name ($Domain.name+'_GPOAll') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                        $GPOALL = Receive-Job -Name ($Domain.name+'_GPOs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 
                         Start-job -Name ($Domain.Name+'_job') -ScriptBlock {
                             if ((test-path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml')) -eq $true) {remove-item -Path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml') -Force}
@@ -415,11 +438,11 @@ function Hammer
 
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting to Process Domain Controllers Inventory")
 
-                Foreach ($DC in $DCs)
+                Foreach ($DC in $Global:DCs)
                     {
 
-                        $Inv1 = Receive-Job -Name ($DC.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                        Start-job -Name ($DC.Name+'_job') -ScriptBlock {
+                        $Inv1 = Receive-Job -Name ('Inv_'+$DC.Name) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                        Start-job -Name ('Job_'+$DC.Name) -ScriptBlock {
                             if ((test-path ("C:\ADxRay\Hammer\Inv_"+$($args[0]).Name+".xml")) -eq $true) {remove-item -Path ("C:\ADxRay\Hammer\Inv_"+$($args[0]).Name+".xml") -Force}
 
                             $Inv1 = $($args[1])
@@ -459,20 +482,30 @@ function Hammer
                     }
             }
 
-            function WaitJobs2
+        function WaitJobs2
             {
 
                 $c = 0
                 $WaitTime = get-date
+                $WaitTime2 = get-date
                 while (get-job | Where-Object {$_.State -eq 'Running'})
                     {
                         $jb = get-job
                         $c = (((($jb.count - ($jb | Where-Object {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
                         $c = [math]::Round($c)
                         Write-Progress -activity 'Processing Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Processing Jobs..'
-                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
+                        if ((New-TimeSpan -Start $WaitTime2 -End (get-date)).TotalMinutes -ge 10)
                             {
-                                Get-Job | Wait-Job -Timeout 5 | Out-Null
+                                Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Warn - Still Waiting for the following Processing Jobs:")
+                                foreach($jbb in ($jb | Where-Object {$_.State -eq 'Running'}))
+                                    {
+                                        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Warn - Job: "+$jbb.Name)
+                                    }
+                                $WaitTime2 = get-date
+                            }
+                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge $JobTimeout)
+                            {
+                                Get-Job | Stop-Job | Out-Null
                                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
                             }
                         Start-Sleep -Seconds 2
@@ -484,14 +517,40 @@ function Hammer
             }
 
 
-
-    HammerForest
-    HammerDomain
-    HammerDC
+    if($Global:Option -eq 1)
+        {
+            HammerForest
+            HammerDomain
+            HammerDC
+        }
+    elseif($Global:Option -eq 2)
+        {
+            HammerForest
+        }
+    elseif($Global:Option -eq 3)
+        {
+            HammerForest
+            HammerDomain
+        }
+    
     WaitJobs
-    ForestJob
-    DomainJob
-    DCjob
+
+    if($Global:Option -eq 1)
+        {
+            ForestJob
+            DomainJob
+            DCjob
+        }
+    elseif($Global:Option -eq 2)
+        {
+            ForestJob
+        }
+    elseif($Global:Option -eq 3)
+        {
+            ForestJob
+            DomainJob
+        }
+
     WaitJobs2
 
     $jbs = Get-Job
@@ -647,7 +706,7 @@ add-content $report "<BR>"
 
 add-content $report  "<table width='40%' align='center' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
- 
+
 Add-Content $report "</tr>" 
 
 $Fore = Import-Clixml -Path C:\ADxRay\Hammer\Forest.xml
@@ -804,7 +863,7 @@ Add-Content $report  "<td width='5%' align='center'><B>ForestTransitive</B></td>
 Add-Content $report  "<td width='5%' align='center'><B>IntraForest</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>SID Filtering</B></td>"
 
- 
+
 Add-Content $report "</tr>" 
 
 Foreach ($Trusts in $Trust)
@@ -883,7 +942,7 @@ add-content $report "<BR><BR><BR>"
 
 ######################################### DOMAIN #############################################
 
-write-host 'Starting Domains Reporting..'
+write-host 'Running Domains Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domains Reporting")
 
@@ -899,7 +958,7 @@ Try{
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain0 in $Forest.Domains.name)
+Foreach ($Domain0 in $Global:DomainNames)
     {
 
     $Domain1 = Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain0+'.xml')
@@ -918,7 +977,7 @@ Foreach ($Domain0 in $Forest.Domains.name)
 
 add-content $report  "<table width='40%' align='center' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
- 
+
 Add-Content $report "</tr>" 
 
 Add-Content $report "<tr>" 
@@ -977,13 +1036,13 @@ Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Domain Functiona
         {
             Add-Content $report "<td bgcolor='White' align=center>$D2Mode</td>" 
         }
-Add-Content $report "</tr>"     
-Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default Computer Container</B></th>" 
+    Add-Content $report "</tr>"     
+    Add-Content $report "<tr>" 
+    Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default Computer Container</B></th>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2CompCont</td>" 
-Add-Content $report "</tr>"     
-Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default User Container</B></th>" 
+    Add-Content $report "</tr>"     
+    Add-Content $report "<tr>" 
+    Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default User Container</B></th>" 
     Add-Content $report "<td bgcolor='White' align=center>$D2UserCont</td>" 
     Add-Content $report "</tr>" 
 
@@ -1022,7 +1081,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Sysvol Folder Status</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
@@ -1033,7 +1092,7 @@ Add-Content $report  "<td width='10%' align='center'><B>Size (MB)</B></td>"
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain in $Forest.domains.name) 
+Foreach ($Domain in $Global:DomainNames) 
     {
 
 $Domain2 = Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain+'.xml')
@@ -1100,7 +1159,6 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting User Accounts Reporting")
 
-
 add-content $report "<CENTER>"
 
 add-content $report  "<CENTER>"
@@ -1121,7 +1179,7 @@ Add-Content $report  "<td width='10%' align='center'><B>Use Kerberos DES</B></td
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain in $Forest.domains.name)
+Foreach ($Domain in $Global:DomainNames)
     {
         Try{
         $UsDomain = $Domain
@@ -1191,7 +1249,7 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - User Accounts Reporting finished")
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of User Account phase.")
- 
+
 Add-content $report  "</table>" 
 
 add-content $report "<BR><BR>"
@@ -1231,7 +1289,7 @@ Add-Content $report  "<td width='15%' align='center'><B>Unsupported Servers</B><
 
 Add-Content $report "</tr>" 
 
-Foreach ($Domain in $Forest.domains.name) 
+Foreach ($Domain in $Global:DomainNames) 
     {
 
     Try{
@@ -1263,9 +1321,9 @@ Foreach ($Domain in $Forest.domains.name)
         {
             Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
         }
-     else 
+    else 
         { 
-           Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
         }
     if ($PCServerUnsupp -eq '' -or $PCServerUnsupp -eq 0)  
         {
@@ -1273,7 +1331,7 @@ Foreach ($Domain in $Forest.domains.name)
         }
     else 
         { 
-          Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
         }
     Add-Content $report "</tr>"
     }
@@ -1341,7 +1399,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Active Directory Tier 0 Group Members</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='60%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain</B></td>" 
@@ -1352,7 +1410,7 @@ Add-Content $report "</tr>"
 
 $Groups = @('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')
 
-Foreach ($Domain in $Forest.domains.name) 
+Foreach ($Domain in $Global:DomainNames) 
     {
 
     Try{
@@ -1390,7 +1448,7 @@ Foreach ($Domain in $Forest.domains.name)
                         {
                             Add-Content $report "<td bgcolor='White' align=center>$GCounter</td>" 
                         }     
-                   
+
             Add-Content $report "</tr>"
             } 
             }
@@ -1444,7 +1502,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Group Policy Objects</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='60%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
@@ -1453,12 +1511,12 @@ Add-Content $report  "<td width='5%' align='center'><B>Without Link</B></td>"
 Add-Content $report  "<td width='5%' align='center'><B>Without Settings</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Disabled Links</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Too Many Settings</B></td>" 
- 
+
 
 Add-Content $report "</tr>" 
 
 
-Foreach ($Domain in $Forest.domains.name)
+Foreach ($Domain in $Global:DomainNames)
     {
 
     Try{
@@ -1473,7 +1531,7 @@ Foreach ($Domain in $Forest.domains.name)
     $GPOWithouLink = ($GPO  | Where-Object {!$_.LinksTo}).name.Count
     $GPODisables = ($GPO.LinksTo.Enabled | Where-Object {$_ -eq $false}).Count
 
- Add-Content $report "<tr>"
+Add-Content $report "<tr>"
 
                 Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
                 Add-Content $report "<td bgcolor='White' align=center>$GPOAll</td>" 
@@ -1537,7 +1595,8 @@ add-content $report "</CENTER>"
 
 Write-Host ('Found: ') -NoNewline
 write-host $GPOall -NoNewline -ForegroundColor Magenta
-Write-Host ' GPOs. Starting the Reporting..' 
+Write-Host ' GPOs.'
+Write-Host 'Running the Reporting Phase..' 
 
 add-content $report "<BR><BR><BR><BR>"
 
@@ -1554,7 +1613,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Empty Group Policy Objects</h3>" 
 add-content $report  "</CENTER>" 
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
@@ -1567,7 +1626,7 @@ Add-Content $report  "<td width='5%' align='center'><B>Modification Date</B></td
 Add-Content $report "</tr>" 
 
 
-Foreach ($Domain in $Forest.domains.name) 
+Foreach ($Domain in $Global:DomainNames) 
     {
 
     Try{
@@ -1577,65 +1636,65 @@ Foreach ($Domain in $Forest.domains.name)
     $Gpos = $XmlDocument.report.gpo
 
     Foreach ($gpo in $gpos)
-    {
+        {
 
-    $GpoName = $Gpo.Name
-    $GpoUserADVer = $Gpo.User.VersionDirectory
-    $GpoCompADVer = $Gpo.Computer.VersionDirectory
-    $GposNoLink = $GPO | Where-Object {!$_.LinksTo}
-    $GpoModDate =  $Gpo.ModifiedTime
+            $GpoName = $Gpo.Name
+            $GpoUserADVer = $Gpo.User.VersionDirectory
+            $GpoCompADVer = $Gpo.Computer.VersionDirectory
+            $GposNoLink = $GPO | Where-Object {!$_.LinksTo}
+            $GpoModDate =  $Gpo.ModifiedTime
 
-    Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring the Following GPO: "+$GpoName)
+            Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring the Following GPO: "+$GpoName)
 
-    if ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0 -and $Gpo.Name -in $GposNoLink.Name)
-        { 
-         Add-Content $report "<tr>"
-         Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-         Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
-         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
-         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
-         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
-         Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
-         Add-Content $report "</tr>"
+            if ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0 -and $Gpo.Name -in $GposNoLink.Name)
+                { 
+                    Add-Content $report "<tr>"
+                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "</tr>"
+                }   
+            elseif ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0)
+                { 
+                    Add-Content $report "<tr>"
+                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
+                    Add-Content $report "<td bgcolor= 'Lime' align=center>YES</td>"
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "</tr>"
+                }
+            elseif ($Gpo.Name -in $GposNoLink.Name)
+                { 
+                    Add-Content $report "<tr>"
+                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
+                    if ($GpoUserADVer -ge 600)
+                        {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
+                        }
+                    else
+                        {
+                        Add-Content $report "<td bgcolor= 'White' align=center>$GpoUserADVer</td>"
+                        }
+                    if ($GpoCompADVer -ge 600)
+                        {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
+                        }
+                    else
+                        {
+                        Add-Content $report "<td bgcolor= 'White' align=center>$GpoCompADVer</td>"
+                        }
+                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
+                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "</tr>"
+                }
         }   
-      elseif ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0)
-                            { 
-                                Add-Content $report "<tr>"
-                                Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                                Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
-                                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
-                                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
-                                Add-Content $report "<td bgcolor= 'Lime' align=center>YES</td>"
-                                Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
-                                Add-Content $report "</tr>"
-                            }
-                        elseif ($Gpo.Name -in $GposNoLink.Name)
-                            { 
-                                Add-Content $report "<tr>"
-                                Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                                Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
-                                if ($GpoUserADVer -ge 600)
-                                    {
-                                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
-                                    }
-                                else
-                                    {
-                                    Add-Content $report "<td bgcolor= 'White' align=center>$GpoUserADVer</td>"
-                                    }
-                                if ($GpoCompADVer -ge 600)
-                                    {
-                                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
-                                    }
-                                else
-                                    {
-                                    Add-Content $report "<td bgcolor= 'White' align=center>$GpoCompADVer</td>"
-                                    }
-                                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
-                                Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
-                                Add-Content $report "</tr>"
-                            }
-                   }
-                   }
+    }
 Catch { 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the GPO Inventoring -------------")
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
@@ -1690,7 +1749,7 @@ add-content $report "<BR><BR><BR>"
 
 ######################################### DC #############################################
 
-write-host 'Starting Domain Controller Reporting..'
+write-host 'Running Domain Controller Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Reporting")
 
@@ -1700,7 +1759,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Active Directory Domain Controllers View ($Forest)</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
@@ -1713,12 +1772,12 @@ Add-Content $report  "<td width='15%' align='center'><B>Operating System</B></td
 Add-Content $report  "<td width='5%' align='center'><B>Build</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>FSMO</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Site</B></td>"
- 
+
 Add-Content $report "</tr>" 
 
 $svcchannel = 0
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     Try{
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start Reporting of: "+$DC)
@@ -1734,8 +1793,8 @@ foreach ($DC in $DCs)
     Remove-Variable FSMO
     Remove-Variable Site
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
     $DCEnabled = $DCD.IsReadOnly
     $DCIP = $DCD.IPv4Address
     $SMBv1 = $DCD.InstalledFeatures | Where-Object {$_ -contains 'FS-SMB1'}
@@ -1862,7 +1921,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### NTP #############################################
 
-write-host 'Starting NTP Reporting..'
+write-host 'NTP Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting NTP Reporting")
 
@@ -1872,7 +1931,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Active Directory Domain Controllers NTP Settings ($Forest)</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
@@ -1882,25 +1941,24 @@ Add-Content $report  "<td width='15%' align='center'><B>NTP Source</B></td>"
 Add-Content $report  "<td width='15%' align='center'><B>Last Successful Sync Time</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Stratum</B></td>"
 Add-Content $report  "<td width='8%' align='center'><B>Type</B></td>" 
- 
+
 Add-Content $report "</tr>" 
 
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start NTP Reporting of: "+$DC)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
     $DCNTPStatus = $DCD.NTPStatus
     $DCNTPConf = $DCD.NTPConf
 
     $DCNTPSource = ($DCNTPStatus | Select-String -Pattern 'Source:').ToString().replace('Source: ','');
     $DCNTPLastSync = [string]($DCNTPStatus | Select-String -Pattern 'Last Successful Sync Time:');
     $DCNTPLastSync = [string]$DCNTPLastSync.replace('Last Successful Sync Time:','');
-    $DCNTPLastSync = [datetime]$DCNTPLastSync;
     $DCNTPStratum = ($DCNTPStatus | Select-String -Pattern 'Stratum:').ToString().replace('Stratum: ','');
     $DCNTPType = ($DCNTPConf | Select-String -Pattern 'Type:').ToString().replace('Type: ','');
 
@@ -1920,14 +1978,7 @@ foreach ($DC in $DCs)
 
     Add-Content $report "<td bgcolor='White' align=center>$DCNTPSource</td>" 
 
-        if ((New-TimeSpan -Start $DCNTPLastSync -end (get-date)).TotalDays -ge 15)
-        {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCNTPLastSync</font></td>" 
-        }
-    else
-        {
-            Add-Content $report "<td bgcolor='White' align=center>$DCNTPLastSync</td>" 
-        }
+    Add-Content $report "<td bgcolor='White' align=center>$DCNTPLastSync</td>" 
 
     Add-Content $report "<td bgcolor='White' align=center>$DCNTPStratum</td>" 
 
@@ -1967,7 +2018,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>DNS Servers</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='80%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Name</B></td>" 
@@ -1981,9 +2032,8 @@ Add-Content $report  "<td width='10%' align='center'><B>Bind Secondaries Enabled
 
 Add-Content $report "</tr>" 
 
-        foreach ($DC in $DCs.Name)
+        foreach ($DC in $Global:DCs)
             {
-                Try{
 
                 remove-variable ldapRR
                 remove-variable DNS
@@ -1997,7 +2047,7 @@ Add-Content $report "</tr>"
                 $ldapRR = $DCD.ldapRR
                     
                 $DNSSRVRR = 'Ok'
-                Foreach ($DCOne in $DCs.Name)
+                Foreach ($DCOne in $Global:DCs)
                     {
                         if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.'))
                             {
@@ -2069,11 +2119,6 @@ Add-Content $report "</tr>"
                 Add-Content $report "</tr>" 
             
             }
-            Catch { 
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - ------------- Errors were found during the DNS Server Inventoring -------------")
-Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - The following error ocurred during catcher: "+$_.Exception.Message)
-            }
-    }
 
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - DNS Servers Reporting finished")
@@ -2096,7 +2141,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 ######################################### DCs Health HEADER #############################################
 
-write-host 'Starting DCDiag Reporting..'
+write-host 'Running DCDiag Report Phase..'
 
 add-content $report  "<table width='100%' border='0'>" 
 add-content $report  "<tr bgcolor='White'>" 
@@ -2111,7 +2156,7 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>This section will give a
 
 ######################################### DCDiag´s  ###############################################
 
-if ($DCs.Count -ge 50) 
+if ($Global:DCs.Count -ge 50) 
 {
 
 add-content $report "<BR><BR><BR>"
@@ -2140,20 +2185,19 @@ Add-Content $report  "<td width='8%' align='center'><B>Services</B></td>"
 Add-Content $report  "<td width='8%' align='center'><B>SystemLog</B></td>"
 Add-Content $report "<tr>"
 
-ForEach ($DC in $DCs)
-{
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+ForEach ($DC in $Global:DCs)
+{    
+    $DCHostName = $DC
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Reporting of: "+$DC.Name)
 
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
-    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
+    $Domain = $DCD.Domain
 
-
-$DC = $DC.ToString()
-$DC = $DC.split('.')
-$DC = $DC[0]
+    $DC = $DC.ToString()
+    $DC = $DC.split('.')
+    $DC = $DC[0]
 
     Add-Content $report "<tr>"
 
@@ -2432,7 +2476,7 @@ else
 
 add-content $report "<BR><BR><BR>"
 
-ForEach ($DC in $DCs)
+ForEach ($DC in $Global:DCs)
 {
 
 add-content $report  "<table width='50%' border='0'>" 
@@ -2446,7 +2490,7 @@ add-content $report  "</table>"
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Reporting of: "+$DC)
 
 
-$DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC.Name+'.xml')
+$DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
 
 $DC = $DC.ToString()
@@ -2966,7 +3010,7 @@ add-content $report  "<CENTER>"
 add-content $report  "<h3>Domain Controllers Event Log Inventory ($Forest)</h3>" 
 add-content $report  "</CENTER>"
 add-content $report "<BR>"
- 
+
 add-content $report  "<table width='90%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
@@ -2978,12 +3022,12 @@ Add-Content $report  "<td width='8%' align='center'><B>Recommended Size (Kb)</B>
 Add-Content $report  "<td width='8%' align='center'><B>Cleartext Password Logon Count</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>Batch job Logon Count</B></td>"
 Add-Content $report  "<td width='10%' align='center'><B>Critical Security Events Found</B></td>" 
- 
+
 Add-Content $report "</tr>" 
 
 $CritEvents = 0
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     Try{
 
@@ -3002,8 +3046,8 @@ foreach ($DC in $DCs)
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Log sizes adquired:"+$SysLogSize+" , "+$SecLogSize+" and "+$ADLogSize) 
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
     $DCSysLog = '{0:N0}' -f $SysLogSize
     $SysRec = '{0:N0}' -f (1002400)
     $DCSecLog = '{0:N0}' -f $SecLogSize
@@ -3109,7 +3153,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### DCs Security BACKUP inventory  ###############################################
 
 
-write-host 'Starting Domain Controllers Backup Reporting..'
+write-host 'Domain Controllers Backup Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Backup Reporting.")   
 
@@ -3133,7 +3177,7 @@ $CritEvents = 0
 $NoBackups = 0
 Remove-Variable Backups
 
-foreach ($DC in $DCs) 
+foreach ($DC in $Global:DCs) 
     {
     Try{
 
@@ -3150,9 +3194,9 @@ foreach ($DC in $DCs)
 
     $Backup = $Backup.tostring('MM-dd-yyyy')
 
-    $Domain = $DC.Domain
+    $Domain = $DCD.Domain
 
-    $DCHostName = $DC.name
+    $DCHostName = $DC
 
     if (!$Backup) {$NoBackups ++}
 
@@ -3228,7 +3272,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### DCs Security PRINT SPOOLER inventory  ###############################################
 
 
-write-host 'Starting Domain Controllers Print Spooler Reporting..'
+write-host 'Domain Controllers Print Spooler Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Print Spooler Reporting.")   
 
@@ -3238,7 +3282,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report "<CENTER>"
- 
+
 add-content $report  "<table width='60%' border='1'>" 
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
@@ -3246,10 +3290,10 @@ Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></t
 Add-Content $report  "<td width='10%' align='center'><B>Print Spooler Status</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Print Spooler Startup Mode</B></td>"
 
- 
+
 Add-Content $report "</tr>" 
 
-foreach ($DC in $DCs) 
+foreach ($DC in $Global:DCs) 
     {
     Try{
 
@@ -3265,8 +3309,8 @@ foreach ($DC in $DCs)
     
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Print Spooler Startup Mode:"+$Startup) 
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
     
     Add-Content $report "<tr>"
 
@@ -3283,7 +3327,7 @@ foreach ($DC in $DCs)
     Add-Content $report "<td bgcolor='Lime' align=center>$State</td>" 
     Add-Content $report "<td bgcolor='Lime' align=center>$Startup</td>" 
     }
-   
+
     Add-Content $report "</tr>" 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of Print Spooler Reporting for server:"+$DC) 
 }
@@ -3313,7 +3357,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### DCs Security HotFix inventory  ###############################################
 
 
-write-host 'Starting Domain Controllers HotFix Reporting..'
+write-host 'Domain Controllers HotFix Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Hotfix Reporting.")   
 
@@ -3336,7 +3380,7 @@ Add-Content $report "</tr>"
 
 $CritEvents = 0
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     Try{
 
@@ -3356,8 +3400,8 @@ foreach ($DC in $DCs)
     
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Latest Hotfix installed:"+$HFID) 
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
     
     Add-Content $report "<tr>"
 
@@ -3434,7 +3478,7 @@ $SecAud = 'Audit Audit Policy Change','Audit Other Object Access Events','Audit 
 
 $UsrRRec = 'SeDenyBatchLogonRight','SeDenyRemoteInteractiveLogonRight','SeDenyNetworkLogonRight','SeDenyServiceLogonRight'
 
-write-host 'Starting Domain Controller Security Policies Reporting..'
+write-host 'Domain Controller Security Policies Reporting..'
 
 
 add-content $report "<CENTER>"
@@ -3461,13 +3505,13 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 Add-Content $report "</tr>" 
 
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     try {
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
     
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reading RSOP result for: " +$DC) 
@@ -3676,17 +3720,17 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
 Add-Content $report "</tr>" 
 
-foreach ($DC in $DCs)
+foreach ($DC in $Global:DCs)
     {
     try {
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controller User Rights Assignments on the server: "+$DC) 
 
-    [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\Hammer\RSOP_"+$DC.Name+".xml")
+    [xml]$XmlDocument = Get-Content -Path ("C:\ADxRay\Hammer\RSOP_"+$DC+".xml")
 
     $us = $XmlDocument.Rsop.ComputerResults.ExtensionData.Extension.UserRightsAssignment | Where-Object {$_.Name -eq 'SeDenyRemoteInteractiveLogonRight' -or $_.Name -eq 'SeDenyBatchLogonRight' -or $_.Name -eq 'SeDenyNetworkLogonRight' -or $_.Name -eq 'SeDenyServiceLogonRight'}
 
@@ -3742,7 +3786,7 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
         }
     else
         {
-           Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnrdp</font></td>"     
+            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnrdp</font></td>"     
         }
 
 
@@ -3806,7 +3850,7 @@ add-content $report "<BR><BR><BR>"
 ######################################### INSTALLED HARDWARE  ###############################################
 
 
-write-host 'Starting Domain Controllers Installed Hardware Reporting..'
+write-host 'Domain Controllers Hardware Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Hardware Reporting.")   
 
@@ -3832,7 +3876,7 @@ Add-Content $report  "<td width='25%' align='center'><B>BIOS Version</B></td>"
 
 Add-Content $report "</tr>" 
 
-foreach ($DC in $DCs) 
+foreach ($DC in $Global:DCs) 
     {
     Try{
 
@@ -3840,8 +3884,8 @@ foreach ($DC in $DCs)
         
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
-    $Domain = $DC.Domain.Name
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
 
     $Proc = $DCD.HW_LogicalProc
     $FreeSpace = ($DCD.HW_FreeSpace | Where-Object {$_.InstanceName -eq 'c:'}).CookedValue.ToString('###.##')
@@ -3913,7 +3957,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 ######################################### INSTALLED SOFTWARES  ###############################################
 
 
-write-host 'Starting Domain Controllers Installed Software Reporting..'
+write-host 'Domain Controllers Software Reporting..'
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Begining Domain Controller's Installed Software Reporting.")   
 
@@ -3938,7 +3982,7 @@ Add-Content $report  "<td width='10%' align='center'><B>Search Known vulnerabili
  
 Add-Content $report "</tr>" 
 
-foreach ($DC in $DCs) 
+foreach ($DC in $Global:DCs) 
     {
     Try{
 
@@ -3949,8 +3993,8 @@ foreach ($DC in $DCs)
     $Software64 = $DCD.InstalledSoftwaresx64   
     $Software86 = $DCD.InstalledSoftwaresx86
 
-    $Domain = $DC.Domain
-    $DCHostName = $DC.name
+    $Domain = $DCD.Domain
+    $DCHostName = $DC
 
     Foreach ($sw in $Software64)
     {
@@ -3987,13 +4031,13 @@ foreach ($DC in $DCs)
     else
         {
 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x64</font></td>" 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>" 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x64</font></td>" 
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>" 
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
         }
-   
+
     Add-Content $report "</tr>" 
     }
     }
@@ -4030,13 +4074,13 @@ foreach ($DC in $DCs)
     else
         {
 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x86</font></td>" 
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>"
-           Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x86</font></td>" 
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>"
+            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
         }
-   
+
     Add-Content $report "</tr>" 
     }
     }
@@ -4077,7 +4121,7 @@ add-content $report "</div>"
 
 ##################################### VERSION CONTROL #######################################
 
-write-host 'Starting ADxRay Version Validation..'
+write-host 'ADxRay Version Check..'
 
 $VerValid = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Merola132/ADxRay/master/Docs/VersionControl" -ErrorAction SilentlyContinue -WarningAction SilentlyContinue -TimeoutSec 5
 if ($VerValid.StatusCode -eq 200) 
@@ -4129,12 +4173,49 @@ Add-Content $report "</html>"
 
 
 
+if($Global:Option -eq 1 -or $Global:Option -eq 2 -or $Global:Option -eq 3)
+    {
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Forest Pre Inventory")
+        $Global:Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domains Pre Inventory")
+        $Global:Domains = $Global:Forest.domains
+        $Global:DomainNames = $Global:Domains.name
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Pre Inventory")
+        $Global:DCs = $Global:Forest.domains | ForEach-Object {$_.DomainControllers}
 
-Hammer
-Start-Sleep 10
-Report
+        Hammer
 
+        $Global:DCs = $Global:DCs.Name
 
+        Start-Sleep 10
+        Report
+    }
+elseif($Global:Option -eq 4)
+    {
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Forest Pre Inventory")
+        $Global:Forest = [system.directoryservices.activedirectory.Forest]::GetCurrentForest()
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domains Pre Inventory")
+        $Global:Domains = $Global:Forest.domains
+        $Global:DomainNames = $Global:Domains.name
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controllers Pre Inventory")
+        $Global:DCs = $Global:Forest.domains | ForEach-Object {$_.DomainControllers}
+
+        Hammer
+    }
+elseif($Global:Option -eq 5)
+    {
+        $Fore = Import-Clixml -Path C:\ADxRay\Hammer\Forest.xml
+        $Global:Forest = $Fore.ForestName
+        $Global:DomainNames = $Fore.Domains        
+        $DomainControllers = Get-ChildItem -Path 'C:\ADxRay\Hammer\' -Recurse
+        $DomainControllers = $DomainControllers | Where-Object {$_.Name -like 'inv_*'}
+        $Global:DCs = @()
+        foreach($DC in $DomainControllers)
+            {
+                $Global:DCs += $DC.Name.replace('Inv_','').replace('.xml','')
+            }
+        Report
+    }
 
 
 
