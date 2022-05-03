@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.1
+Version:        5.6.2
 Author:         Claudio Merola
 Date:           05/03/2022
 
@@ -4201,6 +4201,9 @@ elseif($Global:Option -eq 4)
         $Global:DCs = $Global:Forest.domains | ForEach-Object {$_.DomainControllers}
 
         Hammer
+
+        Compress-Archive -Path 'C:\ADxRay\Hammer' -DestinationPath 'C:\ADxRay\ADxRay.zip'
+
     }
 elseif($Global:Option -eq 5)
     {
@@ -4230,13 +4233,18 @@ $Index[44] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><fon
 
 $index | out-file $report
 
-Write-Host ('Report complete. Report saved at: ') -NoNewline
-write-host $report -ForegroundColor Green -BackgroundColor Red
-
-Start-Sleep 5
-
-Invoke-Item $report
-
+if($Global:Option -eq 1 -or $Global:Option -eq 2 -or $Global:Option -eq 3 -or $Global:Option -eq 5)
+    {
+        Write-Host ('Report Complete. Report saved at: ') -NoNewline
+        write-host $report -ForegroundColor Green -BackgroundColor Red
+        Start-Sleep 5
+        Invoke-Item $report
+    }
+elseif($Global:Option -eq 4)
+    {
+        write-host 'Inventory Complete. Collected files at: ' -NoNewline
+        write-host 'C:\ADxRay\ADxRay.zip' -BackgroundColor Red
+    }
 
 
 
