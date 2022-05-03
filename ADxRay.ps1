@@ -1,33 +1,34 @@
 #requires -version 2
 <#
 .SYNOPSIS
-  Active Directory xRay Inventory
+Active Directory xRay Inventory
 
 .DESCRIPTION
-  This Script is based and inspired on Sukhija Vika's 'Active Directory Health Check' script 
-  (https://gallery.technet.microsoft.com/scriptcenter/Active-Directory-Health-709336cd), the amazing Clint Huffman's 'Performance Analysis of Logs (PAL) tool' 
-  (https://github.com/clinthuffman/PAL) and Microsoft's Ned Pyle blogpost 'What does DCDIAG actually... do?'
-  https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/ 
+This Script is based and inspired on Sukhija Vika's 'Active Directory Health Check' script 
+(https://gallery.technet.microsoft.com/scriptcenter/Active-Directory-Health-709336cd), the amazing Clint Huffman's 'Performance Analysis of Logs (PAL) tool' 
+(https://github.com/clinthuffman/PAL) and Microsoft's Ned Pyle blogpost 'What does DCDIAG actually... do?'
+https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/ 
 
 .OUTPUTS
-  Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
+Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-  Version:        5.4.0
-  Author:         Claudio Merola
-  Date:           02/21/2021
-  Purpose/Change: Correction in GPResult Inventory
-  
+Version:        5.6.0
+Author:         Claudio Merola
+Date:           05/03/2022
+
 #>
 
 #---------------------------------------------------------[Initialisations]--------------------------------------------------------
 
+param ($Clear,$DCTimeout=180)
+
 write-host 'Starting ADxRay Script..'
 
 # Version
-$Global:Ver = '5.4'
+$Global:Ver = '5.6'
 
-$Global:SupBuilds = '10.0 (18362)','10.0 (19041)'
+$Global:SupBuilds = '10.0 (19042)','10.0 (19043)','10.0 (19044)'
 
 $Global:Runtime = Measure-Command -Expression {
 
@@ -76,24 +77,33 @@ function Hammer
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Calling DCDiag")
 
+        if($Clear.isPresent)
+            {
+                $Files = Get-ChildItem -path 'C:\ADxRay\Hammer\' 
+                Foreach ($File in $Files)
+                    {
+                        remove-item -Path $File.FullName -Force
+                    }
+            }
+
     function HammerForest 
         {
 
             Write-Progress -activity 'Running Inventories' -Status "1% Complete." -CurrentOperation 'Triggering Forest Inventory..'
 
-            start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+            Start-job -Name 'Diag' -scriptblock {dcdiag /e /s:$($args)} -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
             Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Active Directory RecycleBin Check")
 
-            start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where-Object {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
+            Start-job -Name 'RecycleBin' -ScriptBlock {if ((Get-ADOptionalFeature -Filter * | Where-Object {$_.Name -eq 'Recycle Bin Feature' -and $_.EnabledScopes -ne '' })) {'Enabled'}else{'Not Enabled'}} | Out-Null
 
             Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Duplicated SPNs check")
 
-            start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
+            Start-job -Name 'SPN' -scriptblock {setspn -X -F} | Out-Null
 
             Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Trusts Inventory")
 
-            start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
+            Start-job -Name 'Trusts' -scriptblock {Get-ADtrust -Filter * -Server $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue } -ArgumentList $Forest.SchemaRoleOwner.Name | Out-Null
 
             Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Inventory")
 
@@ -103,7 +113,7 @@ function Hammer
 
             Foreach ($zone in $Forest.ApplicationPartitions.Name)
                 {
-                    start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
+                    Start-job -Name ('Zone_'+$zone) -scriptblock {Get-ADObject -Filter {Name -like '*..InProgress*'} -SearchBase $($args)} -ArgumentList $zone
                 }
         }
 
@@ -252,20 +262,20 @@ function Hammer
                     $ldapRR.Dispose()
 
                     $DataServer = @{
-                    'Inventory' = $InvS;
-                    'Software_64' = $SW64S;
-                    'Software_86' = $SW86S;
-                    'Installed_Features' = $FeatureS.Name;
-                    'Hardware' = $HWS;
-                    'Backup' = $BackupS;
-                    'NTP_Status' = $NTP1S;
-                    'NTP_Config' = $NTP2S;
-                    'HotFix' = $HotFixS;
-                    'Processor' = $ProcS;
-                    'FreeSpace' = $FreeSpaceS;
-                    'Spooler' = $SpoolerS;
-                    'DNS' = $DNSS;
-                    'ldapRR' = $ldapRRS}
+                                    'Inventory' = $InvS;
+                                    'Software_64' = $SW64S;
+                                    'Software_86' = $SW86S;
+                                    'Installed_Features' = $FeatureS.Name;
+                                    'Hardware' = $HWS;
+                                    'Backup' = $BackupS;
+                                    'NTP_Status' = $NTP1S;
+                                    'NTP_Config' = $NTP2S;
+                                    'HotFix' = $HotFixS;
+                                    'Processor' = $ProcS;
+                                    'FreeSpace' = $FreeSpaceS;
+                                    'Spooler' = $SpoolerS;
+                                    'DNS' = $DNSS;
+                                    'ldapRR' = $ldapRRS}
 
                     $DataServer
 
@@ -287,9 +297,9 @@ function Hammer
                         $c = (((($jb.count - ($jb | Where-Object {$_.State -eq 'Running'}).Count)) / $jb.Count) * 100)
                         $c = [math]::Round($c)
                         Write-Progress -activity 'Running Inventories' -Status "$c% Complete." -PercentComplete $c -CurrentOperation 'Waiting Inventories..'
-                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge 180)
+                        if ((New-TimeSpan -Start $WaitTime -End (get-date)).TotalMinutes -ge $DCTimeout)
                             {
-                                Get-Job | Wait-Job -Timeout 5 | Out-Null
+                                Get-Job | Stop-Job | Out-Null
                                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Err - Timing Out Inventory Jobs")
                             }
                         Start-Sleep -Seconds 2
