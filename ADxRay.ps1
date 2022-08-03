@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.3
+Version:        5.6.4
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -2076,13 +2076,13 @@ Add-Content $report "</tr>"
 
                 Add-Content $report "<tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
-                if ($DNSSca -eq $true)
+                if ($DNSSca -eq '1')
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>Enabled</td>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
+                        Add-Content $report "<td bgcolor= 'Yellow' align=center>Not Configured</td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
 
