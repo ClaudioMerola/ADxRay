@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.4
+Version:        5.6.5
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -189,6 +189,8 @@ function Hammer
 
                     $HW = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {systeminfo /fo CSV | ConvertFrom-Csv}}).AddArgument($($args[0]))
 
+                    $HWBkp = ([PowerShell]::Create()).AddScript({param($DomControl)systeminfo /S $DomControl /fo CSV | ConvertFrom-Csv}).AddArgument($($args[0]))
+
                     $Backup = ([PowerShell]::Create()).AddScript({param($DomControl)repadmin /showbackup $DomControl}).AddArgument($($args[0]))
 
                     $NTP1 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {W32TM /query /status}}).AddArgument($($args[0]))
@@ -214,6 +216,7 @@ function Hammer
                     $jobSW86 = $Software86.BeginInvoke()
                     $jobFeature = $Feature.BeginInvoke()
                     $jobHW = $HW.BeginInvoke()
+                    $jobHWBkp = $HWBkp.BeginInvoke()
                     $jobBackup = $Backup.BeginInvoke()
                     $jobNTP1 = $NTP1.BeginInvoke()
                     $jobNTP2 = $NTP2.BeginInvoke()
@@ -230,6 +233,7 @@ function Hammer
                     $job += $jobSW86
                     $job += $jobFeature
                     $job += $jobHW
+                    $job += $jobHWBkp
                     $job += $jobBackup
                     $job += $jobNTP1
                     $job += $jobNTP2
@@ -248,6 +252,7 @@ function Hammer
                     $SW86S = $Software86.EndInvoke($jobSW86)
                     $FeatureS = $Feature.EndInvoke($jobFeature)
                     $HWS = $HW.EndInvoke($jobHW)
+                    $HWSBkp = $HWBkp.EndInvoke($jobHWBkp)
                     $BackupS = $Backup.EndInvoke($jobBackup)
                     $NTP1S = $NTP1.EndInvoke($jobNTP1)
                     $NTP2S = $NTP2.EndInvoke($jobNTP2)
@@ -263,6 +268,7 @@ function Hammer
                     $Software86.Dispose()
                     $Feature.Dispose()
                     $HW.Dispose()
+                    $HWBkp.Dispose()
                     $Backup.Dispose()
                     $NTP1.Dispose()
                     $NTP2.Dispose()
@@ -280,6 +286,7 @@ function Hammer
                                     'Software_86' = $SW86S;
                                     'Installed_Features' = $FeatureS.Name;
                                     'Hardware' = $HWS;
+                                    'HardwareBkp' = $HWSBkp;
                                     'Backup' = $BackupS;
                                     'NTP_Status' = $NTP1S;
                                     'NTP_Config' = $NTP2S;
@@ -447,6 +454,11 @@ function Hammer
 
                             $Inv1 = $($args[1])
 
+                            $TotalMem = if([string]::IsNullOrEmpty($Inv1.Hardware.'Total Physical Memory')){$Inv1.HardwareBkp.'Total Physical Memory'}Else{$Inv1.Hardware.'Total Physical Memory'}
+                            $BootTime = if([string]::IsNullOrEmpty($Inv1.Hardware.'System Boot Time')){$Inv1.HardwareBkp.'System Boot Time'}Else{$Inv1.Hardware.'System Boot Time'}
+                            $InstallDate = if([string]::IsNullOrEmpty($Inv1.Hardware.'Original Install Date')){$Inv1.HardwareBkp.'Original Install Date'}Else{$Inv1.Hardware.'Original Install Date'}
+                            $BiosVer = if([string]::IsNullOrEmpty($Inv1.Hardware.'BIOS Version')){$Inv1.HardwareBkp.'BIOS Version'}Else{$Inv1.Hardware.'BIOS Version'}
+
                             $DomControl = @{
                                     'Domain' = $Inv1.Inventory.Domain;
                                     'Hostname' = $Inv1.Inventory.Hostname;
@@ -458,10 +470,10 @@ function Hammer
                                     'OperationMasterRoles' = $Inv1.Inventory.OperationMasterRoles;
                                     'Site' = $Inv1.Inventory.Site;
                                     'Backup' = $Inv1.Backup;
-                                    'HW_Mem' = $Inv1.Hardware.'Total Physical Memory';
-                                    'HW_Boot' = $Inv1.Hardware.'System Boot Time';
-                                    'HW_Install' = $Inv1.Hardware.'Original Install Date';
-                                    'HW_BIOS' = $Inv1.Hardware.'BIOS Version';
+                                    'HW_Mem' = $TotalMem;
+                                    'HW_Boot' = $BootTime;
+                                    'HW_Install' = $InstallDate;
+                                    'HW_BIOS' = $BiosVer;
                                     'HotFix' = $Inv1.HotFix;
                                     'NTPStatus' = $Inv1.NTP_Status;
                                     'NTPConf' =  $Inv1.NTP_Config;
