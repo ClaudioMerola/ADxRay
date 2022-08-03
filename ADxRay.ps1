@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.5
+Version:        5.6.6
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -1821,13 +1821,17 @@ foreach ($DC in $Global:DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-    if ($DCEnabled -eq 'True')
+    if($DCEnabled -eq 'True')
         {
             Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
         }
-    else
+    elseif(($DCEnabled -eq 'False'))
         {
             Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor='White' align=center>$DCEnabled</td>"  
         }
 
     Add-Content $report "<td bgcolor='White' align=center>$DCIP</td>" 
@@ -1848,11 +1852,11 @@ foreach ($DC in $Global:DCs)
         {
             Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
         }
-    elseif ($DCOS -like '* 2012*') 
+    elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
         {
             Add-Content $report "<td bgcolor= 'Yellow' align=center>$DCOS</td>" 
         }
-    elseif ($DCOS -like '* 2016*' -or $DCOS -like '* 2019*') 
+    elseif ($DCOS -like '* 2019*' -or $DCOS -like '* 2022*') 
         {
             Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
         }
