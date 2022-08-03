@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.7
+Version:        5.6.8
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -458,11 +458,12 @@ function Hammer
                             $BootTime = if([string]::IsNullOrEmpty($Inv1.Hardware.'System Boot Time')){$Inv1.HardwareBkp.'System Boot Time'}Else{$Inv1.Hardware.'System Boot Time'}
                             $InstallDate = if([string]::IsNullOrEmpty($Inv1.Hardware.'Original Install Date')){$Inv1.HardwareBkp.'Original Install Date'}Else{$Inv1.Hardware.'Original Install Date'}
                             $BiosVer = if([string]::IsNullOrEmpty($Inv1.Hardware.'BIOS Version')){$Inv1.HardwareBkp.'BIOS Version'}Else{$Inv1.Hardware.'BIOS Version'}
+                            $IsReadOnly = if($Inv1.Inventory.IsReadOnly -eq $True){'1'}else{'0'}
 
                             $DomControl = @{
                                     'Domain' = $Inv1.Inventory.Domain;
                                     'Hostname' = $Inv1.Inventory.Hostname;
-                                    'IsReadOnly' = $Inv1.Inventory.IsReadOnly;
+                                    'IsReadOnly' = $IsReadOnly;
                                     'IPv4Address' = $Inv1.Inventory.IPv4Address;
                                     'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
                                     'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
@@ -1823,11 +1824,11 @@ foreach ($DC in $Global:DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-    if($DCEnabled -eq $True)
+    if($DCEnabled -eq '1')
         {
             Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
         }
-    elseif(($DCEnabled -eq $False))
+    elseif(($DCEnabled -eq '0'))
         {
             $Global:FullDCs += $DC
             Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
@@ -4284,7 +4285,6 @@ elseif($Global:Option -eq 4)
         write-host 'Inventory Complete. Collected files at: ' -NoNewline
         write-host 'C:\ADxRay\ADxRay.zip' -BackgroundColor Red
     }
-
 
 
 
