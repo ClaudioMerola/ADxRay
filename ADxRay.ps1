@@ -13,9 +13,9 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.2
+Version:        5.6.3
 Author:         Claudio Merola
-Date:           05/03/2022
+Date:           08/03/2022
 
 #>
 
@@ -1809,7 +1809,7 @@ foreach ($DC in $Global:DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-    if ($DCEnabled -eq $True)
+    if ($DCEnabled -eq 'True')
         {
             Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
         }
