@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.6
+Version:        5.6.7
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -179,7 +179,7 @@ function Hammer
                     
                     $job = @()
 
-                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl }).AddArgument($($args[0]))
+                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Identity $DomControl}).AddArgument($($args[0]))
 
                     $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
@@ -1789,6 +1789,8 @@ Add-Content $report "</tr>"
 
 $svcchannel = 0
 
+$Global:FullDCs = @()
+
 foreach ($DC in $Global:DCs)
     {
     Try{
@@ -1821,12 +1823,13 @@ foreach ($DC in $Global:DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-    if($DCEnabled -eq 'True')
+    if($DCEnabled -eq $True)
         {
             Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
         }
-    elseif(($DCEnabled -eq 'False'))
+    elseif(($DCEnabled -eq $False))
         {
+            $Global:FullDCs += $DC
             Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
         }
     else
@@ -2039,7 +2042,7 @@ add-content $report  "<table width='80%' border='1'>"
 Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Name</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Scavaging Enabled</B></td>" 
-Add-Content $report  "<td width='10%' align='center'><B>Number of Zones</B></td>" 
+Add-Content $report  "<td width='10%' align='center'><B>Number of Forwaders</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Zones Scavaging Enabled</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Suspicious Root Hints</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>SRV Records</B></td>" 
@@ -2057,19 +2060,21 @@ Add-Content $report "</tr>"
                 $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
 
                 $DNS = $DCD.DNS
+                if(![string]::IsNullOrEmpty($DNS))
+                {          
 
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting DNS Server: "+$DC)
 
                 $ldapRR = $DCD.ldapRR
-                    
-                $DNSSRVRR = 'Ok'
-                Foreach ($DCOne in $Global:DCs)
+                
+                $DNSSRVRR = if([string]::IsNullOrEmpty($ldapRR)){'Missing Inventory'}else{'Ok'}
+                Foreach ($DCOne in $Global:FullDCs)
                     {
                         if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.')[0])
                             {
                                 $DNSSRVRR = 'Missing'
                             }
-                    }
+                    }                
                 $DNSRootHintC = @()
                 Foreach ($dd in $dns.ServerRootHint.NameServer.RecordData) 
                     {
@@ -2079,12 +2084,12 @@ Add-Content $report "</tr>"
                             }
                     }
 
-                $DNSName = $DNS.ServerSetting.ComputerName
+                $DNSName = $DC
                 $DNSZoneScavenge = ($dns.ServerZoneAging | Where-Object {$_.AgingEnabled -eq $True }).ToString.Count
                 $DNSBindSec = $DNS.ServerSetting.BindSecondaries
                 $DNSSca = $DNS.ServerScavenging.ScavengingState
                 $DNSRecur = $DNS.ServerRecursion.Enable
-                $DNSZoneCount = ($DNS.ServerZone | Where-Object {$_.ZoneName -notlike '*.arpa' -and $_.ZoneName -ne 'TrustAnchors'}).Count
+                $DNSFWCount = $DCD.DNS.ServerForwarder.IPAddress.count
                 $DNSRootC = $DNSRootHintC.Count
 
 
@@ -2100,7 +2105,15 @@ Add-Content $report "</tr>"
                     { 
                         Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
                     }
-                Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
+
+                if($DNSFWCount -ge 3)
+                    {
+                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSFWCount</font></td>" 
+                    }
+                else
+                    {
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSFWCount</td>"
+                    }
 
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneScavenge</td>" 
                 if ($DNSRootC -eq '' -or $DNSRootC -eq 0)
@@ -2116,9 +2129,13 @@ Add-Content $report "</tr>"
                     {
                         Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSSRVRR</font></td>" 
                     }
-                else  
+                elseif($DNSSRVRR -eq 'Missing Inventory')  
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSRVRR</td>"
+                        Add-Content $report "<td bgcolor= 'White' align=center>$DNSSRVRR</td>"
+                    }
+                else
+                    {
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>Ok</td>"
                     }
 
                 if ($DNSRecur -eq $false)
@@ -2134,6 +2151,8 @@ Add-Content $report "</tr>"
 
                 Add-Content $report "</tr>" 
             
+                }
+
             }
 
 
@@ -2147,7 +2166,11 @@ add-content $report "<BR><BR>"
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>DNS is an important part of Active Directory’s health, so its maintenance is very critical for the safety and functionality of the environment. If you did not disabled DNS Server recursion don't forget to do so according to <a href='https://support.microsoft.com/hr-ba/help/2678371/microsoft-dns-server-vulnerability-to-dns-server-cache-snooping-attack'>'Microsoft DNS Server vulnerability to DNS Server Cache snooping attacks'</a>. Enabling <B>Scavenging</B> is also very important to avoid old records in the DNS. Also verify the <B>forwarders</B> and <B>conditional forwarders</B>.</td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>DNS is an important part of Active Directory’s health, so its maintenance is very critical for the safety and functionality of the environment. If you did not disabled DNS Server recursion don't forget to do so according to <a href='https://support.microsoft.com/hr-ba/help/2678371/microsoft-dns-server-vulnerability-to-dns-server-cache-snooping-attack'>'Microsoft DNS Server vulnerability to DNS Server Cache snooping attacks'</a>. Enabling <B>Scavenging</B> is also very important to avoid old records in the DNS. Also verify the <B>forwarders</B> and <B>conditional forwarders</B> (<a href='https://docs.microsoft.com/en-us/troubleshoot/windows-server/networking/forwarders-resolution-timeouts'>'DNS: Forwarders and conditional forwarders resolution timeouts'</a>).</td></tr></TABLE>" 
+
+add-content $report "<BR>"
+
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td>It’s also very important to regularly monitor the SRV records, as that information is very important to keep a health environment. More information: <a href='https://techcommunity.microsoft.com/t5/core-infrastructure-and-security/the-case-of-the-missing-srv-records/ba-p/255650'>The Case of the Missing SRV Records</a></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -2901,7 +2924,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates that this Domain Controller and locate and contact the RID Master FSMO role holder.</td>"
+add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can locate and contact the RID Master FSMO role holder.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2953,7 +2976,7 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count 
 
 add-content $report  "<td bgcolor='White' align=center>Low</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further. The impact of this validation is marked as 'Low' because is very rare to find a DC without any 'errors' in the System's Event Log.</td>"
+add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further. The impact of this validation is marked as 'Low'.</td>"
 
 Add-Content $report "</tr>" 
 
