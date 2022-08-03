@@ -2049,7 +2049,7 @@ Add-Content $report "</tr>"
                 $DNSSRVRR = 'Ok'
                 Foreach ($DCOne in $Global:DCs)
                     {
-                        if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.'))
+                        if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.')[0])
                             {
                                 $DNSSRVRR = 'Missing'
                             }
@@ -2076,13 +2076,13 @@ Add-Content $report "</tr>"
 
                 Add-Content $report "<tr>"
                 Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
-                if ($DNSSca -eq '1')
+                if ($DNSSca -eq $true)
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>Enabled</td>"
+                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Yellow' align=center>Not Configured</td>" 
+                        Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
                     }
                 Add-Content $report "<td bgcolor='White' align=center>$DNSZoneCount</td>" 
 
