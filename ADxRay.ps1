@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.10
+Version:        5.6.11
 Author:         Claudio Merola
 Date:           08/03/2022
 
@@ -179,7 +179,7 @@ function Hammer
                     
                     $job = @()
 
-                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl}).AddArgument($($args[0]))
+                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Filter {name -like "($DomControl.split('.')[0])*"} -Server $DomControl}).AddArgument($($args[0]))
 
                     $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
