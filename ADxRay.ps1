@@ -13,9 +13,9 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.8
+Version:        5.6.9
 Author:         Claudio Merola
-Date:           08/03/2022
+Date:           08/04/2022
 
 #>
 
@@ -1797,7 +1797,7 @@ foreach ($DC in $Global:DCs)
     Try{
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Start Reporting of: "+$DC)
 
-    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')
+    $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')    
 
     Remove-Variable DCEnabled
     Remove-Variable DCIP
@@ -3934,8 +3934,8 @@ foreach ($DC in $Global:DCs)
     $InvBoot = $DCD.HW_Boot
     $InvInst = $DCD.HW_Install
     $InvBios = $DCD.HW_BIOS
-
-    $InvBiosDate = ($InvBios.Split(",")[1])
+    
+    $InvBiosDate = ($InvBios.Split(",")[(($InvBios.Split(",").count)-1)])
 
     $InvBiosDate = [Convert]::ToDateTime($InvBiosDate, [System.Globalization.DateTimeFormatInfo]::CurrentInfo)
 
