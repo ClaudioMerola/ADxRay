@@ -13,9 +13,9 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.12
+Version:        5.6.13
 Author:         Claudio Merola
-Date:           08/03/2022
+Date:           08/09/2022
 
 #>
 
@@ -137,6 +137,8 @@ function Hammer
                     { 
                         start-job -Name ($Domain.Name+'_Inv') -scriptblock {Get-ADDomain -Identity $($args) -ErrorAction SilentlyContinue -WarningAction SilentlyContinue} -ArgumentList $Domain.Name | Out-Null
 
+                        start-job -Name ($Domain.Name+'_RODC') -scriptblock {Get-ADDomainController -Filter {IsReadOnly -eq $true}} -ArgumentList $Domain.Name | Out-Null
+
                         start-job -Name ($Domain.Name+'_SysVol') -scriptblock {Get-ChildItem  -path $($args) -Recurse | Where-Object -FilterScript {$_.PSIsContainer -eq $false} | Group-Object -Property Extension | ForEach-Object -Process {
                         New-Object -TypeName PSObject -Property @{
                             'Extension'= $_.name
@@ -179,7 +181,7 @@ function Hammer
                     
                     $job = @()
 
-                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Filter {HostName -eq $DomControl} -Server $DomControl}).AddArgument($($args[0]))
+                    $Inv = ([PowerShell]::Create()).AddScript({param($DomControl)Get-ADDomainController -Server $DomControl}).AddArgument($($args[0]))
 
                     $Software64 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
@@ -396,6 +398,7 @@ function Hammer
                     {
 
                         $InvDom = Receive-Job -Name ($Domain.Name+'_Inv') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                        $InvRODC = Receive-Job -Name ($Domain.Name+'_RODC') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $SysVolDom = Receive-Job -Name ($Domain.Name+'_SysVol') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $Usrs = Receive-Job -Name ($Domain.name+'_Usrs') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                         $Comps = Receive-Job -Name ($Domain.name+'_Comps') -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -411,6 +414,7 @@ function Hammer
                             $Comps = $($args[5])
                             $GrpAll = $($args[6])
                             $GPOALL = $($args[7])
+                            $RODC = $($args[8])
 
                             $att = @()
                             foreach ($UAC in $Usrs)
@@ -429,6 +433,7 @@ function Hammer
                                     'DCCount' = ($($args[1]) | Where-Object {$_.Name -eq $InvDom.DNSRoot}).DomainControllers.Count;
                                     'SysVolContent' = $SysVolDom;
                                     'Users' = $att | Group-Object;
+                                    'RODC' = $RODC.HostName;
                                     'Computers' = $Comps;
                                     'AdminGroups'=$GrpAll | Where-Object {$_.Keys -in ('Domain Admins','Schema Admins','Enterprise Admins','Server Operators','Account Operators','Administrators','Backup Operators','Print Operators','Domain Controllers','Read-only Domain Controllers','Group Policy Creator Owners','Cryptographic Operators','Distributed COM Users')};
                                     'Groups'=$GrpAll | Sort-Object Values,Keys -desc | Select-Object -First 10;
@@ -436,7 +441,7 @@ function Hammer
                                 }
 
                             $DomainTable | Export-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$($args[0]).Name+'.xml')
-                        } -ArgumentList $Domain,$Forest.domains,$InvDom,$SysVolDom,$Usrs,$Comps,$GrpAll,$GPOALL
+                        } -ArgumentList $Domain,$Forest.domains,$InvDom,$SysVolDom,$Usrs,$Comps,$GrpAll,$GPOALL,$InvRODC
                     }
             }
 
@@ -458,12 +463,10 @@ function Hammer
                             $BootTime = if([string]::IsNullOrEmpty($Inv1.Hardware.'System Boot Time')){$Inv1.HardwareBkp.'System Boot Time'}Else{$Inv1.Hardware.'System Boot Time'}
                             $InstallDate = if([string]::IsNullOrEmpty($Inv1.Hardware.'Original Install Date')){$Inv1.HardwareBkp.'Original Install Date'}Else{$Inv1.Hardware.'Original Install Date'}
                             $BiosVer = if([string]::IsNullOrEmpty($Inv1.Hardware.'BIOS Version')){$Inv1.HardwareBkp.'BIOS Version'}Else{$Inv1.Hardware.'BIOS Version'}
-                            $IsReadOnly = if($Inv1.Inventory.IsReadOnly -eq $True){'1'}else{'0'}
 
                             $DomControl = @{
                                     'Domain' = $Inv1.Inventory.Domain;
                                     'Hostname' = $Inv1.Inventory.Hostname;
-                                    'IsReadOnly' = $IsReadOnly;
                                     'IPv4Address' = $Inv1.Inventory.IPv4Address;
                                     'IsGlobalCatalog' = $Inv1.Inventory.IsGlobalCatalog;
                                     'OperatingSystem' = $Inv1.Inventory.OperatingSystem;
@@ -971,10 +974,14 @@ Try{
 
 Add-Content $report "</tr>" 
 
+$Global:RODCs = @()
+
 Foreach ($Domain0 in $Global:DomainNames)
     {
 
     $Domain1 = Import-Clixml -Path ('C:\ADxRay\Hammer\Domain_'+$Domain0+'.xml')
+
+    $Global:RODCs += $Domain1.RODC
 
     Add-Content $report "<tr>" 
     
@@ -1790,8 +1797,6 @@ Add-Content $report "</tr>"
 
 $svcchannel = 0
 
-$Global:FullDCs = @()
-
 foreach ($DC in $Global:DCs)
     {
     Try{
@@ -1799,7 +1804,7 @@ foreach ($DC in $Global:DCs)
 
     $DCD = Import-Clixml -Path ('C:\ADxRay\Hammer\Inv_'+$DC+'.xml')    
 
-    Remove-Variable DCEnabled
+    Remove-Variable DCReadOnly
     Remove-Variable DCIP
     Remove-Variable SMBv1
     Remove-Variable DCGC
@@ -1810,7 +1815,7 @@ foreach ($DC in $Global:DCs)
 
     $Domain = $DCD.Domain
     $DCHostName = $DC
-    $DCEnabled = $DCD.IsReadOnly
+    $DCReadOnly = if($DC in $Global:RODCs){$true}else{$false}
     $DCIP = $DCD.IPv4Address
     $SMBv1 = $DCD.InstalledFeatures | Where-Object {$_ -contains 'FS-SMB1'}
     $DCGC = $DCD.IsGlobalCatalog
@@ -1824,18 +1829,13 @@ foreach ($DC in $Global:DCs)
     Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
     Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
 
-    if($DCEnabled -eq '1')
+    if($DCReadOnly -eq '1')
         {
             Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
         }
-    elseif(($DCEnabled -eq '0'))
-        {
-            $Global:FullDCs += $DC
-            Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"  
-        }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$DCEnabled</td>"  
+            Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"   
         }
 
     Add-Content $report "<td bgcolor='White' align=center>$DCIP</td>" 
@@ -2051,6 +2051,15 @@ Add-Content $report  "<td width='10%' align='center'><B>Server Recursion Enabled
 Add-Content $report  "<td width='10%' align='center'><B>Bind Secondaries Enabled</B></td>" 
 
 Add-Content $report "</tr>" 
+
+$Global:FullDCs = @()
+foreach ($DC in $Global:DCs)
+    {
+        if($DC -notin $Global:RODCs)
+            {
+                $Global:FullDCs += $DC
+            }
+    }
 
         foreach ($DC in $Global:DCs)
             {
