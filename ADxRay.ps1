@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.13
+Version:        5.6.14
 Author:         Claudio Merola
 Date:           08/09/2022
 
@@ -1815,7 +1815,7 @@ foreach ($DC in $Global:DCs)
 
     $Domain = $DCD.Domain
     $DCHostName = $DC
-    $DCReadOnly = if($DC in $Global:RODCs){$true}else{$false}
+    $DCReadOnly = if($DC -in $Global:RODCs){$true}else{$false}
     $DCIP = $DCD.IPv4Address
     $SMBv1 = $DCD.InstalledFeatures | Where-Object {$_ -contains 'FS-SMB1'}
     $DCGC = $DCD.IsGlobalCatalog
