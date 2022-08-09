@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.14
+Version:        5.6.15
 Author:         Claudio Merola
 Date:           08/09/2022
 
@@ -2076,11 +2076,13 @@ foreach ($DC in $Global:DCs)
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting DNS Server: "+$DC)
 
                 $ldapRR = $DCD.ldapRR
+
+
                 
                 $DNSSRVRR = if([string]::IsNullOrEmpty($ldapRR)){'Missing Inventory'}else{'Ok'}
-                Foreach ($DCOne in $Global:FullDCs)
+                Foreach ($DCOne in $ldapRR.RecordData.DomainName)
                     {
-                        if ($DCOne.split('.')[0] -notin $ldapRR.RecordData.DomainName.split('.')[0])
+                        if ($DCOne.Substring(0,$DCOne.Length-1) -notin $Global:FullDCs)
                             {
                                 $DNSSRVRR = 'Missing'
                             }
@@ -2255,242 +2257,242 @@ ForEach ($DC in $Global:DCs)
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag initial validation: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag VerifyReference Test: "+$DC)
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq 1) 
     {
-    Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+        Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Advertising Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag FrsEvent: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag DFSREvent Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+    }
 
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SysvolCheck Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KccEvent Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
 
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag MachineAccount Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NCSecDesc Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NetLogons Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag ObjectsReplicated: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Replications: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag RIDManager: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+    }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SystemLog Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq 1) 
     {
             Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
     }
-    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq 1) 
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+    }
 
 Add-Content $report "</tr>" 
 
@@ -2566,16 +2568,14 @@ if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Cou
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity') 
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
-                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test Connectivity</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
+        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test Connectivity</td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>Medium</td>"
@@ -2588,21 +2588,19 @@ Add-Content $report "<tr>"
 
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag VerifyReference Test: "+$DC)
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test VerifyReferences</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test VerifyReferences</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2615,21 +2613,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Advertising Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Advertising</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Advertising</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2642,21 +2638,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag FrsEvent: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
-                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test FrsEvent</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
+        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test FrsEvent</td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>Medium</td>"
@@ -2669,21 +2663,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag DFSREvent Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
-                    Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test DFSREvent</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
+        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test DFSREvent</td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>Medium</td>"
@@ -2696,21 +2688,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SysvolCheck Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SysVolCheck</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SysVolCheck</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2723,21 +2713,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KccEvent Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KccEvent</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KccEvent</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2751,21 +2739,19 @@ Add-Content $report "<tr>"
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
 
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KnowsOfRoleHolders</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KnowsOfRoleHolders</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2780,21 +2766,19 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
 
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test MachineAccount</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test MachineAccount</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2807,21 +2791,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NCSecDesc Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test NCSecDesc</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test NCSecDesc</td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>Medium</td>"
@@ -2834,21 +2816,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NetLogons Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NetLogons</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NetLogons</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2861,21 +2841,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag ObjectsReplicated: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test ObjectsReplicated</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test ObjectsReplicated</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2888,21 +2866,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Replications: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Replications</font></td>"
-                }
+    elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Replications</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2915,46 +2891,46 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag RIDManager: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test RidManager</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -ne 1 -and $DCHostName -in $Global:RODCs)
+    {
+        Add-Content $report "<td bgcolor= 'Lime' align=center>........................ $DC (RODC)</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test RidManager</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can locate and contact the RID Master FSMO role holder.</td>"
+add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can locate and contact the RID Master FSMO role holder. This test is skipped in RODCs.</td>"
 
 Add-Content $report "</tr>" 
 
 Add-Content $report "<tr>"
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Services</font></td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Services</font></td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>High</td>"
@@ -2967,21 +2943,19 @@ Add-Content $report "<tr>"
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SystemLog Test: "+$DC)
 
-if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq $true) 
+if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')
             Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
     }
-    else {
-            if(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq $true) 
-                {
-                    $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
-                }
-                else
-                {
-                    Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test SystemLog</td>"
-                }
+elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq 1) 
+    {
+        $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
+    }
+else
+    {
+        Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test SystemLog</td>"
     }
 
 add-content $report  "<td bgcolor='White' align=center>Low</td>"
