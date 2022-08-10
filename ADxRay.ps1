@@ -13,20 +13,20 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        5.6.15
+Version:        5.7.0
 Author:         Claudio Merola
-Date:           08/09/2022
+Date:           08/10/2022
 
 #>
 
-#---------------------------------------------------------[Initialisations]--------------------------------------------------------
+#---------------------------------------------------------[First Variables]--------------------------------------------------------
 
 param ($Clear,$JobTimeout=180)
 
 write-host 'Starting ADxRay Script..' -ForegroundColor Green
 
 # Version
-$Global:Ver = '5.6'
+$Global:Ver = '5.7'
 
 $Global:SupBuilds = '10.0 (19042)','10.0 (19043)','10.0 (19044)'
 
@@ -48,10 +48,19 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Set
 
 $ErrorActionPreference = "silentlycontinue"
 
+$DefaultFont = 'verdana'
+$TableFont = 'tahoma'
+$TableHeaderColor = 'WhiteSmoke'
+$TableDefaultColor = 'White'
+$TableErrorColor = 'Red'
+$TableMeadiumColor = 'Yellow'
+$TableSuccessColor = 'Lime'
+$TableFontOnError = '#FFFFFF'
 
-########################################################################################################## BEGIN OF FUNCTIONS ################################################################################################
 
-###################################### HEADER FUNCTION ##########################################
+#--------------------------------------------------------------------------------[Begin of Functions]-------------------------------------------------------------------------
+
+#-------------------------------------[Header]--------------------------------------------------------
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Selecting Script Option")
 Write-Host ""
@@ -73,7 +82,7 @@ if($Global:Option -eq 0){$Global:Option = 1}
 Write-Host ""
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Option: "+$Global:Option+" Selected")
 
-###################################### HAMMER FUNCTION ##########################################
+#----------------------------------------[Begin of Hammer]---------------------------------------------------
 
 function Hammer 
     {
@@ -84,7 +93,7 @@ function Hammer
 
         if ((Test-Path -Path C:\ADxRay\Hammer -PathType Container) -eq $false) {New-Item -Type Directory -Force -Path C:\ADxRay\Hammer}
 
-        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Killing current running Powershell job")
+        Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Cleaning current Powershell Job History")
 
         Get-Job | Remove-Job
 
@@ -596,12 +605,12 @@ function Hammer
 
 }
 
-######################################### END OF HAMMER ############################################
+#-----------------------------------------[End of Hammer]---------------------------------------------------
 
 
 
 
-######################################### BEGIN OF REPORTING ############################################
+#----------------------------------------[Begin of Report]---------------------------------------------------
 
 
 
@@ -660,7 +669,7 @@ add-content $report "<BR>"
 add-content $report  "<table width='100%' bgcolor='Black'>" 
 add-content $report  "<tr>" 
 add-content $report  "<td colspan='7' height='130' align='center' bgcolor='Black'>" 
-add-content $report  "<font face='tahoma' color='#0000FF' size='75'><strong><a href='https://github.com/Merola132/ADxRay'>Active Directory xRay Report</a></strong></font>" 
+add-content $report  "<font face=$TableFont color='#0000FF' size='75'><strong><a href='https://github.com/Merola132/ADxRay'>Active Directory xRay Report</a></strong></font>" 
 add-content $report  "</td>"  
 add-content $report  "</tr>"
 add-content $report  "</table>"
@@ -686,8 +695,8 @@ $button = @'
 '@
 add-content $report $button
 
-Add-Content $report "<table><tr><td><font face='tahoma' color='#000000' size='2'><strong>Version: $Ver</font></td></tr></table>"
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td><font face='verdana' size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of theirs Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the servers or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and I will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
+Add-Content $report "<table><tr><td><font face=$TableFont color='#000000' size='2'><strong>Version: $Ver</font></td></tr></table>"
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td><font face=$DefaultFont size='1'>This Report is intended to help network administrators and contractors to get a better understanding and overview of the actual status and health of theirs Active Directory Forest, Domains, Domain Controllers, DNS Servers and Active Directory objects such as User Accounts, Computer Accounts, Groups and Group Policies. This report has been tested in several Active Directory topologies and environments without further problems or impacts in the servers or environment´s performance. If you however experience some sort of problem while running this script/report. Feel free to send that feedback and I will help to investigate as soon as possible (feedback information’s are presented at the end of this report). Thanks for using.</font></td></tr></TABLE>"
 
 
 
@@ -696,9 +705,9 @@ add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td><font face='verdana' siz
 add-content $report "<div id='Forest' class='tabcontent'>"
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Active Directory Forest<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='62'>Active Directory Forest<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
@@ -721,7 +730,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='40%' align='center' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 
 Add-Content $report "</tr>" 
 
@@ -743,84 +752,84 @@ if ($dup -like '*DC=DomainDnsZones,*') {$dupdnsdom ++}
 }
 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Name</B></th>" 
-Add-Content $report "<td bgcolor='White' align=center>$ForeName</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Forest Name</B></th>" 
+Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$ForeName</td>" 
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Domains</B></th>" 
-Add-Content $report "<td bgcolor='White' align=center>$Dom</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Domains</B></th>" 
+Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Dom</td>" 
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Functional Level</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Forest Functional Level</B></th>" 
     if ($ForeMode -like '*NT*' -or $ForeMode -like '*2000*' -or $ForeMode -like '*2003*')
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$ForeMode</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$ForeMode</font></td>" 
         }
     elseif ($ForeMode -like '*2008*') 
         {
-            Add-Content $report "<td bgcolor= 'Yellow' align=center>$ForeMode</td>" 
+            Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$ForeMode</td>" 
         }
     elseif ($ForeMode -like '*2019*' -or $ForeMode -like '*2016*' -or $ForeMode -like '*2012*') 
         {      
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$ForeMode</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$ForeMode</td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$ForeMode</td>" 
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$ForeMode</td>" 
         }
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Global Catalogs</B></th>" 
-Add-Content $report "<td bgcolor='White' align=center>$ForeGC</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Global Catalogs</B></th>" 
+Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$ForeGC</td>" 
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Recycle Bin Enabled</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Recycle Bin Enabled</B></th>" 
     if ($RecycleBin -ne 'Enabled')
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RecycleBin</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$RecycleBin</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$RecycleBin</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$RecycleBin</td>" 
         }
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Sites</B></th>" 
-Add-Content $report "<td bgcolor='White' align=center>$ForeSites</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Sites</B></th>" 
+Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$ForeSites</td>" 
 
 Add-Content $report "</tr>" 
 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Duplicate SPN</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Duplicate SPN</B></th>" 
     if ($SPN -ne 'found 0 group of duplicate SPNs.')
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SPN</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$SPN</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$SPN</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$SPN</td>" 
         }
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Duplicated DNS Zones in Forest level</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Duplicated DNS Zones in Forest level</B></th>" 
     if ($dupdnsfor -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dupdnsfor</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dupdnsfor</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dupdnsfor</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dupdnsfor</td>" 
         }
 Add-Content $report "</tr>" 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Duplicated DNS Zones in Domain level</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Duplicated DNS Zones in Domain level</B></th>" 
     if ($dupdnsdom -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dupdnsdom</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dupdnsdom</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dupdnsdom</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dupdnsdom</td>" 
         }
 Add-Content $report "</tr>" 
 
@@ -871,7 +880,7 @@ add-content $report "<BR>"
 
 
 add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='10%' align='center'><B>Source</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Trusted Domain</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Type</B></td>" 
@@ -895,12 +904,12 @@ Foreach ($Trusts in $Trust)
 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Trust Found for: "+$T3Source+ " To "+$T3Target)
     
-        Add-Content $report "<td bgcolor='White' align=center>$T3Source</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$T3Target</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$T3Dir</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$T3Trans</B></td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$T3Intra</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$T3SIDFil</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3Source</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3Target</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3Dir</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3Trans</B></td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3Intra</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$T3SIDFil</td>" 
 
         Add-Content $report "</tr>" 
     }
@@ -944,9 +953,9 @@ add-content $report "</div>"
 add-content $report "<div id='Domains' class='tabcontent'>"
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Active Directory Domains<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='62'>Active Directory Domains<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
@@ -996,74 +1005,74 @@ Foreach ($Domain0 in $Global:DomainNames)
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting the following domain: "+$D2Name)
 
 add-content $report  "<table width='40%' align='center' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 
 Add-Content $report "</tr>" 
 
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Topology</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Topology</B></th>" 
 
     if ($Domain1.Children.Count -eq '' -and $Domain1.Parent.Count -eq '')
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Single-Domain</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Single-Domain</td>"
         }
     elseif ($Domain1.Count -ge 2 -and $Domain1.Children.Count -ge 2 -and $Trust1.ForestTransitive.Count -eq '') 
         { 
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Multi-Domain</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Multi-Domain</td>" 
         }
     elseif ($Domain1.Count -ge 2 -and $Domain1.Children.Count -ge 2 -and $Trust1.ForestTransitive.Count -ne '') 
         { 
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Multi-Forest</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Multi-Forest</td>" 
         }
 Add-Content $report "</tr>" 
 
     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Forest Name</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$ForeName</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Forest Name</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$ForeName</td>" 
 Add-Content $report "</tr>"     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Domain Name</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2Name</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Domain Name</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2Name</td>" 
 Add-Content $report "</tr>"     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Number of Domain Controllers</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2Count</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Number of Domain Controllers</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2Count</td>" 
 Add-Content $report "</tr>"     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Parent Domain</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2Parent</td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Parent Domain</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2Parent</td>" 
 Add-Content $report "</tr>"     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Child Domain</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2Child</B></td>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Child Domain</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2Child</B></td>" 
 Add-Content $report "</tr>"     
 Add-Content $report "<tr>" 
-Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Domain Functional Level</B></th>" 
+Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Domain Functional Level</B></th>" 
     if ($D2Mode -like '*NT*' -or $D2Mode -like '*2000*' -or $D2Mode -like '*2003*')
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$D2Mode</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$D2Mode</font></td>" 
         }
     elseif ($D2Mode -like '*2008*' -and $D2Mode -notlike '*2008R2*') 
         { 
-            Add-Content $report "<td bgcolor= 'Yellow' align=center>$D2Mode</td>" 
+            Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$D2Mode</td>" 
         }
     elseif ($D2Mode -like '*2012*' -or $D2Mode -like '*2016*') 
         { 
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$D2Mode</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$D2Mode</td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$D2Mode</td>" 
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2Mode</td>" 
         }
     Add-Content $report "</tr>"     
     Add-Content $report "<tr>" 
-    Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default Computer Container</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2CompCont</td>" 
+    Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Default Computer Container</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2CompCont</td>" 
     Add-Content $report "</tr>"     
     Add-Content $report "<tr>" 
-    Add-Content $report  "<th bgcolor='WhiteSmoke' font='tahoma'><B>Default User Container</B></th>" 
-    Add-Content $report "<td bgcolor='White' align=center>$D2UserCont</td>" 
+    Add-Content $report  "<th bgcolor=$TableHeaderColor font=$TableFont><B>Default User Container</B></th>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$D2UserCont</td>" 
     Add-Content $report "</tr>" 
 
     }
@@ -1103,7 +1112,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Extension</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>File Count</B></td>" 
@@ -1131,26 +1140,26 @@ $SYSSIZE = $sys.'TotalSize (MB)'
 
                 Add-Content $report "<tr>"
 
-                Add-Content $report "<td bgcolor= 'White' align=center>$EXTDOM</td>"
+                Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$EXTDOM</td>"
 
                 if ($SYSEXT -notin ('.bat','.exe','.nix','.vbs','.pol','.reg','.xml','.admx','.adml','.inf','.ini','.adm','.kix','.msi','.ps1','.cmd','.ico'))
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSEXT</font></td>" 
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$SYSEXT</font></td>" 
                     }
                 else  
                     {
-                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSEXT</td>"
+                        Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$SYSEXT</td>"
                     }
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - "+$SYSEXT+" extension found, total of: "+$SYSCOUNT+" files ("+$SYSSIZE+")")
-                Add-Content $report "<td bgcolor='White' align=center>$SYSCOUNT</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SYSCOUNT</td>" 
 
                 if ($sys.Totalsize -ge 839436544)
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SYSSIZE</font></td>" 
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$SYSSIZE</font></td>" 
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'White' align=center>$SYSSIZE</td>"
+                        Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$SYSSIZE</td>"
                     }
 
                 Add-Content $report "</tr>" 
@@ -1187,7 +1196,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Total Users</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Enabled Users</B></td>" 
@@ -1220,41 +1229,41 @@ Foreach ($Domain in $Global:DomainNames)
 
         Add-Content $report "<tr>" 
 
-        Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-        Add-Content $report "<td bgcolor='White' align=center>$AllUsers</td>"         
-        Add-Content $report "<td bgcolor='White' align=center>$UsersEnabled</td>"               
-        Add-Content $report "<td bgcolor='White' align=center>$UsersDisabled</td>"    
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$AllUsers</td>"         
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$UsersEnabled</td>"               
+        Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$UsersDisabled</td>"    
         if ($UsersReversePWD -eq 0) 
             {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+                Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsersReversePWD</font></td>" 
+                Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$UsersReversePWD</font></td>" 
             }
         if ($UsersPWDNotReq -eq 0) 
             {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+                Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersPWDNotReq</td>" 
+                Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$UsersPWDNotReq</td>" 
             }
         if ($UsersPWDNeverExpire -eq 0) 
             {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+                Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersPWDNeverExpire</td>" 
+                Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$UsersPWDNeverExpire</td>" 
             }
         if ($UsersDES -eq 0) 
             {
-                Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+                Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
             }
         else 
             { 
-                Add-Content $report "<td bgcolor= 'Yellow' align=center>$UsersDES</td>" 
+                Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$UsersDES</td>" 
             }
 
     Add-Content $report "</tr>"
@@ -1299,7 +1308,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>" 
 
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>Total Computers</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>Workstations</B></td>" 
@@ -1333,25 +1342,25 @@ Foreach ($Domain in $Global:DomainNames)
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total Computers found: "+$PCAllC)
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$PCAllC</td>"         
-    Add-Content $report "<td bgcolor='White' align=center>$PCWS</td>"
-    Add-Content $report "<td bgcolor='White' align=center>$PCServer</td>"           
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$PCAllC</td>"         
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$PCWS</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$PCServer</td>"           
     if ($PCWSUnsupp -eq '' -or $PCWSUnsupp -eq 0) 
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
         }
     else 
         { 
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCWSUnsupp</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$PCWSUnsupp</font></td>" 
         }
     if ($PCServerUnsupp -eq '' -or $PCServerUnsupp -eq 0)  
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
         }
     else 
         { 
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PCServerUnsupp</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$PCServerUnsupp</font></td>" 
         }
     Add-Content $report "</tr>"
     }
@@ -1386,7 +1395,7 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 
 
 add-content $report  "<table width='50%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='left'>" 
 add-content $report  "<H2>Microsoft's Tiering Model<HR><H2>" 
 add-content $report  "</td>" 
@@ -1421,7 +1430,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Group Name</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Members</B></td>" 
@@ -1450,23 +1459,23 @@ Foreach ($Domain in $Global:DomainNames)
 
                     $GName = $gp
                     Add-Content $report "<tr>"
-                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                    Add-Content $report "<td bgcolor='White' align=center>$GName</td>" 
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GName</td>" 
 
                     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring Group: "+$GName)
                     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total members found: "+$GCounter)
 
                     if ($GCounter -ge 1 -and $CritGrp -ge 1) 
                         {
-                            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GCounter</font></td>"
+                            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GCounter</font></td>"
                         }
                     elseif ($GCounter -ge 2 -and $CritGrp -eq 0)  
                         { 
-                            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GCounter</font></td>"
+                            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GCounter</font></td>"
                         }
                     else 
                         {
-                            Add-Content $report "<td bgcolor='White' align=center>$GCounter</td>" 
+                            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GCounter</td>" 
                         }     
 
             Add-Content $report "</tr>"
@@ -1500,7 +1509,7 @@ add-content $report "<BR><BR><BR><BR>"
 
 
 add-content $report  "<table width='50%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='left'>" 
 add-content $report  "<H2>Group Policy Objects<HR><H2>" 
 add-content $report  "</td>" 
@@ -1524,7 +1533,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>GPOs</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Without Link</B></td>" 
@@ -1553,44 +1562,44 @@ Foreach ($Domain in $Global:DomainNames)
 
 Add-Content $report "<tr>"
 
-                Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                Add-Content $report "<td bgcolor='White' align=center>$GPOAll</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GPOAll</td>" 
 
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Inventoring Group Policies in the Domain: "+$Domain)
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Total GPOs found: "+$GPOAll)
                 if ($GPOWithouLink -ge 1) 
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPOWithouLink GPOs</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GPOWithouLink GPOs</font></td>"
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0 GPOs</td>" 
                     }
                 if ($GPEmpt -ge 1) 
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPEmpt GPOs</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GPEmpt GPOs</font></td>"
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0 GPOs</td>" 
                     }
 
                 if ($GPODisables -ge 1) 
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPODisables GPOs</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GPODisables GPOs</font></td>"
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0 GPOs</td>" 
                     }
 
                 if ($GPBIG -ge 1) 
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GPBIG GPOs</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GPBIG GPOs</font></td>"
                     }
                 else 
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>0 GPOs</td>" 
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0 GPOs</td>" 
                     }
 
                 Add-Content $report "</tr>"
@@ -1635,7 +1644,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>GPOs</B></td>" 
 Add-Content $report  "<td width='3%' align='center'><B>User Version</B></td>" 
@@ -1669,48 +1678,48 @@ Foreach ($Domain in $Global:DomainNames)
             if ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0 -and $Gpo.Name -in $GposNoLink.Name)
                 { 
                     Add-Content $report "<tr>"
-                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoName</td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoUserADVer</font></td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoCompADVer</font></td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>NO</font></td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoModDate</td>"
                     Add-Content $report "</tr>"
                 }   
             elseif ($GpoUserADVer -eq 0 -and $GpoCompADVer -eq 0)
                 { 
                     Add-Content $report "<tr>"
-                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
-                    Add-Content $report "<td bgcolor= 'Lime' align=center>YES</td>"
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoName</td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoUserADVer</font></td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoCompADVer</font></td>"
+                    Add-Content $report "<td bgcolor= $TableSuccessColor align=center>YES</td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoModDate</td>"
                     Add-Content $report "</tr>"
                 }
             elseif ($Gpo.Name -in $GposNoLink.Name)
                 { 
                     Add-Content $report "<tr>"
-                    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoName</td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoName</td>"
                     if ($GpoUserADVer -ge 600)
                         {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoUserADVer</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoUserADVer</font></td>"
                         }
                     else
                         {
-                        Add-Content $report "<td bgcolor= 'White' align=center>$GpoUserADVer</td>"
+                        Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$GpoUserADVer</td>"
                         }
                     if ($GpoCompADVer -ge 600)
                         {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$GpoCompADVer</font></td>"
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$GpoCompADVer</font></td>"
                         }
                     else
                         {
-                        Add-Content $report "<td bgcolor= 'White' align=center>$GpoCompADVer</td>"
+                        Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$GpoCompADVer</td>"
                         }
-                    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>NO</font></td>"
-                    Add-Content $report "<td bgcolor='White' align=center>$GpoModDate</td>"
+                    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>NO</font></td>"
+                    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$GpoModDate</td>"
                     Add-Content $report "</tr>"
                 }
         }   
@@ -1755,9 +1764,9 @@ add-content $report "</div>"
 add-content $report "<div id='DomainControllers' class='tabcontent'>"
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller's Health<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='62'>Domain Controller's Health<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
@@ -1781,7 +1790,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Type</B></td>" 
@@ -1826,72 +1835,72 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
     if($DCReadOnly -eq '1')
         {
-            Add-Content $report "<td bgcolor='White' align=center>RODC</td>"  
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>RODC</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>Full DC</td>"   
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>Full DC</td>"   
         }
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCIP</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCIP</td>" 
 
     if (!$SMBv1)
         {
-            Add-Content $report "<td bgcolor='White' align=center>Disable</td>"  
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>Disable</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Enable</font></td>"  
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Enable</font></td>"  
         }
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCGC</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCGC</td>" 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Operating System Version of: "+$DCHostName)
         if ($DCOS -like '* NT*' -or $DCOS -like '* 2000*' -or $DCOS -like '* 2003*' -or $DCOS -like '* 2008*')
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOS</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DCOS</font></td>" 
         }
     elseif ($DCOS -like '* 2012*' -or $DCOS -like '* 2016*') 
         {
-            Add-Content $report "<td bgcolor= 'Yellow' align=center>$DCOS</td>" 
+            Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$DCOS</td>" 
         }
     elseif ($DCOS -like '* 2019*' -or $DCOS -like '* 2022*') 
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOS</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DCOS</td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$DCOS</td>" 
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCOS</td>" 
         }
 
         if (($DCOS -eq 'Windows Server Standard' -or $DCOS -eq 'Windows Server Datacenter') -and $DCOSD -notin $SupBuilds)
         {
             $svcchannel ++
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCOSD</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DCOSD</font></td>" 
         }
     elseif (($DCOS -eq 'Windows Server Standard' -or $DCOS -eq 'Windows Server Datacenter') -and $DCOSD -in $SupBuilds)
         {
             $svcchannel ++
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCOSD</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DCOSD</td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$DCOSD</td>" 
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCOSD</td>" 
         }
 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting FSMO of: "+$DCHostName)
 
-    Add-Content $report "<td bgcolor='White' align=center>$FSMO</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$FSMO</td>" 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Reporting Site of: "+$DCHostName)
 
-    Add-Content $report "<td bgcolor='White' align=center>$Site</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Site</td>" 
     
     Add-Content $report "</tr>" 
 
@@ -1953,7 +1962,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>FSMO</B></td>" 
@@ -1984,25 +1993,25 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
     if ($DCD.OperationMasterRoles -like '*PDC*')
         {
-            Add-Content $report "<td bgcolor='White' align=center>PDC Emulator</td>"  
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>PDC Emulator</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor='White' align=center></td>"   
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center></td>"   
         }
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCNTPSource</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCNTPSource</td>" 
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCNTPLastSync</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCNTPLastSync</td>" 
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCNTPStratum</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCNTPStratum</td>" 
 
-    Add-Content $report "<td bgcolor='White' align=center>$DCNTPType</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCNTPType</td>" 
     
     Add-Content $report "</tr>" 
 
@@ -2040,7 +2049,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='80%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Name</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Server Scavaging Enabled</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Number of Forwaders</B></td>" 
@@ -2108,57 +2117,57 @@ foreach ($DC in $Global:DCs)
                 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Validating DNS Server: "+$DNSName)
 
                 Add-Content $report "<tr>"
-                Add-Content $report "<td bgcolor='White' align=center>$DNSName</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DNSName</td>" 
                 if ($DNSSca -eq $true)
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSSca</td>"
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DNSSca</td>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSSca</td>" 
+                        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$DNSSca</td>" 
                     }
 
                 if($DNSFWCount -ge 3)
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSFWCount</font></td>" 
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DNSFWCount</font></td>" 
                     }
                 else
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSFWCount</td>"
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DNSFWCount</td>"
                     }
 
-                Add-Content $report "<td bgcolor='White' align=center>$DNSZoneScavenge</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DNSZoneScavenge</td>" 
                 if ($DNSRootC -eq '' -or $DNSRootC -eq 0)
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSRootC</font></td>" 
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DNSRootC</font></td>" 
                     }
 
                 if ($DNSSRVRR -eq 'Missing')
                     {
-                        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DNSSRVRR</font></td>" 
+                        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DNSSRVRR</font></td>" 
                     }
                 elseif($DNSSRVRR -eq 'Missing Inventory')  
                     {
-                        Add-Content $report "<td bgcolor= 'White' align=center>$DNSSRVRR</td>"
+                        Add-Content $report "<td bgcolor= $TableDefaultColor align=center>$DNSSRVRR</td>"
                     }
                 else
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>Ok</td>"
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Ok</td>"
                     }
 
                 if ($DNSRecur -eq $false)
                     {
-                        Add-Content $report "<td bgcolor= 'Lime' align=center>$DNSRecur</td>"
+                        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DNSRecur</td>"
                     }
                 else  
                     { 
-                        Add-Content $report "<td bgcolor= 'Yellow' align=center>$DNSRecur</td>" 
+                        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$DNSRecur</td>" 
                     }
-                Add-Content $report "<td bgcolor='White' align=center>$DNSBindSec</td>" 
+                Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DNSBindSec</td>" 
 
 
                 Add-Content $report "</tr>" 
@@ -2195,9 +2204,9 @@ add-content $report "<BR><BR><BR><BR><BR><BR>"
 write-host 'Running DCDiag Report Phase..'
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='50' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='50'>Domain Controller Diagnostic Tool<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='50'>Domain Controller Diagnostic Tool<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>"
@@ -2215,7 +2224,7 @@ add-content $report "<BR><BR><BR>"
 add-content $report "<CENTER>"
 
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>Connectivity</B></td>"
@@ -2252,81 +2261,81 @@ ForEach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag initial validation: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Failed</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Missing</td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag VerifyReference Test: "+$DC)
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Advertising Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag FrsEvent: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Failed</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Missing</td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag DFSREvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Failed</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Failed</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>Missing</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>Missing</td>"
     }
 
 
@@ -2334,30 +2343,30 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KccEvent Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag KnowsOfRoleHolders Test: "+$DC)
@@ -2365,133 +2374,133 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag MachineAccount Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NCSecDesc Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>Failed</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>Missing</td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag NetLogons Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag ObjectsReplicated: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag Replications: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag RIDManager: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Failed</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Failed</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>Missing</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Missing</font></td>"
     }
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting DCDiag SystemLog Test: "+$DC)
 
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq 1) 
     {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>Passed</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>Passed</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq 1) 
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>Failed</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>Failed</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>Missing</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>Missing</td>"
     }
 
 Add-Content $report "</tr>" 
@@ -2531,7 +2540,7 @@ ForEach ($DC in $Global:DCs)
 {
 
 add-content $report  "<table width='50%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='left'>" 
 add-content $report  "<H2>$DC<HR><H2>" 
 add-content $report  "</td>" 
@@ -2553,7 +2562,7 @@ add-content $report "<BR><BR>"
 add-content $report "<CENTER>"
  
 add-content $report  "<table width='85%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='40%' align='center'><B>Domain Controller Status</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Impact</B></td>" 
 Add-Content $report  "<td width='60%' align='center'><B>Description</B></td>" 
@@ -2566,21 +2575,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity')).Count -eq $true) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Connectivity') 
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')).Count -eq $true) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Connectivity')
-        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>$Status</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test Connectivity</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>......................... $DC missing test Connectivity</td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>Medium</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Medium</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Initial connection validation, checks if the DC can be located in the DNS, validates the ICMP ping (1 hop), checks LDAP binding and also the RPC connection. This initial test requires <b>ICMP, LDAP, DNS</b> and <b>RPC</b> connectivity to work properly.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Initial connection validation, checks if the DC can be located in the DNS, validates the ICMP ping (1 hop), checks LDAP binding and also the RPC connection. This initial test requires <b>ICMP, LDAP, DNS</b> and <b>RPC</b> connectivity to work properly.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2591,21 +2600,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test VerifyReferences')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test VerifyReferences')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test VerifyReferences</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test VerifyReferences</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates that several attributes are present for the domain in the countainer and subcontainers in the DC objetcs. This test will fail if any attribute is missing. You can find more details regarding the attributes at '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'> What does DCDiag actually do.</a>'</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates that several attributes are present for the domain in the countainer and subcontainers in the DC objetcs. This test will fail if any attribute is missing. You can find more details regarding the attributes at '<a href='https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-do/'> What does DCDiag actually do.</a>'</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2616,21 +2625,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Advertising')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Advertising')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Advertising</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test Advertising</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can be correctly located through the KDC service. It does not validate the Kerberos tickets answer or the communication through the <b>TCP</b> and <b>UDP</b> port <b>88</b>.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates this Domain Controller can be correctly located through the KDC service. It does not validate the Kerberos tickets answer or the communication through the <b>TCP</b> and <b>UDP</b> port <b>88</b>.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2641,21 +2650,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test FrsEvent')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test FrsEvent')
-        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>$Status</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test FrsEvent</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>......................... $DC missing test FrsEvent</td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>Medium</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Medium</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding FRS replication. If running Windows Server 2008 R2 or newer on all Domain Controllers is possible SYSVOL were already migrated to DFSR, in this case errors found here can be ignored.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks if theres any errors in the event logs regarding FRS replication. If running Windows Server 2008 R2 or newer on all Domain Controllers is possible SYSVOL were already migrated to DFSR, in this case errors found here can be ignored.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2666,21 +2675,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test DFSREvent')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test DFSREvent')
-        Add-Content $report "<td bgcolor='Yellow' align=center>$Status</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>$Status</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor='Yellow' align=center>......................... $DC missing test DFSREvent</td>"
+        Add-Content $report "<td bgcolor=$TableMeadiumColor align=center>......................... $DC missing test DFSREvent</td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>Medium</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Medium</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if theres any errors in the event logs regarding DFSR replication. If running Windows Server 2008 or older on all Domain Controllers is possible SYSVOL is still using FRS, and in this case errors found here can be ignored. Obs. is highly recommended to migrate SYSVOL to DFSR.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks if theres any errors in the event logs regarding DFSR replication. If running Windows Server 2008 or older on all Domain Controllers is possible SYSVOL is still using FRS, and in this case errors found here can be ignored. Obs. is highly recommended to migrate SYSVOL to DFSR.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2691,21 +2700,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test SysVolCheck')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SysVolCheck')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test SysVolCheck</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test SysVolCheck</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates if the registry key <b>'HKEY_Local_Machine\System\CurrentControlSet\Services\Netlogon\Parameters\SysvolReady=1'</b> exist. This registry has to exist with value '1' for the DC´s SYSVOL to be advertised.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates if the registry key <b>'HKEY_Local_Machine\System\CurrentControlSet\Services\Netlogon\Parameters\SysvolReady=1'</b> exist. This registry has to exist with value '1' for the DC´s SYSVOL to be advertised.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2716,21 +2725,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test KccEvent')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KccEvent')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KccEvent</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test KccEvent</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates through KCC there were no errors in the <b>Event Viewer > Applications and Services Logs > Directory Services</b> event log in the past 15 minutes (default time).</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates through KCC there were no errors in the <b>Event Viewer > Applications and Services Logs > Directory Services</b> event log in the past 15 minutes (default time).</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2742,21 +2751,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test KnowsOfRoleHolders')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test KnowsOfRoleHolders')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test KnowsOfRoleHolders</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test KnowsOfRoleHolders</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if this Domain Controller is aware of which DC (or DCs) hold the <b>FSMOs</b>.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks if this Domain Controller is aware of which DC (or DCs) hold the <b>FSMOs</b>.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2769,21 +2778,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test MachineAccount')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test MachineAccount')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test MachineAccount</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test MachineAccount</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if this computer account exist in Active Directory and the main attributes are set. If this validation reports error. the following parameters of <b>DCDIAG</b> might help: <b>/RecreateMachineAccount</b> and <b>/FixMachineAccount</b>.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks if this computer account exist in Active Directory and the main attributes are set. If this validation reports error. the following parameters of <b>DCDIAG</b> might help: <b>/RecreateMachineAccount</b> and <b>/FixMachineAccount</b>.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2794,21 +2803,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test NCSecDesc')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NCSecDesc')
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$Status</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test NCSecDesc</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>......................... $DC missing test NCSecDesc</td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>Medium</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Medium</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates if permissions are correctly set in this Domain Controller for all naming contexts. Those permissions directly affect replication´s health.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates if permissions are correctly set in this Domain Controller for all naming contexts. Those permissions directly affect replication´s health.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2819,21 +2828,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test NetLogons')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test NetLogons')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test NetLogons</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test NetLogons</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates if core security groups (including administrators and Authenticated Users) can connect and read NETLOGON and SYSVOL folders. It also validates access to IPC$. which can lead to failures in organizations that disable IPC$.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates if core security groups (including administrators and Authenticated Users) can connect and read NETLOGON and SYSVOL folders. It also validates access to IPC$. which can lead to failures in organizations that disable IPC$.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2844,21 +2853,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test ObjectsReplicated')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test ObjectsReplicated')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test ObjectsReplicated</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test ObjectsReplicated</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks the replication health of core objects and attributes.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks the replication health of core objects and attributes.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2869,21 +2878,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Replications')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
     elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Replications')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Replications</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test Replications</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Makes a deep validation to check the main replication for all naming contexts in this Domain Controller.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Makes a deep validation to check the main replication for all naming contexts in this Domain Controller.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2894,25 +2903,25 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test RidManager')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test RidManager')).Count -ne 1 -and $DCHostName -in $Global:RODCs)
     {
-        Add-Content $report "<td bgcolor= 'Lime' align=center>........................ $DC (RODC)</td>"
+        Add-Content $report "<td bgcolor= $TableSuccessColor align=center>........................ $DC (RODC)</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test RidManager</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test RidManager</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates this Domain Controller can locate and contact the RID Master FSMO role holder. This test is skipped in RODCs.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates this Domain Controller can locate and contact the RID Master FSMO role holder. This test is skipped in RODCs.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2921,21 +2930,21 @@ Add-Content $report "<tr>"
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test Services')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test Services')
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Status</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Status</font></td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>......................... $DC missing test Services</font></td>"
+        Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>......................... $DC missing test Services</font></td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>High</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>High</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Validates if the core Active Directory services are running in this Domain Controller. The services verified are: <b>RPCSS, EVENTSYSTEM, DNSCACHE, ISMSERV, KDC, SAMSS, WORKSTATION, W32TIME, NETLOGON, NTDS</b> (in case Windows Server 2008 or newer) and <b>DFSR</b> (if SYSVOL is using DFSR).</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Validates if the core Active Directory services are running in this Domain Controller. The services verified are: <b>RPCSS, EVENTSYSTEM, DNSCACHE, ISMSERV, KDC, SAMSS, WORKSTATION, W32TIME, NETLOGON, NTDS</b> (in case Windows Server 2008 or newer) and <b>DFSR</b> (if SYSVOL is using DFSR).</td>"
 
 Add-Content $report "</tr>" 
 
@@ -2946,21 +2955,21 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 if(($DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')).Count -eq 1) 
     {
             $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' passed test SystemLog')
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$Status</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$Status</td>"
     }
 elseif(($DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')).Count -eq 1) 
     {
         $Status = $DCD.DCDiag | Select-String -Pattern ($DC +' failed test SystemLog')
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>$Status</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>$Status</td>"
     }
 else
     {
-        Add-Content $report "<td bgcolor= 'Yellow' align=center>......................... $DC missing test SystemLog</td>"
+        Add-Content $report "<td bgcolor= $TableMeadiumColor align=center>......................... $DC missing test SystemLog</td>"
     }
 
-add-content $report  "<td bgcolor='White' align=center>Low</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Low</td>"
 
-add-content $report  "<td bgcolor='White' align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further. The impact of this validation is marked as 'Low'.</td>"
+add-content $report  "<td bgcolor=$TableDefaultColor align=center>Checks if there is any erros in the <b>'Event Viewer > System'</b> event log in the past 60 minutes. Since the System event log records data from many places, errors reported here may lead to false positive and must be investigated further. The impact of this validation is marked as 'Low'.</td>"
 
 Add-Content $report "</tr>" 
 
@@ -3003,9 +3012,9 @@ add-content $report "</div>"
 add-content $report  "<div id='Security' class='tabcontent'>"
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller's Security<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='62'>Domain Controller's Security<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>"
@@ -3035,7 +3044,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
 
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>System Log Max Size (Kb)</B></td>" 
@@ -3079,57 +3088,57 @@ foreach ($DC in $Global:DCs)
     
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
         if ($SysLogSize.MaximumKilobytes -ge 1002400)
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCSysLog</td>"  
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DCSysLog</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCSysLog</font></td>"   
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DCSysLog</font></td>"   
         }
 
-    Add-Content $report "<td bgcolor='White' align=center>$SysRec</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SysRec</td>" 
 
         if ($SecLogSize.MaximumKilobytes -ge 4194240)
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCSecLog</td>"  
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DCSecLog</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCSecLog</font></td>"   
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DCSecLog</font></td>"   
         }
 
-    Add-Content $report "<td bgcolor='White' align=center>$SecRec</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SecRec</td>" 
 
         if ($evtclearpw -eq '' -or $evtclearpw -eq 0)
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"  
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$evtclearpw</font></td>"   
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$evtclearpw</font></td>"   
         }
 
         if ($evtbatch -eq '' -or $evtbatch -eq 0)
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>0</td>"  
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>0</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$evtbatch</font></td>"   
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$evtbatch</font></td>"   
         }
 
         if ($DCEvt -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$DCEvt</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$DCEvt</font></td>" 
             $CritEvents ++  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$DCEvt</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$DCEvt</td>"    
         }
         Add-Content $report "</tr>" 
         Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - End of server:"+$DC) 
@@ -3151,7 +3160,7 @@ if ($CritEvents -ge 1)
 {
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Critical Security Events were found in this environment! Investigate further following Microsoft´s <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor'>Events to Monitor in Active Directory</a>. </font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Critical Security Events were found in this environment! Investigate further following Microsoft´s <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/plan/appendix-l--events-to-monitor'>Events to Monitor in Active Directory</a>. </font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3188,7 +3197,7 @@ add-content $report "<BR>"
 add-content $report "<CENTER>"
  
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Latest Backup Date</B></td>" 
@@ -3227,17 +3236,17 @@ foreach ($DC in $Global:DCs)
     
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>"
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>"
 
     if ($oldbkp -eq 1)
     {
     $CritEvents ++
-    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Backup</font></td>" 
+    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Backup</font></td>" 
     }
     else 
     {
-    Add-Content $report "<td bgcolor='White' align=center>$Backup</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Backup</td>" 
     }
 
     Add-Content $report "</tr>" 
@@ -3259,7 +3268,7 @@ if ($CritEvents -ge 1)
 {
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Outdated backups were found in the environment. Verify and make sure backups are been run in the Domain Controllers above.</font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Outdated backups were found in the environment. Verify and make sure backups are been run in the Domain Controllers above.</font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3272,7 +3281,7 @@ if ($NoBackups -ge 1)
 {
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>No Backups were found at all!! Check the current backup policies and make sure this environment is been backed up correctly as soon as possible.</font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>No Backups were found at all!! Check the current backup policies and make sure this environment is been backed up correctly as soon as possible.</font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3307,7 +3316,7 @@ add-content $report "<BR>"
 add-content $report "<CENTER>"
 
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Print Spooler Status</B></td>" 
@@ -3337,18 +3346,18 @@ foreach ($DC in $Global:DCs)
     
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
     if ($State -eq 'Running')
     {
-    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$State</font></td>" 
-    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$Startup</font></td>" 
+    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$State</font></td>" 
+    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$Startup</font></td>" 
     }
     else 
     {
-    Add-Content $report "<td bgcolor='Lime' align=center>$State</td>" 
-    Add-Content $report "<td bgcolor='Lime' align=center>$Startup</td>" 
+    Add-Content $report "<td bgcolor=$TableSuccessColor align=center>$State</td>" 
+    Add-Content $report "<td bgcolor=$TableSuccessColor align=center>$Startup</td>" 
     }
 
     Add-Content $report "</tr>" 
@@ -3392,7 +3401,7 @@ add-content $report "<BR>"
 add-content $report "<CENTER>"
  
 add-content $report  "<table width='60%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Latest Installed HotFix</B></td>" 
@@ -3428,19 +3437,19 @@ foreach ($DC in $Global:DCs)
     
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
     if ((New-TimeSpan -Start $HFDate -End (Get-Date)).Days -ge 60)
     {
     $CritEvents ++
-    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$HFID</font></td>" 
-    Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$HFDate</font></td>" 
+    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$HFID</font></td>" 
+    Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$HFDate</font></td>" 
     }
     else 
     {
-    Add-Content $report "<td bgcolor='White' align=center>$HFID</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$HFDate</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$HFID</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$HFDate</td>" 
     }
    
     Add-Content $report "</tr>" 
@@ -3464,7 +3473,7 @@ if ($CritEvents -ge 1)
 {
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Outdated Domain Controllers were found! Since 2015 Microsoft make rollup updates available in a monthly basis. Update the reported servers as soon as possible!</font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Outdated Domain Controllers were found! Since 2015 Microsoft make rollup updates available in a monthly basis. Update the reported servers as soon as possible!</font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3512,7 +3521,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='8%' align='center'><B>Missing Security Options Settings</B></td>" 
@@ -3543,8 +3552,8 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
 
     $SecCount = 0
@@ -3625,56 +3634,56 @@ foreach ($DC in $Global:DCs)
 
     if ($SecCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$SecCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$SecCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$SecCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$SecCount</td>"    
         }
 
     if ($PolCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$PolCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$PolCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$PolCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$PolCount</td>"    
         }
 
     if ($AudCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$AudCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$AudCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$AudCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$AudCount</td>"    
         }
 
     if ($UsrRCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$UsrRCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$UsrRCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$UsrRCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$UsrRCount</td>"    
         }
 
     if ($RegCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$RegCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$RegCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$RegCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$RegCount</td>"    
         }
 
     if ($FWCount -ge 1)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$FWCount</font></td>" 
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$FWCount</font></td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$FWCount</td>"    
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$FWCount</td>"    
         }
 
         Add-Content $report "</tr>" 
@@ -3698,7 +3707,7 @@ if ($SecCount -ge 1 -or $PolCount -ge 1 -or $UsrRCount -ge 1 -or $RegCount -ge 1
 
 add-content $report  "<CENTER>"
 
-add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= 'Red' align=center><font color='#FFFFFF'>Some of Security Policies recommended by Microsoft were not found in those Domain Controllers. Download the latest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>. Be careful when applying the Microsoft's Security Baseline in the environment, as some settings may impact the overall experience of end users. Precaution is recommended and testing everything upfront might be a good idea.</font></td></tr></TABLE>" 
+add-content $report  "<TABLE BORDER=0 WIDTH=95%><tr><td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>Some of Security Policies recommended by Microsoft were not found in those Domain Controllers. Download the latest Security Baseline and apply them in the environment for Workstations, Member Servers and Domain Controllers: <a href='https://www.microsoft.com/en-us/download/details.aspx?id=55319'>Microsoft Security Compliance Toolkit 1.0</a>. Be careful when applying the Microsoft's Security Baseline in the environment, as some settings may impact the overall experience of end users. Precaution is recommended and testing everything upfront might be a good idea.</font></td></tr></TABLE>" 
 
 add-content $report  "</CENTER>"
 
@@ -3731,7 +3740,7 @@ add-content $report  "</CENTER>"
 add-content $report "<BR>"
  
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='5%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Deny access to this computer from the network</B></td>" 
@@ -3773,43 +3782,43 @@ Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Sta
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostname</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostname</td>" 
 
     if ($dnnet -like '*\Administrator')
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnnet</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dnnet</td>"
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnnet</font></td>"     
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dnnet</font></td>"     
         }
 
     if ($dnbat -like '*\Administrator')
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnbat</td>"
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dnbat</td>"
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnbat</font></td>"     
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dnbat</font></td>"     
         }
 
     if ($dnsvc -like '*\Administrator')
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnsvc</td>"  
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dnsvc</td>"  
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnsvc</font></td>"   
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dnsvc</font></td>"   
         }
 
     if ($dnrdp -like '*\Administrator')
         {
-            Add-Content $report "<td bgcolor= 'Lime' align=center>$dnrdp</td>" 
+            Add-Content $report "<td bgcolor= $TableSuccessColor align=center>$dnrdp</td>" 
         }
     else
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$dnrdp</font></td>"     
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$dnrdp</font></td>"     
         }
 
 
@@ -3853,9 +3862,9 @@ add-content $report  "</div>"
 add-content $report "<div id='Inventory' class='tabcontent'>"
 
 add-content $report  "<table width='100%' border='0'>" 
-add-content $report  "<tr bgcolor='White'>" 
+add-content $report  "<tr bgcolor=$TableDefaultColor>" 
 add-content $report  "<td colspan='7' height='70' align='center'>" 
-add-content $report  "<font face='verdana' color='#000000' size='62'>Domain Controller's Inventory<HR></font>" 
+add-content $report  "<font face=$DefaultFont color='#000000' size='62'>Domain Controller's Inventory<HR></font>" 
 add-content $report  "</td>" 
 add-content $report  "</tr>" 
 add-content $report  "</table>" 
@@ -3887,7 +3896,7 @@ add-content $report "<BR>"
 add-content $report "<CENTER>"
  
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='8%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='10%' align='center'><B>Total Physical Memory</B></td>"
@@ -3924,31 +3933,31 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostName</td>" 
 
-    Add-Content $report "<td bgcolor='White' align=center>$InvMem</td>"
-    Add-Content $report "<td bgcolor='White' align=center>$Proc</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$InvMem</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Proc</td>"
 
     if($FreeSpace -le 10)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$FreeSpace</font></td>"
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$FreeSpace</font></td>"
         }
         else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$FreeSpace</td>"
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$FreeSpace</td>"
         }
 
 
-    Add-Content $report "<td bgcolor='White' align=center>$InvBoot</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$InvInst</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$InvBoot</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$InvInst</td>" 
     if((New-TimeSpan -Start $InvBiosDate -End (Get-Date)).TotalDays -ge 365)
         {
-            Add-Content $report "<td bgcolor= 'Red' align=center><font color='#FFFFFF'>$InvBios</font></td>"
+            Add-Content $report "<td bgcolor= $TableErrorColor align=center><font color=$TableFontOnError>$InvBios</font></td>"
         }
         else
         {
-            Add-Content $report "<td bgcolor='White' align=center>$InvBios</td>"
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$InvBios</td>"
         }
    
     Add-Content $report "</tr>" 
@@ -3993,7 +4002,7 @@ add-content $report "<BR>"
 add-content $report "<CENTER>"
  
 add-content $report  "<table width='90%' border='1'>" 
-Add-Content $report  "<tr bgcolor='WhiteSmoke'>" 
+Add-Content $report  "<tr bgcolor=$TableHeaderColor>" 
 Add-Content $report  "<td width='8%' align='center'><B>Domain</B></td>" 
 Add-Content $report  "<td width='15%' align='center'><B>Domain Controller</B></td>" 
 Add-Content $report  "<td width='25%' align='center'><B>Installed Softwares</B></td>" 
@@ -4036,30 +4045,36 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostName</td>" 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Reporting of:"+$SWD)
 
-        if ($SWDP -like '*Microsoft*')
+    if ($SWDP -like '*Microsoft*')
         {
 
-            Add-Content $report "<td bgcolor='White' align=center>$SWD</td>"
-            Add-Content $report "<td bgcolor='White' align=center>x64</td>" 
-            Add-Content $report "<td bgcolor='White' align=center>$SWDV</td>" 
-            Add-Content $report "<td bgcolor='White' align=center>$SWDP</td>" 
-            Add-Content $report "<td bgcolor='White' align=center><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></td>"
-
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWD</td>"
         }
     else
         {
-
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x64</font></td>" 
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>" 
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
+            Add-Content $report "<td bgcolor=$TableErrorColor align=center><font color=$TableFontOnError>$SWD</font></td>"
         }
+            
+
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>x64</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWDV</td>" 
+
+    if ($SWDP -like '*Microsoft*')
+        {
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWDP</td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor=$TableErrorColor align=center><font color=$TableFontOnError>$SWDP</font></td>"              
+        }
+        
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></td>"
+     
 
     Add-Content $report "</tr>" 
     }
@@ -4080,29 +4095,35 @@ foreach ($DC in $Global:DCs)
 
     Add-Content $report "<tr>"
 
-    Add-Content $report "<td bgcolor='White' align=center>$Domain</td>" 
-    Add-Content $report "<td bgcolor='White' align=center>$DCHostName</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$Domain</td>" 
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$DCHostName</td>" 
 
     Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Reporting of:"+$SWD)
 
-        if ($SWDP -like '*Microsoft*')
+    if ($SWDP -like '*Microsoft*')
         {
 
-            Add-Content $report "<td bgcolor='White' align=center>$SWD</td>"
-            Add-Content $report "<td bgcolor='White' align=center>x86</td>" 
-            Add-Content $report "<td bgcolor='White' align=center>$SWDV</td>" 
-            Add-Content $report "<td bgcolor='White' align=center>$SWDP</td>"
-            Add-Content $report "<td bgcolor='White' align=center><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></td>" 
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWD</td>"
         }
     else
         {
-
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWD</font></td>" 
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>x86</font></td>" 
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDV</font></td>"  
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'>$SWDP</font></td>"
-            Add-Content $report "<td bgcolor='Red' align=center><font color='#FFFFFF'><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></font></td>"   
+            Add-Content $report "<td bgcolor=$TableErrorColor align=center><font color=$TableFontOnError>$SWD</font></td>"
         }
+            
+
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>x64</td>"
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWDV</td>" 
+
+    if ($SWDP -like '*Microsoft*')
+        {
+            Add-Content $report "<td bgcolor=$TableDefaultColor align=center>$SWDP</td>" 
+        }
+    else
+        {
+            Add-Content $report "<td bgcolor=$TableErrorColor align=center><font color=$TableFontOnError>$SWDP</font></td>"              
+        }
+        
+    Add-Content $report "<td bgcolor=$TableDefaultColor align=center><a href='https://www.cvedetails.com/version-search.php?vendor=$SWDPLink&product=$SWDLink&version=$SWDVLink'>Search CVE Details</a></td>"
 
     Add-Content $report "</tr>" 
     }
@@ -4252,7 +4273,7 @@ $Measure = $Runtime.Totalminutes.ToString('#######.##')
 
 $index = Get-Content $report
 
-$Index[44] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face='verdana' color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
+$Index[44] = "<TABLE BORDER=0 WIDTH=20% align='right'><tr><td align='right'><font face=$DefaultFont color='#000000' size='4'> Execution: $Measure Minutes<HR></font></td></tr></TABLE>"
 
 $index | out-file $report
 
