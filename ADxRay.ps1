@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        6.0.0
+Version:        6.0.1
 Author:         Claudio Merola
 Co-Author:      Raphaela Pereira
 Date:           08/22/2022
@@ -1044,10 +1044,10 @@ if($Trust)
                         $T3Source = $Trusts.Source
                         $T3Target = $Trusts.Target
 
-                        Write-Host 'Analyzing and Reporting Trust Between:' -NoNewline
+                        Write-Host 'Analyzing and Reporting Trust Between: ' -NoNewline
                         Write-Host $T3Source -NoNewline -ForegroundColor Magenta
                         Write-Host ' and ' -NoNewline
-                        Write-Host $T3Target -NoNewline -ForegroundColor Magenta
+                        Write-Host $T3Target -ForegroundColor Magenta
 
                         $T3Dir = $Trusts.Direction
                         $T3Trans = $Trusts.ForestTransitive
