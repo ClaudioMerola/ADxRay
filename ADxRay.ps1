@@ -13,7 +13,7 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        6.0.1
+Version:        6.0.2
 Author:         Claudio Merola
 Co-Author:      Raphaela Pereira
 Date:           08/22/2022
@@ -3211,12 +3211,12 @@ Add-Content $report "               <table width='90%' border='1'>"
 Add-Content $report "                   <tr>" 
 Add-Content $report "                       <th width='5%' align='center'>Domain</th>" 
 Add-Content $report "                       <th width='10%' align='center'>Domain Controller</th>" 
-Add-Content $report "                       <th width='8%' align='center'>Missing Security Options Settings</th>" 
-Add-Content $report "                       <th width='8%' align='center'>Missing Policies Settings</th>"
-Add-Content $report "                       <th width='8%' align='center'>Missing Audit Settings</th>"
-Add-Content $report "                       <th width='8%' align='center'>Missing User Right Assignment Settings</th>"
-Add-Content $report "                       <th width='8%' align='center'>Missing Security Registry Settings</th>" 
-Add-Content $report "                       <th width='8%' align='center'>Missing Firewall Settings</th>"
+Add-Content $report "                       <th width='8%' align='center'>Missing Security Options</th>" 
+Add-Content $report "                       <th width='8%' align='center'>Missing Policies</th>"
+Add-Content $report "                       <th width='8%' align='center'>Missing Audit</th>"
+Add-Content $report "                       <th width='8%' align='center'>Missing User Right Assignment</th>"
+Add-Content $report "                       <th width='8%' align='center'>Missing Security Registry</th>" 
+Add-Content $report "                       <th width='8%' align='center'>Missing Firewall</th>"
 Add-Content $report "                   </tr>" 
 
 Add-Content $ADxRayLog ((get-date -Format 'MM-dd-yyyy  HH:mm:ss')+" - Info - Starting Domain Controller Security Policies Reporting") 
