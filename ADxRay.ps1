@@ -15,7 +15,8 @@ Details regarding the environment will be presented during the execution of the 
 .NOTES
 Version:        6.0.0
 Author:         Claudio Merola
-Date:           08/10/2022
+Co-Author:      Raphaela Pereira
+Date:           08/22/2022
 
 #>
 
