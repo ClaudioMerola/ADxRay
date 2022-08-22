@@ -1,7 +1,5 @@
 ## Active Directory xRay Script
 
-I started this as a personal project to help me during my day to day work on different Active Directory environments.
-
 The script does not record, create or modify anything in the environment (except for creating a folder named “ADxRay” in C:\ of the computer running the script. Inside that folder the log files and the main report file named “ADxRay_Report(YEAR-MONTH-DAY).htm” is created). 
 
 The script must be run at a Domain Controller running at least Windows Server 2012 (see requirements below). 
@@ -45,7 +43,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-#### Screenshots:
+## Screenshots:
 
 <BR/>
 
@@ -53,11 +51,23 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
+### User and Computer Account's health:
+
+<BR/>
+
 ![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/1.png)
 
+<BR/>
 
+### Group Policy Validations:
+
+<BR/>
 
 ![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/2.png)
+
+<BR/>
+
+### Domain Controller's Health:
 
 <BR/>
 
@@ -65,7 +75,15 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
+### Domain Controller's NTP and DNS Configuration:
+
+<BR/>
+
 ![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/4.png)
+
+<BR/>
+
+### Domain Controller's Security Policy Status (against Microsoft's Best Practices):
 
 <BR/>
 
@@ -73,4 +91,16 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
+### Domain Controller's Hardware Inventory:
+
+<BR/>
+
 ![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/6.png)
+
+<BR/>
+
+### Domain Controller's Software Inventory:
+
+<BR/>
+
+![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/7.png)
