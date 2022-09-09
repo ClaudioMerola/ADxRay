@@ -47,7 +47,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/0.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/0.png)
 
 <BR/>
 
@@ -55,7 +55,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/1.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/1.png)
 
 <BR/>
 
@@ -63,7 +63,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/2.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/2.png)
 
 <BR/>
 
@@ -71,7 +71,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/3.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/3.png)
 
 <BR/>
 
@@ -79,7 +79,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/4.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/4.png)
 
 <BR/>
 
@@ -87,7 +87,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/5.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/5.png)
 
 <BR/>
 
@@ -95,7 +95,7 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/6.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/6.png)
 
 <BR/>
 
@@ -103,4 +103,4 @@ Even the script may overload the server used to run, it is not harmful to the en
 
 <BR/>
 
-![alt text](https://github.com/ClaudioMerola/ADxRay/raw/master/Docs/7.png)
+![alt text](https://raw.githubusercontent.com/ClaudioMerola/ADxRay/main/Docs/7.png)
