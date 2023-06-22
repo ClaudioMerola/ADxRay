@@ -13,10 +13,10 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        6.0.2
+Version:        6.0.4
 Author:         Claudio Merola
 Co-Author:      Raphaela Pereira
-Date:           08/22/2022
+Date:           06/22/2023
 
 #>
 
@@ -194,7 +194,7 @@ function Hammer
 
                     $Software86 = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*}}).AddArgument($($args[0]))
 
-                    $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Get-WindowsFeature -ComputerName $DomControl | Where-Object {$_.Installed -eq 'Installed'}}).AddArgument($($args[0]))
+                    $Feature = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {Get-SmbServerConfiguration | Select EnableSMB1Protocol}}).AddArgument($($args[0]))
 
                     $HW = ([PowerShell]::Create()).AddScript({param($DomControl)Invoke-Command -cn $DomControl -ScriptBlock {systeminfo /fo CSV | ConvertFrom-Csv}}).AddArgument($($args[0]))
 
@@ -293,7 +293,7 @@ function Hammer
                                     'Inventory' = $InvS;
                                     'Software_64' = $SW64S;
                                     'Software_86' = $SW86S;
-                                    'Installed_Features' = $FeatureS.Name;
+                                    'Installed_Features' = $FeatureS;
                                     'Hardware' = $HWS;
                                     'HardwareBkp' = $HWSBkp;
                                     'Backup' = $BackupS;
@@ -1766,7 +1766,7 @@ foreach ($DC in $Global:DCs)
                 $DCHostName = $DC
                 $DCReadOnly = if($DC -in $Global:RODCs){$true}else{$false}
                 $DCIP = $DCD.IPv4Address
-                $SMBv1 = $DCD.InstalledFeatures | Where-Object {$_ -contains 'FS-SMB1'}
+                $SMBv1 = $DCD.InstalledFeatures
                 $DCGC = $DCD.IsGlobalCatalog
                 $DCOS = $DCD.OperatingSystem
                 $DCOSD = $DCD.OperatingSystemVersion
