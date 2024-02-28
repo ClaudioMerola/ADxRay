@@ -13,10 +13,10 @@ https://blogs.technet.microsoft.com/askds/2011/03/22/what-does-dcdiag-actually-d
 Details regarding the environment will be presented during the execution of the script. The log file will be created at: C:\AdxRay\ADXRay.log
 
 .NOTES
-Version:        6.0.4
+Version:        6.0.5
 Author:         Claudio Merola
 Co-Author:      Raphaela Pereira
-Date:           06/22/2023
+Date:           02/28/2024
 
 #>
 
@@ -1786,7 +1786,7 @@ foreach ($DC in $Global:DCs)
                         Add-Content $report "                       <td align=center>Full DC</td>"   
                     }
                 Add-Content $report "                       <td align=center>$DCIP</td>" 
-                if (!$SMBv1)
+                if (!$SMBv1 -or $SMBv1 -eq 'False' -or $SMBv1 -eq $false -or $SMBv1.EnableSMB1Protocol -eq 'False')
                     {
                         Add-Content $report "                       <td align=center>Disable</td>"  
                     }
